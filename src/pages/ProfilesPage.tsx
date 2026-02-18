@@ -31,6 +31,8 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
   const [editing, setEditing] = useState<AwsProfile | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [actionStatus, setActionStatus] = useState<Record<string, string>>({});
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const handleSave = async (profile: AwsProfile) => {
     await saveProfile(profile);
@@ -39,8 +41,13 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
   };
 
   const handleDelete = async (name: string) => {
-    if (window.confirm(`Delete profile "${name}"?`)) {
+    if (confirmDelete === name) {
       await deleteProfile(name);
+      setConfirmDelete(null);
+    } else {
+      setConfirmDelete(name);
+      // Auto-clear confirmation after 3 seconds
+      setTimeout(() => setConfirmDelete((prev) => (prev === name ? null : prev)), 3000);
     }
   };
 
@@ -69,7 +76,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
       !profile.sso_role_name
     )
       return;
-    const region = profile.region || settings.default_region || ssoStatus.region;
+    const consoleRegion = profile.region || settings.default_region;
     const key = `${profile.name}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
@@ -77,16 +84,20 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
         accessToken: ssoStatus.access_token,
         accountId: profile.sso_account_id,
         roleName: profile.sso_role_name,
-        region,
+        ssoRegion: ssoStatus.region,
+        consoleRegion,
         sessionDurationSecs: settings.session_timeout_hours * 3600,
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
       console.error("Failed to open console:", err);
+      setActionError(`Console: ${err}`);
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
-    setTimeout(
-      () => setActionStatus((prev) => ({ ...prev, [key]: "" })),
+    setTimeout(() => {
+      setActionStatus((prev) => ({ ...prev, [key]: "" }));
+      setActionError(null);
+    },
       2000,
     );
   };
@@ -98,7 +109,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
       !profile.sso_role_name
     )
       return;
-    const region = profile.region || settings.default_region || ssoStatus.region;
+    const cliRegion = profile.region || settings.default_region;
     const key = `${profile.name}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
@@ -106,18 +117,20 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
         accessToken: ssoStatus.access_token,
         accountId: profile.sso_account_id,
         roleName: profile.sso_role_name,
-        region,
+        ssoRegion: ssoStatus.region,
+        cliRegion,
         profileName: profile.name,
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
       console.error("Failed to configure CLI:", err);
+      setActionError(`CLI config: ${err}`);
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
-    setTimeout(
-      () => setActionStatus((prev) => ({ ...prev, [key]: "" })),
-      3000,
-    );
+    setTimeout(() => {
+      setActionStatus((prev) => ({ ...prev, [key]: "" }));
+      setActionError(null);
+    }, 5000);
   };
 
   const canConnect = (profile: AwsProfile) =>
@@ -156,6 +169,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
       </div>
 
       {loading && <div className="loading">Loading profiles...</div>}
+      {actionError && <div className="error-msg">{actionError}</div>}
 
       <div className="profile-list">
         <div className="section">
@@ -253,11 +267,14 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
                       <Edit3 size={14} />
                     </button>
                     <button
-                      className="icon-btn icon-btn-danger"
-                      title="Delete"
+                      className={`icon-btn icon-btn-danger ${confirmDelete === profile.name ? "icon-btn-confirm" : ""}`}
+                      title={confirmDelete === profile.name ? "Click again to confirm" : "Delete"}
                       onClick={() => handleDelete(profile.name)}
                     >
                       <Trash2 size={14} />
+                      {confirmDelete === profile.name && (
+                        <span className="copied-tooltip">Confirm?</span>
+                      )}
                     </button>
                   </div>
                 </div>

@@ -306,6 +306,21 @@
   color: var(--color-danger);
 }
 
+.icon-btn-confirm {
+  background: rgba(241, 76, 76, 0.25);
+  color: var(--color-danger);
+  animation: pulse-danger 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-danger {
+  from {
+    background: rgba(241, 76, 76, 0.15);
+  }
+  to {
+    background: rgba(241, 76, 76, 0.35);
+  }
+}
+
 .icon-btn-loading {
   opacity: 0.5;
   cursor: wait;

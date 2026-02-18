@@ -166,12 +166,13 @@ pub fn open_aws_console(
     access_token: &str,
     account_id: &str,
     role_name: &str,
-    region: &str,
+    sso_region: &str,
+    console_region: &str,
     session_duration_secs: Option<u64>,
 ) -> Result<(), String> {
-    info!("Opening AWS Console for {role_name} in {account_id} (region: {region})");
+    info!("Opening AWS Console for {role_name} in {account_id} (sso_region: {sso_region}, console_region: {console_region})");
 
-    let creds = get_role_credentials(access_token, account_id, role_name, region)?;
+    let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
 
     // Build the federation session JSON
     let session_json = serde_json::json!({
@@ -212,7 +213,7 @@ pub fn open_aws_console(
     // Step 2: Build the console login URL
     let destination_url = format!(
         "https://{}.console.aws.amazon.com/console/home?region={}",
-        region, region
+        console_region, console_region
     );
     let destination = urlencoding::encode(&destination_url);
     let console_url = format!(
@@ -233,12 +234,13 @@ pub fn configure_cli_credentials(
     access_token: &str,
     account_id: &str,
     role_name: &str,
-    region: &str,
+    sso_region: &str,
+    cli_region: &str,
     profile_name: &str,
 ) -> Result<String, String> {
-    info!("Configuring CLI credentials for {role_name} in {account_id} as profile [{profile_name}]");
+    info!("Configuring CLI credentials for {role_name} in {account_id} as profile [{profile_name}] (sso_region: {sso_region}, cli_region: {cli_region})");
 
-    let creds = get_role_credentials(access_token, account_id, role_name, region)?;
+    let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
 
     let path = aws_credentials_path();
     if let Some(parent) = path.parent() {
@@ -271,7 +273,7 @@ pub fn configure_cli_credentials(
     conf.set_to(
         Some(profile_name),
         "region".to_string(),
-        region.to_string(),
+        cli_region.to_string(),
     );
 
     conf.write_to_file(&path)

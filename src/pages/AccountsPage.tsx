@@ -40,6 +40,7 @@ export function AccountsPage({
   const [copied, setCopied] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [actionStatus, setActionStatus] = useState<Record<string, string>>({});
+  const [actionError, setActionError] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Filter accounts by search query (name, id, or email)
@@ -83,7 +84,6 @@ export function AccountsPage({
 
   const handleOpenConsole = async (accountId: string, roleName: string) => {
     if (!ssoStatus.access_token || !ssoStatus.region) return;
-    const region = settings.default_region || ssoStatus.region;
     const key = `${accountId}-${roleName}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
@@ -91,15 +91,20 @@ export function AccountsPage({
         accessToken: ssoStatus.access_token,
         accountId,
         roleName,
-        region,
+        ssoRegion: ssoStatus.region,
+        consoleRegion: settings.default_region,
         sessionDurationSecs: settings.session_timeout_hours * 3600,
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
       console.error("Failed to open console:", err);
+      setActionError(`Console: ${err}`);
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
-    setTimeout(() => setActionStatus((prev) => ({ ...prev, [key]: "" })), 2000);
+    setTimeout(() => {
+      setActionStatus((prev) => ({ ...prev, [key]: "" }));
+      setActionError(null);
+    }, 5000);
   };
 
   const handleConfigureCli = async (
@@ -108,7 +113,6 @@ export function AccountsPage({
     accountName: string,
   ) => {
     if (!ssoStatus.access_token || !ssoStatus.region) return;
-    const region = settings.default_region || ssoStatus.region;
     const key = `${accountId}-${roleName}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     // Profile name: sanitized account name + role
@@ -118,15 +122,20 @@ export function AccountsPage({
         accessToken: ssoStatus.access_token,
         accountId,
         roleName,
-        region,
+        ssoRegion: ssoStatus.region,
+        cliRegion: settings.default_region,
         profileName,
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
       console.error("Failed to configure CLI:", err);
+      setActionError(`CLI config: ${err}`);
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
-    setTimeout(() => setActionStatus((prev) => ({ ...prev, [key]: "" })), 3000);
+    setTimeout(() => {
+      setActionStatus((prev) => ({ ...prev, [key]: "" }));
+      setActionError(null);
+    }, 5000);
   };
 
   const handleBookmark = async (
@@ -221,6 +230,7 @@ export function AccountsPage({
         <div className="loading">Loading accounts...</div>
       )}
       {error && <div className="error-msg">{error}</div>}
+      {actionError && <div className="error-msg">{actionError}</div>}
 
       <div className="account-list">
         {filteredAccounts.map((account) => (

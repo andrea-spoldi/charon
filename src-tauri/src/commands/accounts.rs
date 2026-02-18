@@ -167,8 +167,9 @@ pub fn open_aws_console(
     account_id: &str,
     role_name: &str,
     region: &str,
+    session_duration_secs: Option<u64>,
 ) -> Result<(), String> {
-    info!("Opening AWS Console for {role_name} in {account_id}");
+    info!("Opening AWS Console for {role_name} in {account_id} (region: {region})");
 
     let creds = get_role_credentials(access_token, account_id, role_name, region)?;
 
@@ -182,10 +183,13 @@ pub fn open_aws_console(
 
     let encoded_session = urlencoding::encode(&session_json);
 
+    // Session duration: default 8h (28800s), max 12h (43200s)
+    let duration = session_duration_secs.unwrap_or(28800).min(43200);
+
     // Step 1: Get a sign-in token from the federation endpoint
     let signin_token_url = format!(
-        "https://signin.aws.amazon.com/federation?Action=getSigninToken&SessionDuration=43200&Session={}",
-        encoded_session
+        "https://signin.aws.amazon.com/federation?Action=getSigninToken&SessionDuration={}&Session={}",
+        duration, encoded_session
     );
 
     let output = Command::new("curl")

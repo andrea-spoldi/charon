@@ -8,10 +8,17 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { useSsoStatus } from "./hooks/useSsoStatus";
 import { useProfiles } from "./hooks/useProfiles";
 import { useAccounts } from "./hooks/useAccounts";
-import type { Page } from "./types";
+import type { Page, AppSettings } from "./types";
+import { invoke } from "@tauri-apps/api/core";
 
 function App() {
   const [activePage, setActivePage] = useState<Page>("accounts");
+  const [settings, setSettings] = useState<AppSettings>({
+    default_region: "us-east-1",
+    aws_cli_path: "aws",
+    refresh_interval_secs: 30,
+    session_timeout_hours: 8,
+  });
   const { status: ssoStatus, refresh: refreshSsoStatus } = useSsoStatus();
   const {
     sessions,
@@ -28,6 +35,11 @@ function App() {
     reset: resetAccounts,
   } = useAccounts();
   const hasFetched = useRef(false);
+
+  // Load settings once on mount
+  useEffect(() => {
+    invoke<AppSettings>("get_settings").then(setSettings).catch(console.error);
+  }, []);
 
   // Login trigger: when TopBar login is clicked, navigate to Sessions and start login
   const [loginSessionName, setLoginSessionName] = useState<string | null>(null);
@@ -80,6 +92,7 @@ function App() {
             error={accountsError}
             onRefresh={refreshAccounts}
             onFetchRoles={fetchRoles}
+            settings={settings}
           />
         );
       case "sessions":
@@ -94,9 +107,9 @@ function App() {
           />
         );
       case "profiles":
-        return <ProfilesPage ssoStatus={ssoStatus} />;
+        return <ProfilesPage ssoStatus={ssoStatus} settings={settings} />;
       case "settings":
-        return <SettingsPage />;
+        return <SettingsPage onSettingsChanged={() => invoke<AppSettings>("get_settings").then(setSettings)} />;
     }
   };
 

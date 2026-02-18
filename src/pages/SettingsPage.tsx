@@ -3,11 +3,16 @@ import { Save } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import type { AppSettings } from "../types";
 
-export function SettingsPage() {
+interface SettingsPageProps {
+  onSettingsChanged?: () => void;
+}
+
+export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
   const [settings, setSettings] = useState<AppSettings>({
     default_region: "us-east-1",
     aws_cli_path: "aws",
     refresh_interval_secs: 30,
+    session_timeout_hours: 8,
   });
   const [saved, setSaved] = useState(false);
 
@@ -19,6 +24,7 @@ export function SettingsPage() {
     try {
       await invoke("save_settings", { settings });
       setSaved(true);
+      onSettingsChanged?.();
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       console.error("Failed to save settings:", err);
@@ -43,6 +49,35 @@ export function SettingsPage() {
             }
             placeholder="us-east-1"
           />
+          <span className="form-hint">
+            Used for console login and CLI credential export when no
+            profile-level region is set.
+          </span>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="session-timeout">
+            Console Session Timeout (hours)
+          </label>
+          <input
+            id="session-timeout"
+            type="number"
+            min={1}
+            max={12}
+            value={settings.session_timeout_hours}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                session_timeout_hours: Math.max(
+                  1,
+                  Math.min(12, parseInt(e.target.value) || 8),
+                ),
+              })
+            }
+          />
+          <span className="form-hint">
+            Duration of federated console sessions (1–12 hours). Default: 8.
+          </span>
         </div>
 
         <div className="form-field">

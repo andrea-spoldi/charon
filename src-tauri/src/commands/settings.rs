@@ -8,6 +8,7 @@ pub struct AppSettings {
     pub default_region: String,
     pub aws_cli_path: String,
     pub refresh_interval_secs: u64,
+    pub session_timeout_hours: u64,
 }
 
 impl Default for AppSettings {
@@ -16,6 +17,7 @@ impl Default for AppSettings {
             default_region: "us-east-1".to_string(),
             aws_cli_path: "aws".to_string(),
             refresh_interval_secs: 30,
+            session_timeout_hours: 8,
         }
     }
 }
@@ -64,6 +66,7 @@ mod tests {
         assert_eq!(s.default_region, "us-east-1");
         assert_eq!(s.aws_cli_path, "aws");
         assert_eq!(s.refresh_interval_secs, 30);
+        assert_eq!(s.session_timeout_hours, 8);
     }
 
     #[test]
@@ -72,10 +75,12 @@ mod tests {
             default_region: "eu-west-1".to_string(),
             aws_cli_path: "/usr/local/bin/aws".to_string(),
             refresh_interval_secs: 60,
+            session_timeout_hours: 4,
         };
         let json = serde_json::to_string(&s).unwrap();
         let parsed: AppSettings = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.default_region, "eu-west-1");
         assert_eq!(parsed.refresh_interval_secs, 60);
+        assert_eq!(parsed.session_timeout_hours, 4);
     }
 }

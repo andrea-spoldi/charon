@@ -11,7 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
-import type { SsoTokenInfo, SsoSession, SsoAccount, AccountRole } from "../types";
+import type { SsoTokenInfo, SsoSession, SsoAccount, AccountRole, AppSettings } from "../types";
 
 interface AccountsPageProps {
   ssoStatus: SsoTokenInfo;
@@ -22,6 +22,7 @@ interface AccountsPageProps {
   error: string | null;
   onRefresh: () => void;
   onFetchRoles: (accessToken: string, accountId: string, region: string) => void;
+  settings: AppSettings;
 }
 
 export function AccountsPage({
@@ -33,6 +34,7 @@ export function AccountsPage({
   error,
   onRefresh,
   onFetchRoles,
+  settings,
 }: AccountsPageProps) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState<string | null>(null);
@@ -81,6 +83,7 @@ export function AccountsPage({
 
   const handleOpenConsole = async (accountId: string, roleName: string) => {
     if (!ssoStatus.access_token || !ssoStatus.region) return;
+    const region = ssoStatus.region || settings.default_region;
     const key = `${accountId}-${roleName}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
@@ -88,7 +91,8 @@ export function AccountsPage({
         accessToken: ssoStatus.access_token,
         accountId,
         roleName,
-        region: ssoStatus.region,
+        region,
+        sessionDurationSecs: settings.session_timeout_hours * 3600,
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
@@ -104,6 +108,7 @@ export function AccountsPage({
     accountName: string,
   ) => {
     if (!ssoStatus.access_token || !ssoStatus.region) return;
+    const region = ssoStatus.region || settings.default_region;
     const key = `${accountId}-${roleName}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     // Profile name: sanitized account name + role
@@ -113,7 +118,7 @@ export function AccountsPage({
         accessToken: ssoStatus.access_token,
         accountId,
         roleName,
-        region: ssoStatus.region,
+        region,
         profileName,
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));

@@ -58,6 +58,7 @@ export interface AppSettings {
   default_region: string;
   aws_cli_path: string;
   refresh_interval_secs: number;
+  session_timeout_hours: number;
 }
 
 // Navigation pages

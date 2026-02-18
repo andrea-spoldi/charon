@@ -11,13 +11,14 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { useProfiles } from "../hooks/useProfiles";
 import { ProfileForm } from "./ProfileForm";
-import type { AwsProfile, SsoTokenInfo } from "../types";
+import type { AwsProfile, SsoTokenInfo, AppSettings } from "../types";
 
 interface ProfilesPageProps {
   ssoStatus: SsoTokenInfo;
+  settings: AppSettings;
 }
 
-export function ProfilesPage({ ssoStatus }: ProfilesPageProps) {
+export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
   const {
     profiles,
     sessions,
@@ -68,7 +69,7 @@ export function ProfilesPage({ ssoStatus }: ProfilesPageProps) {
       !profile.sso_role_name
     )
       return;
-    const region = profile.region || ssoStatus.region || "us-east-1";
+    const region = profile.region || ssoStatus.region || settings.default_region;
     const key = `${profile.name}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
@@ -77,6 +78,7 @@ export function ProfilesPage({ ssoStatus }: ProfilesPageProps) {
         accountId: profile.sso_account_id,
         roleName: profile.sso_role_name,
         region,
+        sessionDurationSecs: settings.session_timeout_hours * 3600,
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
@@ -96,7 +98,7 @@ export function ProfilesPage({ ssoStatus }: ProfilesPageProps) {
       !profile.sso_role_name
     )
       return;
-    const region = profile.region || ssoStatus.region || "us-east-1";
+    const region = profile.region || ssoStatus.region || settings.default_region;
     const key = `${profile.name}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {

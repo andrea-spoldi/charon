@@ -1,0 +1,139 @@
+stages:
+  - check
+  - test
+  - build
+  - release
+
+variables:
+  CARGO_HOME: ${CI_PROJECT_DIR}/.cargo
+  RUST_BACKTRACE: "1"
+
+# ------------------ Cache ------------------
+.rust-cache:
+  cache:
+    key: rust-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cargo/registry/
+      - .cargo/git/
+      - src-tauri/target/
+    policy: pull-push
+
+.node-cache:
+  cache:
+    key: node-${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .pnpm-store/
+    policy: pull-push
+
+# ------------------ Check ------------------
+lint:frontend:
+  stage: check
+  image: node:22-slim
+  extends: .node-cache
+  before_script:
+    - corepack enable
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm lint
+    - pnpm format:check
+
+lint:rust:
+  stage: check
+  image: rust:1.77-slim
+  extends: .rust-cache
+  script:
+    - rustup component add clippy rustfmt
+    - cd src-tauri && cargo fmt -- --check
+    - cd src-tauri && cargo clippy -- -D warnings
+
+audit:frontend:
+  stage: check
+  image: node:22-slim
+  extends: .node-cache
+  before_script:
+    - corepack enable
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm audit --audit-level=high
+  allow_failure: true
+
+audit:rust:
+  stage: check
+  image: rust:1.77-slim
+  extends: .rust-cache
+  before_script:
+    - cargo install cargo-audit
+  script:
+    - cd src-tauri && cargo audit
+  allow_failure: true
+
+# ------------------ Test ------------------
+test:frontend:
+  stage: test
+  image: node:22-slim
+  extends: .node-cache
+  before_script:
+    - corepack enable
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm test
+
+test:rust:
+  stage: test
+  image: rust:1.77-slim
+  extends: .rust-cache
+  script:
+    - cd src-tauri && cargo test
+
+# ------------------ Build ------------------
+build:tauri:
+  stage: build
+  image: rust:1.77-slim
+  extends:
+    - .rust-cache
+    - .node-cache
+  before_script:
+    - apt-get update && apt-get install -y
+        libwebkit2gtk-4.1-dev
+        build-essential
+        curl
+        wget
+        file
+        libxdo-dev
+        libssl-dev
+        libayatana-appindicator3-dev
+        librsvg2-dev
+        nodejs
+        npm
+    - npm install -g corepack
+    - corepack enable
+    - pnpm install --frozen-lockfile
+  script:
+    - pnpm tauri build
+  artifacts:
+    paths:
+      - src-tauri/target/release/bundle/
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ------------------ Release ------------------
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  needs:
+    - job: build:tauri
+      artifacts: true
+  script:
+    - echo "Creating release for ${CI_COMMIT_TAG}"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: "Release ${CI_COMMIT_TAG}"
+    assets:
+      links:
+        - name: "Build artifacts"
+          url: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/download"
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/

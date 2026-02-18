@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+src-tauri/target/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Cargo
+.cargo/
+
+# Tauri
+src-tauri/target/
+src-tauri/WixTools/
+src-tauri/icons/
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+
+# TypeScript build info
+tsconfig.tsbuildinfo
+
+# AI tooling
+.claude/
+.cursor/

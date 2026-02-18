@@ -1,0 +1,40 @@
+[package]
+name = "charon"
+version = "0.2.0"
+description = "Desktop app for managing connections to multiple AWS accounts via AWS Identity Center"
+authors = ["platform"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "charon_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "charon"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+log = "0.4"
+env_logger = "0.11"
+dirs = "6"
+rust-ini = "0.21"
+open = "5"
+urlencoding = "2"
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+tokio = { version = "1", features = ["time"] }
+sha1 = "0.10"
+
+[dev-dependencies]
+tempfile = "3"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

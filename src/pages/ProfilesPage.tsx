@@ -69,7 +69,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
       !profile.sso_role_name
     )
       return;
-    const region = profile.region || ssoStatus.region || settings.default_region;
+    const region = profile.region || settings.default_region || ssoStatus.region;
     const key = `${profile.name}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
@@ -98,7 +98,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
       !profile.sso_role_name
     )
       return;
-    const region = profile.region || ssoStatus.region || settings.default_region;
+    const region = profile.region || settings.default_region || ssoStatus.region;
     const key = `${profile.name}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {

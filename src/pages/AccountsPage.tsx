@@ -83,7 +83,7 @@ export function AccountsPage({
 
   const handleOpenConsole = async (accountId: string, roleName: string) => {
     if (!ssoStatus.access_token || !ssoStatus.region) return;
-    const region = ssoStatus.region || settings.default_region;
+    const region = settings.default_region || ssoStatus.region;
     const key = `${accountId}-${roleName}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
@@ -108,7 +108,7 @@ export function AccountsPage({
     accountName: string,
   ) => {
     if (!ssoStatus.access_token || !ssoStatus.region) return;
-    const region = ssoStatus.region || settings.default_region;
+    const region = settings.default_region || ssoStatus.region;
     const key = `${accountId}-${roleName}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     // Profile name: sanitized account name + role

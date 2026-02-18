@@ -73,10 +73,12 @@ export function SessionsPage({
   const [loggingIn, setLoggingIn] = useState<string | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
   const pollAbortRef = useRef(false);
+  const loginTriggeredRef = useRef<string | null>(null);
 
-  // Handle login trigger from TopBar
+  // Handle login trigger from TopBar (guard against StrictMode double-fire)
   useEffect(() => {
-    if (loginSessionName && !deviceAuth && !loggingIn) {
+    if (loginSessionName && !deviceAuth && !loggingIn && loginTriggeredRef.current !== loginSessionName) {
+      loginTriggeredRef.current = loginSessionName;
       handleLogin(loginSessionName);
       onLoginHandled?.();
     }
@@ -171,6 +173,7 @@ export function SessionsPage({
       setDeviceAuth(null);
     } finally {
       setLoggingIn(null);
+      loginTriggeredRef.current = null;
     }
   };
 
@@ -178,6 +181,7 @@ export function SessionsPage({
     pollAbortRef.current = true;
     setDeviceAuth(null);
     setLoggingIn(null);
+    loginTriggeredRef.current = null;
   };
 
   const handleCopyCode = async () => {

@@ -44,8 +44,9 @@ lint:rust:
   extends: .rust-cache
   script:
     - rustup component add clippy rustfmt
-    - cd src-tauri && cargo fmt -- --check
-    - cd src-tauri && cargo clippy -- -D warnings
+    - cd src-tauri
+    - cargo fmt -- --check
+    - cargo clippy -- -D warnings
 
 audit:frontend:
   stage: check

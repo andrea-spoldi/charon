@@ -50,6 +50,7 @@ pub fn list_sso_accounts(access_token: &str, region: &str) -> Result<Vec<SsoAcco
             "--output",
             "json",
         ])
+        .env("AWS_CONFIG_FILE", "/dev/null")
         .output()
         .map_err(|e| format!("Failed to run aws cli: {e}"))?;
 
@@ -88,6 +89,7 @@ pub fn list_account_roles(
             "--output",
             "json",
         ])
+        .env("AWS_CONFIG_FILE", "/dev/null")
         .output()
         .map_err(|e| format!("Failed to run aws cli: {e}"))?;
 
@@ -145,6 +147,7 @@ pub fn get_role_credentials(
             "--output",
             "json",
         ])
+        .env("AWS_CONFIG_FILE", "/dev/null")
         .output()
         .map_err(|e| format!("Failed to run aws cli: {e}"))?;
 

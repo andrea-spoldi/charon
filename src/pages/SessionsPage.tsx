@@ -67,6 +67,8 @@ export function SessionsPage({
   const [region, setRegion] = useState("us-east-1");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Device authorization state
   const [deviceAuth, setDeviceAuth] = useState<DeviceAuthInfo | null>(null);
@@ -107,15 +109,50 @@ export function SessionsPage({
     setError(null);
   };
 
+  const validateSessionName = (value: string): string | null => {
+    if (!value) return "Session name is required";
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(value)) return "Only lowercase letters, numbers, and hyphens (must start with letter or number)";
+    return null;
+  };
+
+  const validateStartUrl = (value: string): string | null => {
+    if (!value) return "Start URL is required";
+    if (!/^https:\/\/d-[a-z0-9]+\.awsapps\.com\/start\/?$/.test(value)) return "Must match https://d-xxxxxxxxxx.awsapps.com/start/";
+    return null;
+  };
+
+  const handleSessionNameChange = (value: string) => {
+    // Auto-sanitize: lowercase, replace spaces with hyphens
+    const sanitized = value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    setSessionName(sanitized);
+    const err = validateSessionName(sanitized);
+    setValidationErrors((prev) => ({ ...prev, name: err || "" }));
+  };
+
+  const handleStartUrlChange = (value: string) => {
+    setStartUrl(value);
+    const err = validateStartUrl(value);
+    setValidationErrors((prev) => ({ ...prev, url: err || "" }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSaving(true);
 
+    const nameErr = validateSessionName(sessionName);
+    const urlErr = validateStartUrl(startUrl);
+    if (nameErr || urlErr) {
+      setValidationErrors({ name: nameErr || "", url: urlErr || "" });
+      return;
+    }
+
+    setSaving(true);
     try {
+      // Ensure URL ends with trailing slash
+      const normalizedUrl = startUrl.endsWith("/") ? startUrl : startUrl + "/";
       const session: SsoSession = {
         name: sessionName,
-        sso_start_url: startUrl,
+        sso_start_url: normalizedUrl,
         sso_region: region,
         sso_registration_scopes: "sso:account:access",
       };
@@ -130,12 +167,17 @@ export function SessionsPage({
   };
 
   const handleDelete = async (name: string) => {
-    if (!window.confirm(`Delete SSO session "${name}"?`)) return;
-    try {
-      await invoke("delete_sso_session", { name });
-      onRefresh();
-    } catch (err) {
-      setError(String(err));
+    if (confirmDelete === name) {
+      setConfirmDelete(null);
+      try {
+        await invoke("delete_sso_session", { name });
+        onRefresh();
+      } catch (err) {
+        setError(String(err));
+      }
+    } else {
+      setConfirmDelete(name);
+      setTimeout(() => setConfirmDelete((prev) => (prev === name ? null : prev)), 3000);
     }
   };
 
@@ -297,14 +339,19 @@ export function SessionsPage({
                 id="session-name"
                 type="text"
                 value={sessionName}
-                onChange={(e) => setSessionName(e.target.value)}
+                onChange={(e) => handleSessionNameChange(e.target.value)}
                 placeholder="my-sso"
                 required
                 disabled={!!editing}
+                className={validationErrors.name ? "input-error" : ""}
               />
-              <span className="form-hint">
-                A short name to identify this SSO connection
-              </span>
+              {validationErrors.name ? (
+                <span className="form-error">{validationErrors.name}</span>
+              ) : (
+                <span className="form-hint">
+                  A short name to identify this SSO connection
+                </span>
+              )}
             </div>
 
             <div className="form-field">
@@ -316,13 +363,18 @@ export function SessionsPage({
                 id="start-url"
                 type="url"
                 value={startUrl}
-                onChange={(e) => setStartUrl(e.target.value)}
-                placeholder="https://your-org.awsapps.com/start"
+                onChange={(e) => handleStartUrlChange(e.target.value)}
+                placeholder="https://d-xxxxxxxxxx.awsapps.com/start"
                 required
+                className={validationErrors.url ? "input-error" : ""}
               />
-              <span className="form-hint">
-                Your organization's AWS access portal URL
-              </span>
+              {validationErrors.url ? (
+                <span className="form-error">{validationErrors.url}</span>
+              ) : (
+                <span className="form-hint">
+                  Your organization's AWS access portal URL
+                </span>
+              )}
             </div>
 
             <div className="form-field">
@@ -407,11 +459,14 @@ export function SessionsPage({
                   <Edit3 size={14} />
                 </button>
                 <button
-                  className="icon-btn icon-btn-danger"
-                  title="Delete"
+                  className={`icon-btn icon-btn-danger ${confirmDelete === session.name ? "icon-btn-confirm" : ""}`}
+                  title={confirmDelete === session.name ? "Click again to confirm" : "Delete"}
                   onClick={() => handleDelete(session.name)}
                 >
                   <Trash2 size={14} />
+                  {confirmDelete === session.name && (
+                    <span className="copied-tooltip">Confirm?</span>
+                  )}
                 </button>
               </div>
             </div>

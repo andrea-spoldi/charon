@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
+import { StatusBar } from "./components/StatusBar";
 import { AccountsPage } from "./pages/AccountsPage";
 import { SessionsPage } from "./pages/SessionsPage";
 import { ProfilesPage } from "./pages/ProfilesPage";
@@ -123,6 +124,7 @@ function App() {
       />
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
       <main>{renderPage()}</main>
+      <StatusBar ssoStatus={ssoStatus} settings={settings} />
     </div>
   );
 }

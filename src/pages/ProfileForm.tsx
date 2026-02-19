@@ -4,6 +4,7 @@ import type { AwsProfile, SsoSession } from "../types";
 interface ProfileFormProps {
   initial: AwsProfile | null;
   sessions: SsoSession[];
+  defaultRegion?: string;
   onSave: (profile: AwsProfile) => void;
   onCancel: () => void;
 }
@@ -11,6 +12,7 @@ interface ProfileFormProps {
 export function ProfileForm({
   initial,
   sessions,
+  defaultRegion,
   onSave,
   onCancel,
 }: ProfileFormProps) {
@@ -18,7 +20,7 @@ export function ProfileForm({
   const [ssoSession, setSsoSession] = useState(initial?.sso_session ?? "");
   const [accountId, setAccountId] = useState(initial?.sso_account_id ?? "");
   const [roleName, setRoleName] = useState(initial?.sso_role_name ?? "");
-  const [region, setRegion] = useState(initial?.region ?? "");
+  const [region, setRegion] = useState(initial?.region ?? defaultRegion ?? "");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

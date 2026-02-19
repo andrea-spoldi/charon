@@ -22,6 +22,7 @@
 
   --sidebar-width: 200px;
   --topbar-height: 48px;
+  --statusbar-height: 24px;
 
   --radius: 4px;
   --radius-lg: 6px;
@@ -49,7 +50,7 @@
 /* ===== Layout ===== */
 .app-layout {
   display: grid;
-  grid-template-rows: var(--topbar-height) 1fr;
+  grid-template-rows: var(--topbar-height) 1fr var(--statusbar-height);
   grid-template-columns: var(--sidebar-width) 1fr;
   height: 100vh;
   overflow: hidden;
@@ -754,4 +755,67 @@
 
 .device-auth-cancel {
   margin-top: 4px;
+}
+
+/* ===== Status Bar ===== */
+.statusbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  height: var(--statusbar-height);
+  background: var(--color-bg-secondary);
+  border-top: 1px solid var(--color-border);
+  font-size: 11px;
+  color: var(--color-muted);
+}
+
+.statusbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.statusbar-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.statusbar-error {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-danger);
+}
+
+.statusbar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.statusbar-dot-active {
+  background: var(--color-success);
+}
+
+.statusbar-dot-inactive {
+  background: var(--color-muted);
+}
+
+/* ===== Form Validation ===== */
+.input-error {
+  border-color: var(--color-danger) !important;
+}
+
+.form-error {
+  font-size: 11px;
+  color: var(--color-danger);
 }

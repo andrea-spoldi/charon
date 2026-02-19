@@ -153,7 +153,7 @@ export function AccountsPage({
           sso_session: sessions.length > 0 ? sessions[0].name : null,
           sso_account_id: accountId,
           sso_role_name: roleName,
-          region: ssoStatus.region,
+          region: settings.default_region,
           output: null,
         },
       });

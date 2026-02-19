@@ -148,6 +148,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
         <ProfileForm
           initial={editing}
           sessions={sessions}
+          defaultRegion={settings.default_region}
           onSave={handleSave}
           onCancel={() => {
             setShowForm(false);

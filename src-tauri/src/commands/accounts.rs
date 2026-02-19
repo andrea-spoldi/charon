@@ -39,7 +39,7 @@ struct ListAccountRolesResponse {
 pub fn list_sso_accounts(access_token: &str, region: &str) -> Result<Vec<SsoAccount>, String> {
     info!("Listing SSO accounts");
 
-    let output = Command::new(&resolve_aws_cli())
+    let output = Command::new(resolve_aws_cli())
         .args([
             "sso",
             "list-accounts",
@@ -76,7 +76,7 @@ pub fn list_account_roles(
 ) -> Result<Vec<AccountRole>, String> {
     info!("Listing roles for account {account_id}");
 
-    let output = Command::new(&resolve_aws_cli())
+    let output = Command::new(resolve_aws_cli())
         .args([
             "sso",
             "list-account-roles",
@@ -102,7 +102,10 @@ pub fn list_account_roles(
     let response: ListAccountRolesResponse =
         serde_json::from_str(&stdout).map_err(|e| format!("Failed to parse response: {e}"))?;
 
-    info!("Found {} roles for account {account_id}", response.role_list.len());
+    info!(
+        "Found {} roles for account {account_id}",
+        response.role_list.len()
+    );
     Ok(response.role_list)
 }
 
@@ -132,7 +135,7 @@ pub fn get_role_credentials(
 ) -> Result<RoleCredentials, String> {
     info!("Getting role credentials for {role_name} in {account_id}");
 
-    let output = Command::new(&resolve_aws_cli())
+    let output = Command::new(resolve_aws_cli())
         .args([
             "sso",
             "get-role-credentials",
@@ -192,8 +195,7 @@ pub fn open_aws_console(
 
     // Step 1: Get a sign-in token from the federation endpoint
     let signin_token_url = format!(
-        "https://signin.aws.amazon.com/federation?Action=getSigninToken&SessionDuration={}&Session={}",
-        duration, encoded_session
+        "https://signin.aws.amazon.com/federation?Action=getSigninToken&SessionDuration={duration}&Session={encoded_session}"
     );
 
     let output = Command::new("curl")
@@ -215,13 +217,11 @@ pub fn open_aws_console(
 
     // Step 2: Build the console login URL
     let destination_url = format!(
-        "https://{}.console.aws.amazon.com/console/home?region={}",
-        console_region, console_region
+        "https://{console_region}.console.aws.amazon.com/console/home?region={console_region}"
     );
     let destination = urlencoding::encode(&destination_url);
     let console_url = format!(
-        "https://signin.aws.amazon.com/federation?Action=login&Issuer=Charon&Destination={}&SigninToken={}",
-        destination, signin_token
+        "https://signin.aws.amazon.com/federation?Action=login&Issuer=Charon&Destination={destination}&SigninToken={signin_token}"
     );
 
     // Step 3: Open in default browser
@@ -284,8 +284,7 @@ pub fn configure_cli_credentials(
 
     info!("Configured CLI credentials for profile [{profile_name}]");
     Ok(format!(
-        "Credentials saved to profile [{}]. They expire in ~12 hours.",
-        profile_name
+        "Credentials saved to profile [{profile_name}]. They expire in ~12 hours."
     ))
 }
 

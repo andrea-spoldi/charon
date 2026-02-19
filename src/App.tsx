@@ -66,7 +66,12 @@ function App() {
       hasFetched.current = true;
       fetchAccounts(ssoStatus.access_token, ssoStatus.region);
     }
-  }, [ssoStatus.status, ssoStatus.access_token, ssoStatus.region, fetchAccounts]);
+  }, [
+    ssoStatus.status,
+    ssoStatus.access_token,
+    ssoStatus.region,
+    fetchAccounts,
+  ]);
 
   // Reset when session ends
   useEffect(() => {
@@ -119,9 +124,21 @@ function App() {
           />
         );
       case "profiles":
-        return <ProfilesPage ssoStatus={ssoStatus} settings={settings} onError={addToast} />;
+        return (
+          <ProfilesPage
+            ssoStatus={ssoStatus}
+            settings={settings}
+            onError={addToast}
+          />
+        );
       case "settings":
-        return <SettingsPage onSettingsChanged={() => invoke<AppSettings>("get_settings").then(setSettings)} />;
+        return (
+          <SettingsPage
+            onSettingsChanged={() =>
+              invoke<AppSettings>("get_settings").then(setSettings)
+            }
+          />
+        );
     }
   };
 

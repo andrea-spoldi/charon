@@ -19,7 +19,11 @@ interface ProfilesPageProps {
   onError?: (message: string, type?: "error" | "success" | "info") => void;
 }
 
-export function ProfilesPage({ ssoStatus, settings, onError }: ProfilesPageProps) {
+export function ProfilesPage({
+  ssoStatus,
+  settings,
+  onError,
+}: ProfilesPageProps) {
   const {
     profiles,
     sessions,
@@ -48,7 +52,10 @@ export function ProfilesPage({ ssoStatus, settings, onError }: ProfilesPageProps
     } else {
       setConfirmDelete(name);
       // Auto-clear confirmation after 3 seconds
-      setTimeout(() => setConfirmDelete((prev) => (prev === name ? null : prev)), 3000);
+      setTimeout(
+        () => setConfirmDelete((prev) => (prev === name ? null : prev)),
+        3000,
+      );
     }
   };
 
@@ -100,9 +107,7 @@ export function ProfilesPage({ ssoStatus, settings, onError }: ProfilesPageProps
     setTimeout(() => {
       setActionStatus((prev) => ({ ...prev, [key]: "" }));
       setActionError(null);
-    },
-      2000,
-    );
+    }, 2000);
   };
 
   const handleConfigureCli = async (profile: AwsProfile) => {
@@ -235,14 +240,11 @@ export function ProfilesPage({ ssoStatus, settings, onError }: ProfilesPageProps
                     <button
                       className={`icon-btn ${actionStatus[consoleKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[consoleKey] === "error" ? "icon-btn-error" : ""}`}
                       title={
-                        connectable
-                          ? "Open AWS Console"
-                          : "Login to SSO first"
+                        connectable ? "Open AWS Console" : "Login to SSO first"
                       }
                       onClick={() => handleOpenConsole(profile)}
                       disabled={
-                        !connectable ||
-                        actionStatus[consoleKey] === "loading"
+                        !connectable || actionStatus[consoleKey] === "loading"
                       }
                     >
                       <ExternalLink size={14} />
@@ -273,7 +275,11 @@ export function ProfilesPage({ ssoStatus, settings, onError }: ProfilesPageProps
                     </button>
                     <button
                       className={`icon-btn icon-btn-danger ${confirmDelete === profile.name ? "icon-btn-confirm" : ""}`}
-                      title={confirmDelete === profile.name ? "Click again to confirm" : "Delete"}
+                      title={
+                        confirmDelete === profile.name
+                          ? "Click again to confirm"
+                          : "Delete"
+                      }
                       onClick={() => handleDelete(profile.name)}
                     >
                       <Trash2 size={14} />
@@ -286,15 +292,16 @@ export function ProfilesPage({ ssoStatus, settings, onError }: ProfilesPageProps
               );
             })}
 
-          {!loading && profiles.filter((p) => p.name !== "default").length === 0 && (
-            <div className="empty-state">
-              <p>No profiles configured.</p>
-              <p className="text-muted">
-                Add a profile or bookmark an account+role from the Accounts
-                page.
-              </p>
-            </div>
-          )}
+          {!loading &&
+            profiles.filter((p) => p.name !== "default").length === 0 && (
+              <div className="empty-state">
+                <p>No profiles configured.</p>
+                <p className="text-muted">
+                  Add a profile or bookmark an account+role from the Accounts
+                  page.
+                </p>
+              </div>
+            )}
         </div>
       </div>
     </div>

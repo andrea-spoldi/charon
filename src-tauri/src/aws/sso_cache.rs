@@ -112,9 +112,7 @@ pub fn get_sso_status() -> SsoTokenInfo {
         // Prefer active sessions
         match (&best, &status) {
             (None, _) => best = Some(info),
-            (Some(prev), SsoSessionStatus::Active)
-                if prev.status != SsoSessionStatus::Active =>
-            {
+            (Some(prev), SsoSessionStatus::Active) if prev.status != SsoSessionStatus::Active => {
                 best = Some(info);
             }
             _ => {}

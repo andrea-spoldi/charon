@@ -132,10 +132,18 @@ fn write_profile_to_section(conf: &mut Ini, section: &str, profile: &AwsProfile)
         conf.set_to(Some(section), "sso_session".to_string(), session.clone());
     }
     if let Some(ref account_id) = profile.sso_account_id {
-        conf.set_to(Some(section), "sso_account_id".to_string(), account_id.clone());
+        conf.set_to(
+            Some(section),
+            "sso_account_id".to_string(),
+            account_id.clone(),
+        );
     }
     if let Some(ref role_name) = profile.sso_role_name {
-        conf.set_to(Some(section), "sso_role_name".to_string(), role_name.clone());
+        conf.set_to(
+            Some(section),
+            "sso_role_name".to_string(),
+            role_name.clone(),
+        );
     }
     if let Some(ref region) = profile.region {
         conf.set_to(Some(section), "region".to_string(), region.clone());
@@ -186,7 +194,10 @@ pub fn save_profile(profile: &AwsProfile) -> Result<(), String> {
     if was_default {
         conf.delete(Some("default"));
         write_profile_to_section(&mut conf, "default", profile);
-        info!("Also updated [default] section (synced with profile '{}')", profile.name);
+        info!(
+            "Also updated [default] section (synced with profile '{}')",
+            profile.name
+        );
     }
 
     conf.write_to_file(&path)
@@ -246,8 +257,7 @@ pub fn delete_sso_session(name: &str) -> Result<(), String> {
         return Err("AWS config file not found".to_string());
     }
 
-    let mut conf =
-        Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
+    let mut conf = Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
 
     let section_name = format!("sso-session {name}");
     conf.delete(Some(&section_name));
@@ -266,8 +276,7 @@ pub fn delete_profile(name: &str) -> Result<(), String> {
         return Err("AWS config file not found".to_string());
     }
 
-    let mut conf =
-        Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
+    let mut conf = Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
 
     let section_name = if name == "default" {
         "default".to_string()
@@ -300,8 +309,7 @@ pub fn set_default_profile(name: &str) -> Result<(), String> {
         return Err("AWS config file not found".to_string());
     }
 
-    let mut conf =
-        Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
+    let mut conf = Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
 
     let source_section = format!("profile {name}");
     let props: Vec<(String, String)> = conf

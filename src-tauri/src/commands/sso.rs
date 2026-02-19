@@ -34,7 +34,7 @@ pub fn get_sso_status() -> SsoTokenInfo {
 pub fn sso_login(session_name: &str) -> Result<String, String> {
     info!("Starting SSO login for session: {session_name}");
 
-    let output = Command::new(&resolve_aws_cli())
+    let output = Command::new(resolve_aws_cli())
         .args(["sso", "login", "--sso-session", session_name])
         .output()
         .map_err(|e| format!("Failed to run aws cli: {e}"))?;
@@ -67,8 +67,7 @@ pub async fn start_device_auth(session_name: String) -> Result<DeviceAuthInfo, S
     let client = oidc::register_client(region, "Charon", scopes).await?;
 
     // 3. Start device authorization
-    let device_auth =
-        oidc::start_device_authorization(region, &client, start_url).await?;
+    let device_auth = oidc::start_device_authorization(region, &client, start_url).await?;
 
     // 4. Open browser to verification URL
     if let Err(e) = open::that(&device_auth.verification_uri_complete) {
@@ -240,9 +239,7 @@ fn epoch_to_utc_string(epoch: u64) -> String {
     let min = remaining / secs_per_min;
     let sec = remaining % secs_per_min;
 
-    format!(
-        "{year:04}-{month:02}-{day:02}T{hour:02}:{min:02}:{sec:02}UTC"
-    )
+    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{min:02}:{sec:02}UTC")
 }
 
 fn is_leap_year(year: u64) -> bool {
@@ -254,7 +251,7 @@ fn is_leap_year(year: u64) -> bool {
 pub fn sso_logout() -> Result<String, String> {
     info!("Logging out of SSO");
 
-    let output = Command::new(&resolve_aws_cli())
+    let output = Command::new(resolve_aws_cli())
         .args(["sso", "logout"])
         .output()
         .map_err(|e| format!("Failed to run aws cli: {e}"))?;

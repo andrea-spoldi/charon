@@ -46,13 +46,10 @@ export function useProfiles() {
     [refresh],
   );
 
-  const setDefault = useCallback(
-    async (name: string) => {
-      await invoke("set_default_profile", { name });
-      setDefaultProfile(name);
-    },
-    [],
-  );
+  const setDefault = useCallback(async (name: string) => {
+    await invoke("set_default_profile", { name });
+    setDefaultProfile(name);
+  }, []);
 
   return {
     profiles,

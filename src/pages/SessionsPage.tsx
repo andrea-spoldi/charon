@@ -70,7 +70,9 @@ export function SessionsPage({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   // Device authorization state
   const [deviceAuth, setDeviceAuth] = useState<DeviceAuthInfo | null>(null);
@@ -81,7 +83,12 @@ export function SessionsPage({
 
   // Handle login trigger from TopBar (guard against StrictMode double-fire)
   useEffect(() => {
-    if (loginSessionName && !deviceAuth && !loggingIn && loginTriggeredRef.current !== loginSessionName) {
+    if (
+      loginSessionName &&
+      !deviceAuth &&
+      !loggingIn &&
+      loginTriggeredRef.current !== loginSessionName
+    ) {
       loginTriggeredRef.current = loginSessionName;
       handleLogin(loginSessionName);
       onLoginHandled?.();
@@ -113,19 +120,24 @@ export function SessionsPage({
 
   const validateSessionName = (value: string): string | null => {
     if (!value) return "Session name is required";
-    if (!/^[a-z0-9][a-z0-9-]*$/.test(value)) return "Only lowercase letters, numbers, and hyphens (must start with letter or number)";
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(value))
+      return "Only lowercase letters, numbers, and hyphens (must start with letter or number)";
     return null;
   };
 
   const validateStartUrl = (value: string): string | null => {
     if (!value) return "Start URL is required";
-    if (!/^https:\/\/d-[a-z0-9]+\.awsapps\.com\/start\/?$/.test(value)) return "Must match https://d-xxxxxxxxxx.awsapps.com/start/";
+    if (!/^https:\/\/d-[a-z0-9]+\.awsapps\.com\/start\/?$/.test(value))
+      return "Must match https://d-xxxxxxxxxx.awsapps.com/start/";
     return null;
   };
 
   const handleSessionNameChange = (value: string) => {
     // Auto-sanitize: lowercase, replace spaces with hyphens
-    const sanitized = value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const sanitized = value
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
     setSessionName(sanitized);
     const err = validateSessionName(sanitized);
     setValidationErrors((prev) => ({ ...prev, name: err || "" }));
@@ -183,7 +195,10 @@ export function SessionsPage({
       }
     } else {
       setConfirmDelete(name);
-      setTimeout(() => setConfirmDelete((prev) => (prev === name ? null : prev)), 3000);
+      setTimeout(
+        () => setConfirmDelete((prev) => (prev === name ? null : prev)),
+        3000,
+      );
     }
   };
 
@@ -364,7 +379,10 @@ export function SessionsPage({
 
             <div className="form-field">
               <label htmlFor="start-url">
-                <Globe size={14} style={{ marginRight: 4, verticalAlign: -2 }} />
+                <Globe
+                  size={14}
+                  style={{ marginRight: 4, verticalAlign: -2 }}
+                />
                 SSO Start URL
               </label>
               <input
@@ -441,9 +459,7 @@ export function SessionsPage({
               <div className="profile-info">
                 <span className="profile-name">{session.name}</span>
                 <span className="text-muted">{session.sso_start_url}</span>
-                <span className="text-muted">
-                  Region: {session.sso_region}
-                </span>
+                <span className="text-muted">Region: {session.sso_region}</span>
                 {session.sso_registration_scopes && (
                   <span className="text-muted">
                     Scopes: {session.sso_registration_scopes}
@@ -468,7 +484,11 @@ export function SessionsPage({
                 </button>
                 <button
                   className={`icon-btn icon-btn-danger ${confirmDelete === session.name ? "icon-btn-confirm" : ""}`}
-                  title={confirmDelete === session.name ? "Click again to confirm" : "Delete"}
+                  title={
+                    confirmDelete === session.name
+                      ? "Click again to confirm"
+                      : "Delete"
+                  }
                   onClick={() => handleDelete(session.name)}
                 >
                   <Trash2 size={14} />

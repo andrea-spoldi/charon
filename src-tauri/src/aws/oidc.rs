@@ -1,4 +1,4 @@
-use log::{info, debug};
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
 /// OIDC client registration response
@@ -138,9 +138,7 @@ pub async fn start_device_authorization(
     if !resp.status().is_success() {
         let status = resp.status();
         let text = resp.text().await.unwrap_or_default();
-        return Err(format!(
-            "Device authorization failed ({status}): {text}"
-        ));
+        return Err(format!("Device authorization failed ({status}): {text}"));
     }
 
     let result: DeviceAuthorization = resp
@@ -148,7 +146,10 @@ pub async fn start_device_authorization(
         .await
         .map_err(|e| format!("Failed to parse device authorization response: {e}"))?;
 
-    info!("Device authorization started, user code: {}", result.user_code);
+    info!(
+        "Device authorization started, user code: {}",
+        result.user_code
+    );
     Ok(result)
 }
 
@@ -179,20 +180,29 @@ pub async fn create_token(
     debug!("Token endpoint responded with status: {status}");
 
     if status.is_success() {
-        let text = resp.text().await
+        let text = resp
+            .text()
+            .await
             .map_err(|e| OidcError::Other(format!("Failed to read token response: {e}")))?;
         debug!("Token response body length: {} chars", text.len());
-        let token: OidcTokenResponse = serde_json::from_str(&text)
-            .map_err(|e| OidcError::Other(format!("Failed to parse token response: {e}. Body: {}", &text[..text.len().min(200)])))?;
+        let token: OidcTokenResponse = serde_json::from_str(&text).map_err(|e| {
+            OidcError::Other(format!(
+                "Failed to parse token response: {e}. Body: {}",
+                &text[..text.len().min(200)]
+            ))
+        })?;
         return Ok(token);
     }
 
     // Parse error response
-    let text = resp.text().await
+    let text = resp
+        .text()
+        .await
         .map_err(|e| OidcError::Other(format!("Failed to read error response: {e}")))?;
     debug!("Token error response: {text}");
-    let error_resp: OidcErrorResponse = serde_json::from_str(&text)
-        .map_err(|e| OidcError::Other(format!("Failed to parse error response: {e}. Body: {text}")))?;
+    let error_resp: OidcErrorResponse = serde_json::from_str(&text).map_err(|e| {
+        OidcError::Other(format!("Failed to parse error response: {e}. Body: {text}"))
+    })?;
 
     match error_resp.error.as_str() {
         "authorization_pending" => Err(OidcError::AuthorizationPending),
@@ -235,7 +245,10 @@ mod tests {
             "Authorization pending"
         );
         assert_eq!(format!("{}", OidcError::SlowDown), "Slow down");
-        assert_eq!(format!("{}", OidcError::ExpiredToken), "Device code expired");
+        assert_eq!(
+            format!("{}", OidcError::ExpiredToken),
+            "Device code expired"
+        );
     }
 
     #[test]

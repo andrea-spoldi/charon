@@ -11,7 +11,13 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
-import type { SsoTokenInfo, SsoSession, SsoAccount, AccountRole, AppSettings } from "../types";
+import type {
+  SsoTokenInfo,
+  SsoSession,
+  SsoAccount,
+  AccountRole,
+  AppSettings,
+} from "../types";
 
 interface AccountsPageProps {
   ssoStatus: SsoTokenInfo;
@@ -21,7 +27,11 @@ interface AccountsPageProps {
   loading: boolean;
   error: string | null;
   onRefresh: () => void;
-  onFetchRoles: (accessToken: string, accountId: string, region: string) => void;
+  onFetchRoles: (
+    accessToken: string,
+    accountId: string,
+    region: string,
+  ) => void;
   settings: AppSettings;
 }
 
@@ -282,10 +292,7 @@ export function AccountsPage({
                           className={`icon-btn ${actionStatus[consoleKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[consoleKey] === "error" ? "icon-btn-error" : ""}`}
                           title="Open AWS Console"
                           onClick={() =>
-                            handleOpenConsole(
-                              account.accountId,
-                              role.roleName,
-                            )
+                            handleOpenConsole(account.accountId, role.roleName)
                           }
                           disabled={actionStatus[consoleKey] === "loading"}
                         >

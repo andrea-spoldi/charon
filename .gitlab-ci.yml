@@ -58,6 +58,7 @@ lint:rust:
     - .tauri-system-deps
   script:
     - rustup component add clippy rustfmt
+    - mkdir -p dist
     - cd src-tauri
     - cargo fmt -- --check
     - cargo clippy -- -D warnings
@@ -101,6 +102,7 @@ test:rust:
     - .rust-cache
     - .tauri-system-deps
   script:
+    - mkdir -p dist
     - cd src-tauri && cargo test
 
 # ------------------ Build ------------------

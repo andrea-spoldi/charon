@@ -126,6 +126,41 @@ pub fn parse_profiles() -> Vec<AwsProfile> {
     profiles
 }
 
+/// Helper: write profile fields into a given section
+fn write_profile_to_section(conf: &mut Ini, section: &str, profile: &AwsProfile) {
+    if let Some(ref session) = profile.sso_session {
+        conf.set_to(Some(section), "sso_session".to_string(), session.clone());
+    }
+    if let Some(ref account_id) = profile.sso_account_id {
+        conf.set_to(Some(section), "sso_account_id".to_string(), account_id.clone());
+    }
+    if let Some(ref role_name) = profile.sso_role_name {
+        conf.set_to(Some(section), "sso_role_name".to_string(), role_name.clone());
+    }
+    if let Some(ref region) = profile.region {
+        conf.set_to(Some(section), "region".to_string(), region.clone());
+    }
+    if let Some(ref output) = profile.output {
+        conf.set_to(Some(section), "output".to_string(), output.clone());
+    }
+}
+
+/// Check if a named profile is currently the [default] by comparing SSO fields
+fn is_current_default(conf: &Ini, profile_section: &str) -> bool {
+    let default_props = match conf.section(Some("default")) {
+        Some(p) => p,
+        None => return false,
+    };
+    let profile_props = match conf.section(Some(profile_section)) {
+        Some(p) => p,
+        None => return false,
+    };
+
+    default_props.get("sso_session") == profile_props.get("sso_session")
+        && default_props.get("sso_account_id") == profile_props.get("sso_account_id")
+        && default_props.get("sso_role_name") == profile_props.get("sso_role_name")
+}
+
 /// Save/update a profile in ~/.aws/config
 pub fn save_profile(profile: &AwsProfile) -> Result<(), String> {
     let path = aws_config_path();
@@ -141,20 +176,17 @@ pub fn save_profile(profile: &AwsProfile) -> Result<(), String> {
         format!("profile {}", profile.name)
     };
 
-    if let Some(ref session) = profile.sso_session {
-        conf.set_to(Some(&section_name), "sso_session".to_string(), session.clone());
-    }
-    if let Some(ref account_id) = profile.sso_account_id {
-        conf.set_to(Some(&section_name), "sso_account_id".to_string(), account_id.clone());
-    }
-    if let Some(ref role_name) = profile.sso_role_name {
-        conf.set_to(Some(&section_name), "sso_role_name".to_string(), role_name.clone());
-    }
-    if let Some(ref region) = profile.region {
-        conf.set_to(Some(&section_name), "region".to_string(), region.clone());
-    }
-    if let Some(ref output) = profile.output {
-        conf.set_to(Some(&section_name), "output".to_string(), output.clone());
+    // Check if this profile is currently the default BEFORE updating it
+    let was_default = profile.name != "default" && is_current_default(&conf, &section_name);
+
+    // Update the profile section
+    write_profile_to_section(&mut conf, &section_name, profile);
+
+    // If this profile was the default, also sync the [default] section
+    if was_default {
+        conf.delete(Some("default"));
+        write_profile_to_section(&mut conf, "default", profile);
+        info!("Also updated [default] section (synced with profile '{}')", profile.name);
     }
 
     conf.write_to_file(&path)
@@ -243,7 +275,16 @@ pub fn delete_profile(name: &str) -> Result<(), String> {
         format!("profile {name}")
     };
 
+    // Check if this profile is currently the default BEFORE deleting it
+    let was_default = name != "default" && is_current_default(&conf, &section_name);
+
     conf.delete(Some(&section_name));
+
+    // If this profile was the default, also remove the [default] section
+    if was_default {
+        conf.delete(Some("default"));
+        info!("Also removed [default] section (was synced with profile '{name}')");
+    }
 
     conf.write_to_file(&path)
         .map_err(|e| format!("Failed to write config: {e}"))?;

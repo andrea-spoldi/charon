@@ -43,6 +43,7 @@ lint:rust:
   image: rust:1.88-slim
   extends: .rust-cache
   script:
+    - apt-get update && apt-get install -y build-essential
     - rustup component add clippy rustfmt
     - cd src-tauri
     - cargo fmt -- --check
@@ -61,7 +62,7 @@ audit:frontend:
 
 audit:rust:
   stage: check
-  image: rust:1.77-slim
+  image: rust:1.88-slim
   extends: .rust-cache
   before_script:
     - cargo install cargo-audit
@@ -82,7 +83,7 @@ test:frontend:
 
 test:rust:
   stage: test
-  image: rust:1.77-slim
+  image: rust:1.88-slim
   extends: .rust-cache
   script:
     - cd src-tauri && cargo test
@@ -90,7 +91,7 @@ test:rust:
 # ------------------ Build ------------------
 build:tauri:
   stage: build
-  image: rust:1.77-slim
+  image: rust:1.88-slim
   extends:
     - .rust-cache
     - .node-cache

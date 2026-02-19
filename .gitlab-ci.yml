@@ -26,6 +26,18 @@ variables:
       - .pnpm-store/
     policy: pull-push
 
+# ------------------ Shared ------------------
+.tauri-system-deps:
+  before_script:
+    - apt-get update && apt-get install -y
+      libwebkit2gtk-4.1-dev
+      build-essential
+      pkg-config
+      libxdo-dev
+      libssl-dev
+      libayatana-appindicator3-dev
+      librsvg2-dev
+
 # ------------------ Check ------------------
 lint:frontend:
   stage: check
@@ -41,9 +53,10 @@ lint:frontend:
 lint:rust:
   stage: check
   image: rust:1.88-slim
-  extends: .rust-cache
+  extends:
+    - .rust-cache
+    - .tauri-system-deps
   script:
-    - apt-get update && apt-get install -y build-essential pkg-config
     - rustup component add clippy rustfmt
     - cd src-tauri
     - cargo fmt -- --check
@@ -84,7 +97,9 @@ test:frontend:
 test:rust:
   stage: test
   image: rust:1.88-slim
-  extends: .rust-cache
+  extends:
+    - .rust-cache
+    - .tauri-system-deps
   script:
     - cd src-tauri && cargo test
 
@@ -99,6 +114,7 @@ build:tauri:
     - apt-get update && apt-get install -y
       libwebkit2gtk-4.1-dev
       build-essential
+      pkg-config
       curl
       wget
       file

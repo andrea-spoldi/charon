@@ -25,7 +25,7 @@ export function StatusBar({ ssoStatus, settings, error }: StatusBarProps) {
         </span>
         {ssoStatus.status === "active" && ssoStatus.expires_at && (
           <span className="statusbar-item">
-            Expires: {new Date(ssoStatus.expires_at).toLocaleTimeString()}
+            Expires: {new Date(ssoStatus.expires_at.replace("UTC", "Z")).toLocaleTimeString()}
           </span>
         )}
         <span

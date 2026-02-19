@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { TopBar } from "./components/TopBar";
 import { StatusBar } from "./components/StatusBar";
+import { ToastContainer } from "./components/ToastContainer";
 import { AccountsPage } from "./pages/AccountsPage";
 import { SessionsPage } from "./pages/SessionsPage";
 import { ProfilesPage } from "./pages/ProfilesPage";
@@ -9,6 +10,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { useSsoStatus } from "./hooks/useSsoStatus";
 import { useProfiles } from "./hooks/useProfiles";
 import { useAccounts } from "./hooks/useAccounts";
+import { useToast } from "./hooks/useToast";
 import type { Page, AppSettings } from "./types";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -35,6 +37,7 @@ function App() {
     fetchRoles,
     reset: resetAccounts,
   } = useAccounts();
+  const { toasts, addToast, dismissToast } = useToast();
   const hasFetched = useRef(false);
 
   // Load settings once on mount
@@ -44,6 +47,13 @@ function App() {
 
   // Login trigger: when TopBar login is clicked, navigate to Sessions and start login
   const [loginSessionName, setLoginSessionName] = useState<string | null>(null);
+
+  // Surface account errors as toasts
+  useEffect(() => {
+    if (accountsError) {
+      addToast(accountsError, "error");
+    }
+  }, [accountsError, addToast]);
 
   // Auto-fetch accounts once when SSO becomes active
   useEffect(() => {
@@ -105,10 +115,11 @@ function App() {
             onStatusChange={refreshSsoStatus}
             loginSessionName={loginSessionName}
             onLoginHandled={() => setLoginSessionName(null)}
+            onError={addToast}
           />
         );
       case "profiles":
-        return <ProfilesPage ssoStatus={ssoStatus} settings={settings} />;
+        return <ProfilesPage ssoStatus={ssoStatus} settings={settings} onError={addToast} />;
       case "settings":
         return <SettingsPage onSettingsChanged={() => invoke<AppSettings>("get_settings").then(setSettings)} />;
     }
@@ -121,9 +132,11 @@ function App() {
         sessions={sessions}
         onStatusChange={refreshSsoStatus}
         onLogin={handleTopBarLogin}
+        onError={addToast}
       />
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
       <main>{renderPage()}</main>
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
       <StatusBar ssoStatus={ssoStatus} settings={settings} />
     </div>
   );

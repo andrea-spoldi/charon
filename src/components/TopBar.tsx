@@ -8,6 +8,7 @@ interface TopBarProps {
   sessions: SsoSession[];
   onStatusChange: () => void;
   onLogin: () => void;
+  onError: (message: string, type?: "error" | "success" | "info") => void;
 }
 
 export function TopBar({
@@ -15,6 +16,7 @@ export function TopBar({
   sessions,
   onStatusChange,
   onLogin,
+  onError,
 }: TopBarProps) {
   const activeSession = sessions.length > 0 ? sessions[0] : null;
 
@@ -24,6 +26,7 @@ export function TopBar({
       onStatusChange();
     } catch (err) {
       console.error("Logout failed:", err);
+      onError(`Logout failed: ${err}`, "error");
     }
   };
 

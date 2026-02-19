@@ -16,9 +16,10 @@ import type { AwsProfile, SsoTokenInfo, AppSettings } from "../types";
 interface ProfilesPageProps {
   ssoStatus: SsoTokenInfo;
   settings: AppSettings;
+  onError?: (message: string, type?: "error" | "success" | "info") => void;
 }
 
-export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
+export function ProfilesPage({ ssoStatus, settings, onError }: ProfilesPageProps) {
   const {
     profiles,
     sessions,
@@ -66,6 +67,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
       await setDefault(name);
     } catch (err) {
       console.error("Failed to set default profile:", err);
+      onError?.(`Set default failed: ${err}`, "error");
     }
   };
 
@@ -92,6 +94,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
     } catch (err) {
       console.error("Failed to open console:", err);
       setActionError(`Console: ${err}`);
+      onError?.(`Console: ${err}`, "error");
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
     setTimeout(() => {
@@ -125,6 +128,7 @@ export function ProfilesPage({ ssoStatus, settings }: ProfilesPageProps) {
     } catch (err) {
       console.error("Failed to configure CLI:", err);
       setActionError(`CLI config: ${err}`);
+      onError?.(`CLI config: ${err}`, "error");
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
     setTimeout(() => {

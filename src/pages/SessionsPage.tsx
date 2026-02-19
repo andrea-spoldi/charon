@@ -50,6 +50,7 @@ interface SessionsPageProps {
   /** Set externally (e.g. from TopBar) to trigger login for a session */
   loginSessionName?: string | null;
   onLoginHandled?: () => void;
+  onError?: (message: string, type?: "error" | "success" | "info") => void;
 }
 
 export function SessionsPage({
@@ -59,6 +60,7 @@ export function SessionsPage({
   onStatusChange,
   loginSessionName,
   onLoginHandled,
+  onError,
 }: SessionsPageProps) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SsoSession | null>(null);
@@ -160,7 +162,9 @@ export function SessionsPage({
       resetForm();
       onRefresh();
     } catch (err) {
-      setError(String(err));
+      const msg = String(err);
+      setError(msg);
+      onError?.(msg, "error");
     } finally {
       setSaving(false);
     }
@@ -173,7 +177,9 @@ export function SessionsPage({
         await invoke("delete_sso_session", { name });
         onRefresh();
       } catch (err) {
-        setError(String(err));
+        const msg = String(err);
+        setError(msg);
+        onError?.(msg, "error");
       }
     } else {
       setConfirmDelete(name);
@@ -210,7 +216,9 @@ export function SessionsPage({
       onStatusChange();
     } catch (err) {
       if (!pollAbortRef.current) {
-        setError(String(err));
+        const msg = String(err);
+        setError(msg);
+        onError?.(msg, "error");
       }
       setDeviceAuth(null);
     } finally {

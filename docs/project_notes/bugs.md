@@ -4,6 +4,13 @@ Chronological log of bugs encountered and their solutions.
 
 ## Entries
 
+### 2026-02-19 - Account list fails when [default] has broken sso_session (v0.3.4)
+- **Issue**: With a valid SSO login, refreshing the account list failed with "sso-session does not exist" when `[default]` in `~/.aws/config` referenced a wrong or non-existent `sso_session`
+- **Root Cause**: AWS CLI commands (`list-accounts`, `list-account-roles`, `get-role-credentials`) read `~/.aws/config` and tried to resolve the `[default]` profile's `sso_session` reference, even though all params (access-token, region) were passed explicitly on the command line
+- **Solution**: Set `AWS_CONFIG_FILE=/dev/null` env var on these three commands so the CLI ignores `~/.aws/config` entirely. SSO login/logout commands are left untouched as they legitimately need config access
+- **Prevention**: Any new AWS CLI subprocess that passes explicit params should use `AWS_CONFIG_FILE=/dev/null` to avoid config interference
+- **File**: `src-tauri/src/commands/accounts.rs`
+
 ### 2026-02-19 - Errors silently swallowed, no UI feedback (v0.3.3)
 - **Issue**: Logout failures, account list errors from wrong session config, and other connection errors were only logged to console — user saw no feedback in the UI
 - **Root Cause**: All `catch` blocks across TopBar, SessionsPage, ProfilesPage only called `console.error` with no visible notification to the user

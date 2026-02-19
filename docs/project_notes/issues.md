@@ -21,3 +21,7 @@
 ### 2026-02-19 - v0.3.3: Toast notification system for errors
 - **Status**: Completed
 - **Description**: Global toast notifications for all errors (logout, account list, session/profile operations) with auto-dismiss and slide-in animation
+
+### 2026-02-19 - v0.3.4: Isolate CLI commands from broken [default] config
+- **Status**: Completed
+- **Description**: AWS CLI commands for listing accounts/roles now set AWS_CONFIG_FILE=/dev/null to prevent broken [default] profile from interfering

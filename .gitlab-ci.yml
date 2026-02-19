@@ -40,7 +40,7 @@ lint:frontend:
 
 lint:rust:
   stage: check
-  image: rust:1.77-slim
+  image: rust:1.88-slim
   extends: .rust-cache
   script:
     - rustup component add clippy rustfmt
@@ -96,17 +96,17 @@ build:tauri:
     - .node-cache
   before_script:
     - apt-get update && apt-get install -y
-        libwebkit2gtk-4.1-dev
-        build-essential
-        curl
-        wget
-        file
-        libxdo-dev
-        libssl-dev
-        libayatana-appindicator3-dev
-        librsvg2-dev
-        nodejs
-        npm
+      libwebkit2gtk-4.1-dev
+      build-essential
+      curl
+      wget
+      file
+      libxdo-dev
+      libssl-dev
+      libayatana-appindicator3-dev
+      librsvg2-dev
+      nodejs
+      npm
     - npm install -g corepack
     - corepack enable
     - pnpm install --frozen-lockfile

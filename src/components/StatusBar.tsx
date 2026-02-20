@@ -24,8 +24,11 @@ export function StatusBar({ ssoStatus, settings, error }: StatusBarProps) {
           {settings.default_region}
         </span>
         {ssoStatus.status === "active" && ssoStatus.expires_at && (
-          <span className="statusbar-item">
-            Expires:{" "}
+          <span
+            className="statusbar-item"
+            title="SSO token expiry — after this you'll need to log in again"
+          >
+            SSO Token Expires:{" "}
             {new Date(
               ssoStatus.expires_at.replace("UTC", "Z"),
             ).toLocaleTimeString()}

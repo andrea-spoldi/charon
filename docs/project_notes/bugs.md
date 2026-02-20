@@ -4,6 +4,13 @@ Chronological log of bugs encountered and their solutions.
 
 ## Entries
 
+### 2026-02-20 - StatusBar "Expires" shows SSO token expiry, not console timeout (v0.3.5)
+- **Issue**: User set Console Session Timeout to 8 hours in settings, but StatusBar "Expires" showed +1 hour from login
+- **Root Cause**: The StatusBar displayed `ssoStatus.expires_at` which is the SSO OIDC **access token** expiry (set by the IdP, typically 1 hour). The "Console Session Timeout" setting only applies to federated AWS Console browser sessions, not the SSO token itself
+- **Solution**: Clarified the label to "SSO Token Expires" with a tooltip explaining it's the SSO token lifetime. The Console Session Timeout setting is a separate concept that controls browser console session duration
+- **Prevention**: Clearly label any expiry/timeout field to indicate what it refers to. SSO token expiry != console session timeout
+- **File**: `src/components/StatusBar.tsx`
+
 ### 2026-02-19 - Account list fails when [default] has broken sso_session (v0.3.4)
 - **Issue**: With a valid SSO login, refreshing the account list failed with "sso-session does not exist" when `[default]` in `~/.aws/config` referenced a wrong or non-existent `sso_session`
 - **Root Cause**: AWS CLI commands (`list-accounts`, `list-account-roles`, `get-role-credentials`) read `~/.aws/config` and tried to resolve the `[default]` profile's `sso_session` reference, even though all params (access-token, region) were passed explicitly on the command line

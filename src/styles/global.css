@@ -57,8 +57,24 @@
 }
 
 .app-layout > main {
+  position: relative;
   overflow-y: auto;
   min-height: 0;
+}
+
+.app-layout > main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("../assets/background.png") center center / 75% no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app-layout > main > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* ===== Scrollbar ===== */

@@ -1,5 +1,5 @@
 include:
-  - component: gitlab.com/docebo/application-platform-team/platform/gitlab-ci-components/semantic-release@1.15.0
+  - component: gitlab.com/docebo/application-platform-team/platform/gitlab-ci-components/semantic-release@1.15.1
     rules:
       - if: $CI_COMMIT_TAG
         when: never

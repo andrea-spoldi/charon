@@ -11,6 +11,7 @@ import { useSsoStatus } from "./hooks/useSsoStatus";
 import { useProfiles } from "./hooks/useProfiles";
 import { useAccounts } from "./hooks/useAccounts";
 import { useToast } from "./hooks/useToast";
+import { useFontSize } from "./components/FontSizeToggle";
 import type { Page, AppSettings } from "./types";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -38,6 +39,7 @@ function App() {
     reset: resetAccounts,
   } = useAccounts();
   const { toasts, addToast, dismissToast } = useToast();
+  const { fontSize, setFontSize } = useFontSize();
   const hasFetched = useRef(false);
 
   // Load settings once on mount
@@ -150,6 +152,8 @@ function App() {
         onStatusChange={refreshSsoStatus}
         onLogin={handleTopBarLogin}
         onError={addToast}
+        fontSize={fontSize}
+        onFontSizeChange={setFontSize}
       />
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
       <main>{renderPage()}</main>

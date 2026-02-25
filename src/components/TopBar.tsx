@@ -1,6 +1,8 @@
 import { LogIn, LogOut } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { StatusBadge } from "./StatusBadge";
+import { FontSizeToggle } from "./FontSizeToggle";
+import type { FontSize } from "./FontSizeToggle";
 import type { SsoTokenInfo, SsoSession } from "../types";
 
 interface TopBarProps {
@@ -9,6 +11,8 @@ interface TopBarProps {
   onStatusChange: () => void;
   onLogin: () => void;
   onError: (message: string, type?: "error" | "success" | "info") => void;
+  fontSize: FontSize;
+  onFontSizeChange: (size: FontSize) => void;
 }
 
 export function TopBar({
@@ -17,6 +21,8 @@ export function TopBar({
   onStatusChange,
   onLogin,
   onError,
+  fontSize,
+  onFontSizeChange,
 }: TopBarProps) {
   const activeSession = sessions.length > 0 ? sessions[0] : null;
 
@@ -40,6 +46,7 @@ export function TopBar({
         )}
       </div>
       <div className="topbar-right">
+        <FontSizeToggle fontSize={fontSize} onChange={onFontSizeChange} />
         <StatusBadge status={ssoStatus.status} />
         {ssoStatus.status === "active" ? (
           <button className="topbar-btn" onClick={handleLogout} title="Logout">

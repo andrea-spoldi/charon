@@ -11,7 +11,10 @@ const FONT_SIZES: Record<FontSize, string> = {
 };
 
 function applyFontSize(size: FontSize) {
-  document.documentElement.style.setProperty("--font-size-base", FONT_SIZES[size]);
+  document.documentElement.style.setProperty(
+    "--font-size-base",
+    FONT_SIZES[size],
+  );
 }
 
 export function useFontSize() {

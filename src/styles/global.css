@@ -170,14 +170,14 @@
 }
 
 .topbar-logo {
-  font-size: 15px;
+  font-size: 1.154rem;
   font-weight: 600;
   color: var(--color-text-bright);
   letter-spacing: -0.3px;
 }
 
 .topbar-subtitle {
-  font-size: 11px;
+  font-size: 0.846rem;
   color: var(--color-muted);
 }
 
@@ -197,7 +197,7 @@
   border-radius: var(--radius);
   background: transparent;
   color: var(--color-text);
-  font-size: 12px;
+  font-size: 0.923rem;
   cursor: pointer;
   transition:
     background-color 0.15s,
@@ -228,7 +228,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 0.923rem;
 }
 
 .status-dot {
@@ -263,7 +263,7 @@
   border: none;
   background: transparent;
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 1rem;
   cursor: pointer;
   text-align: left;
   transition:
@@ -297,7 +297,7 @@
 }
 
 .page-header h2 {
-  font-size: 18px;
+  font-size: 1.385rem;
   font-weight: 600;
   color: var(--color-text-bright);
 }
@@ -330,7 +330,7 @@
   padding: 6px 14px;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
-  font-size: 12px;
+  font-size: 0.923rem;
   cursor: pointer;
   transition:
     background-color 0.15s,
@@ -419,7 +419,7 @@
   display: inline-block;
   margin-left: 8px;
   padding: 1px 6px;
-  font-size: 10px;
+  font-size: 0.769rem;
   font-weight: 500;
   color: var(--color-success);
   border: 1px solid var(--color-success);
@@ -430,7 +430,7 @@
 .copied-tooltip {
   position: absolute;
   top: -24px;
-  font-size: 10px;
+  font-size: 0.769rem;
   background: var(--color-bg-active);
   padding: 2px 6px;
   border-radius: var(--radius);
@@ -459,7 +459,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   color: var(--color-text);
-  font-size: 13px;
+  font-size: 1rem;
   outline: none;
   transition: border-color 0.15s;
 }
@@ -514,7 +514,7 @@
   border: none;
   background: var(--color-bg-secondary);
   color: var(--color-text);
-  font-size: 13px;
+  font-size: 1rem;
   cursor: pointer;
   text-align: left;
   transition: background-color 0.15s;
@@ -536,13 +536,13 @@
 
 .account-id {
   font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 12px;
+  font-size: 0.923rem;
   color: var(--color-muted);
 }
 
 .account-email {
   margin-left: auto;
-  font-size: 12px;
+  font-size: 0.923rem;
 }
 
 .role-list {
@@ -555,7 +555,7 @@
   justify-content: space-between;
   padding: 8px 14px 8px 42px;
   border-bottom: 1px solid var(--color-border);
-  font-size: 13px;
+  font-size: 1rem;
 }
 
 .role-row:last-child {
@@ -564,7 +564,7 @@
 
 .role-name {
   font-family: "SF Mono", "Fira Code", monospace;
-  font-size: 12px;
+  font-size: 0.923rem;
 }
 
 .role-actions {
@@ -578,7 +578,7 @@
 }
 
 .section-title {
-  font-size: 11px;
+  font-size: 0.846rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -634,7 +634,7 @@
 }
 
 .form-field label {
-  font-size: 12px;
+  font-size: 0.923rem;
   font-weight: 500;
   color: var(--color-text);
 }
@@ -646,7 +646,7 @@
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius);
   color: var(--color-text-bright);
-  font-size: 13px;
+  font-size: 1rem;
   font-family: inherit;
   transition: border-color 0.15s;
 }
@@ -662,7 +662,7 @@
 }
 
 .form-hint {
-  font-size: 11px;
+  font-size: 0.846rem;
   color: var(--color-muted);
 }
 
@@ -675,7 +675,7 @@
 /* ===== Utility ===== */
 .text-muted {
   color: var(--color-muted);
-  font-size: 12px;
+  font-size: 0.923rem;
 }
 
 .empty-state {
@@ -700,13 +700,13 @@
   border: 1px solid rgba(241, 76, 76, 0.3);
   border-radius: var(--radius);
   color: var(--color-danger);
-  font-size: 13px;
+  font-size: 1rem;
   margin-bottom: 16px;
 }
 
 /* ===== Top Bar Session Badge ===== */
 .topbar-session {
-  font-size: 11px;
+  font-size: 0.846rem;
   color: var(--color-accent);
   background: rgba(0, 122, 204, 0.12);
   padding: 2px 8px;
@@ -725,7 +725,7 @@
 }
 
 .setup-header h2 {
-  font-size: 18px;
+  font-size: 1.385rem;
   font-weight: 600;
   color: var(--color-text-bright);
   margin-bottom: 8px;
@@ -741,7 +741,7 @@
 
 .setup-btn {
   padding: 8px 20px;
-  font-size: 13px;
+  font-size: 1rem;
 }
 
 /* ===== Device Authorization Panel ===== */
@@ -767,14 +767,14 @@
 }
 
 .device-auth-header h3 {
-  font-size: 18px;
+  font-size: 1.385rem;
   font-weight: 600;
   color: var(--color-text-bright);
 }
 
 .device-auth-instruction {
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 1rem;
   line-height: 1.6;
 }
 
@@ -790,7 +790,7 @@
 
 .device-code {
   font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace;
-  font-size: 28px;
+  font-size: 2.154rem;
   font-weight: 700;
   letter-spacing: 3px;
   color: var(--color-text-bright);
@@ -811,7 +811,7 @@
   align-items: center;
   gap: 6px;
   color: var(--color-accent);
-  font-size: 12px;
+  font-size: 0.923rem;
   text-decoration: none;
   transition: color 0.15s;
 }
@@ -826,7 +826,7 @@
   align-items: center;
   gap: 8px;
   color: var(--color-muted);
-  font-size: 13px;
+  font-size: 1rem;
 }
 
 .device-auth-cancel {
@@ -843,7 +843,7 @@
   height: var(--statusbar-height);
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
-  font-size: 11px;
+  font-size: 0.846rem;
   color: var(--color-muted);
 }
 
@@ -892,7 +892,7 @@
 }
 
 .form-error {
-  font-size: 11px;
+  font-size: 0.846rem;
   color: var(--color-danger);
 }
 
@@ -916,7 +916,7 @@
   border-radius: var(--radius-lg);
   background: var(--color-bg-tertiary);
   border: 1px solid var(--color-border-light);
-  font-size: 12px;
+  font-size: 0.923rem;
   color: var(--color-text);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   animation: toast-slide-in 0.2s ease-out;

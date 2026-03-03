@@ -194,7 +194,8 @@ fn write_sso_cache(
     Ok(())
 }
 
-/// Convert epoch seconds to UTC timestamp string like "2024-06-15T12:00:00UTC"
+/// Convert epoch seconds to RFC 3339 UTC timestamp (e.g. "2024-06-15T12:00:00Z").
+/// Uses "Z" for UTC so Terraform/OpenTofu and AWS SDK can parse the cache file.
 fn epoch_to_utc_string(epoch: u64) -> String {
     // Manual conversion to avoid pulling in chrono
     let secs_per_day: u64 = 86400;
@@ -239,7 +240,7 @@ fn epoch_to_utc_string(epoch: u64) -> String {
     let min = remaining / secs_per_min;
     let sec = remaining % secs_per_min;
 
-    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{min:02}:{sec:02}UTC")
+    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{min:02}:{sec:02}Z")
 }
 
 fn is_leap_year(year: u64) -> bool {
@@ -270,16 +271,16 @@ mod tests {
 
     #[test]
     fn test_epoch_to_utc_string() {
-        // 2024-01-01T00:00:00UTC = epoch 1704067200
+        // 2024-01-01T00:00:00Z = epoch 1704067200 (RFC 3339)
         let s = epoch_to_utc_string(1704067200);
-        assert_eq!(s, "2024-01-01T00:00:00UTC");
+        assert_eq!(s, "2024-01-01T00:00:00Z");
     }
 
     #[test]
     fn test_epoch_to_utc_string_with_time() {
-        // 2024-06-15T13:30:45UTC
+        // 2024-06-15T13:30:45Z (RFC 3339)
         let s = epoch_to_utc_string(1718458245);
-        assert_eq!(s, "2024-06-15T13:30:45UTC");
+        assert_eq!(s, "2024-06-15T13:30:45Z");
     }
 
     #[test]

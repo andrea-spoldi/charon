@@ -4,6 +4,13 @@ Chronological log of bugs encountered and their solutions.
 
 ## Entries
 
+### 2026-03-03 - Terraform/OpenTofu fail to parse SSO cache expiresAt ("cannot parse \"UTC\" as \"Z07:00\"")
+- **Issue**: Terraform/OpenTofu reported "failed to parse cached SSO token file, field \"expiresAt\", expected RFC3339 timestamp" and "No valid credential sources found" when using credentials from Charon's SSO cache
+- **Root Cause**: Charon wrote `expiresAt` with a `UTC` suffix (e.g. `2026-03-03T15:13:20UTC`). RFC 3339 and the AWS provider expect UTC to be denoted by `Z`, not the literal string `UTC`
+- **Solution**: Changed `epoch_to_utc_string()` in `sso.rs` to emit `Z` instead of `UTC` (e.g. `2026-03-03T15:13:20Z`) so the cache file is valid RFC 3339
+- **Prevention**: When writing timestamps for cross-tool consumption (AWS CLI, Terraform, SDKs), always use RFC 3339: use `Z` for UTC, not `UTC`
+- **File**: `src-tauri/src/commands/sso.rs`
+
 ### 2026-02-20 - StatusBar "Expires" shows SSO token expiry, not console timeout (v0.3.5)
 - **Issue**: User set Console Session Timeout to 8 hours in settings, but StatusBar "Expires" showed +1 hour from login
 - **Root Cause**: The StatusBar displayed `ssoStatus.expires_at` which is the SSO OIDC **access token** expiry (set by the IdP, typically 1 hour). The "Console Session Timeout" setting only applies to federated AWS Console browser sessions, not the SSO token itself

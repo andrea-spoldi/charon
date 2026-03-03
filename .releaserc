@@ -102,7 +102,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "bash scripts/bump-version.sh ${nextRelease.version}"
+        "prepareCmd": "sh scripts/bump-version.sh ${nextRelease.version}"
       }
     ],
     [

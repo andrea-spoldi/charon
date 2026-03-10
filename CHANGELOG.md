@@ -1,3 +1,9 @@
+## [0.4.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.3.7...v0.4.0) (2026-03-10)
+
+### 🚀 Features
+
+* seamless AWS Console account switching via OAuth logout redirect ([9bee373](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/9bee3737ad0c3d8acc9cd854cadd320d3c5358f1))
+
 ## [0.3.7](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.3.6...v0.3.7) (2026-03-04)
 
 ### 🐛 Bug Fixes

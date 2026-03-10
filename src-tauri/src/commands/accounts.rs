@@ -193,9 +193,11 @@ pub fn open_aws_console(
     // Session duration: default 8h (28800s), max 12h (43200s)
     let duration = session_duration_secs.unwrap_or(28800).min(43200);
 
+    let sign_in_base = "https://us-east-1.signin.aws.amazon.com";
+
     // Step 1: Get a sign-in token from the federation endpoint
     let signin_token_url = format!(
-        "https://signin.aws.amazon.com/federation?Action=getSigninToken&SessionDuration={duration}&Session={encoded_session}"
+        "{sign_in_base}/federation?Action=getSigninToken&SessionDuration={duration}&Session={encoded_session}"
     );
 
     let output = Command::new("curl")
@@ -215,17 +217,31 @@ pub fn open_aws_console(
         .as_str()
         .ok_or("No SigninToken in federation response")?;
 
-    // Step 2: Build the console login URL
+    // Step 2: Build the federation login URL with proper encoding
     let destination_url = format!(
         "https://{console_region}.console.aws.amazon.com/console/home?region={console_region}"
     );
-    let destination = urlencoding::encode(&destination_url);
-    let console_url = format!(
-        "https://signin.aws.amazon.com/federation?Action=login&Issuer=Charon&Destination={destination}&SigninToken={signin_token}"
-    );
 
-    // Step 3: Open in default browser
-    open::that(&console_url).map_err(|e| format!("Failed to open browser: {e}"))?;
+    let mut login_url = url::Url::parse(&format!("{sign_in_base}/federation"))
+        .map_err(|e| format!("Failed to parse federation URL: {e}"))?;
+    login_url
+        .query_pairs_mut()
+        .append_pair("Action", "login")
+        .append_pair("Issuer", "Charon")
+        .append_pair("Destination", &destination_url)
+        .append_pair("SigninToken", signin_token);
+
+    // Step 3: Wrap in OAuth logout redirect for seamless session replacement
+    // This clears any existing console session before logging into the new one,
+    // avoiding the "sign out first" interstitial page.
+    let mut console_url = url::Url::parse(&format!("{sign_in_base}/oauth"))
+        .map_err(|e| format!("Failed to parse OAuth URL: {e}"))?;
+    console_url
+        .query_pairs_mut()
+        .append_pair("Action", "logout")
+        .append_pair("redirect_uri", login_url.as_str());
+
+    open::that(console_url.as_str()).map_err(|e| format!("Failed to open browser: {e}"))?;
 
     info!("Opened AWS Console for {role_name} in {account_id}");
     Ok(())

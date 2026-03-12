@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { AlertTriangle, Plus, Trash2, Zap } from "lucide-react";
 import type {
   SsoTokenInfo,
@@ -66,7 +66,6 @@ export function TunnelsPage({
   const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [connectingId, setConnectingId] = useState<string | null>(null);
-  const hasFetchedInstances = useRef(false);
 
   // Resolve the active profile
   const activeProfile = defaultProfile
@@ -75,43 +74,6 @@ export function TunnelsPage({
 
   const profileAccountId = activeProfile?.sso_account_id ?? null;
   const profileRoleName = activeProfile?.sso_role_name ?? null;
-  const profileRegion = activeProfile?.region ?? settings.default_region;
-
-  // Auto-fetch instances when profile is available and SSO is active
-  useEffect(() => {
-    if (
-      ssoStatus.status === "active" &&
-      ssoStatus.access_token &&
-      ssoStatus.region &&
-      profileAccountId &&
-      profileRoleName &&
-      !hasFetchedInstances.current
-    ) {
-      hasFetchedInstances.current = true;
-      onFetchInstances(
-        ssoStatus.access_token,
-        profileAccountId,
-        profileRoleName,
-        ssoStatus.region,
-        profileRegion,
-      );
-    }
-  }, [
-    ssoStatus.status,
-    ssoStatus.access_token,
-    ssoStatus.region,
-    profileAccountId,
-    profileRoleName,
-    profileRegion,
-    onFetchInstances,
-  ]);
-
-  // Reset fetch flag when session ends
-  useEffect(() => {
-    if (ssoStatus.status !== "active") {
-      hasFetchedInstances.current = false;
-    }
-  }, [ssoStatus.status]);
 
   const handleDeleteConfig = (id: string) => {
     if (deleteConfirm === id) {

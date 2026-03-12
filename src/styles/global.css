@@ -727,6 +727,30 @@
   padding: 6px 0;
 }
 
+.input-with-action {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.input-with-action input {
+  flex: 1;
+}
+
+.instance-picker {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 0.923rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.instance-picker option {
+  padding: 4px 8px;
+}
+
 .form-actions {
   display: flex;
   gap: 8px;

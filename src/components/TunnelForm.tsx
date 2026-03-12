@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefreshCw, Save, X } from "lucide-react";
+import { List, RefreshCw, Save, X } from "lucide-react";
 import type {
   SsoTokenInfo,
   AwsProfile,
@@ -36,6 +36,7 @@ export function TunnelForm({
   onCancel,
 }: TunnelFormProps) {
   const [instanceId, setInstanceId] = useState("");
+  const [showBrowser, setShowBrowser] = useState(false);
   const [remoteHost, setRemoteHost] = useState("");
   const [remotePort, setRemotePort] = useState("");
   const [localPort, setLocalPort] = useState("");
@@ -49,9 +50,17 @@ export function TunnelForm({
   const ssoRegion = ssoStatus.region;
   const onlineInstances = instances.filter((i) => i.pingStatus === "Online");
 
-  const handleRefreshInstances = () => {
+  const handleBrowseInstances = () => {
     if (accessToken && ssoRegion) {
+      setShowBrowser(true);
       onFetchInstances(accessToken, accountId, roleName, ssoRegion, region);
+    }
+  };
+
+  const handleSelectInstance = (id: string) => {
+    if (id) {
+      setInstanceId(id);
+      setShowBrowser(false);
     }
   };
 
@@ -62,7 +71,7 @@ export function TunnelForm({
       : parseInt(remotePort, 10) || 0;
 
   const canSave =
-    instanceId &&
+    instanceId.trim() &&
     remoteHost.trim() &&
     remotePort &&
     parseInt(remotePort, 10) > 0;
@@ -74,7 +83,7 @@ export function TunnelForm({
       name: tunnelName || `${remoteHost}:${remotePort}`,
       accountId,
       roleName,
-      instanceId,
+      instanceId: instanceId.trim(),
       remoteHost: remoteHost.trim(),
       remotePort: parseInt(remotePort, 10),
       localPort: effectiveLocalPort,
@@ -96,37 +105,59 @@ export function TunnelForm({
       </div>
 
       <div className="form-field">
-        <label htmlFor="tunnel-instance">
-          Bridge Instance
+        <label htmlFor="tunnel-instance">Bridge Instance</label>
+        <div className="input-with-action">
+          <input
+            id="tunnel-instance"
+            type="text"
+            placeholder="e.g., i-0abc123def456789"
+            value={instanceId}
+            onChange={(e) => setInstanceId(e.target.value)}
+          />
           <button
-            className="icon-btn inline-icon-btn"
-            title="Refresh instances"
-            onClick={handleRefreshInstances}
+            className="btn btn-sm btn-outline"
+            onClick={handleBrowseInstances}
             disabled={loadingInstances}
+            title="Browse instances"
           >
-            <RefreshCw size={12} className={loadingInstances ? "spin" : ""} />
+            {loadingInstances ? (
+              <RefreshCw size={12} className="spin" />
+            ) : (
+              <List size={12} />
+            )}
+            <span>{loadingInstances ? "Loading..." : "Browse"}</span>
           </button>
-        </label>
-        <select
-          id="tunnel-instance"
-          value={instanceId}
-          onChange={(e) => setInstanceId(e.target.value)}
-          disabled={loadingInstances}
-        >
-          <option value="">
-            {loadingInstances ? "Loading instances..." : "Select instance..."}
-          </option>
-          {onlineInstances.map((i) => (
-            <option key={i.instanceId} value={i.instanceId}>
-              {i.instanceId}
-              {i.computerName ? ` (${i.computerName})` : ""}
-              {i.ipAddress ? ` - ${i.ipAddress}` : ""}
-            </option>
-          ))}
-        </select>
-        {instances.length > 0 && onlineInstances.length === 0 && (
-          <span className="form-hint">No online instances found</span>
+        </div>
+        {showBrowser && !loadingInstances && (
+          <select
+            className="instance-picker"
+            size={Math.min(onlineInstances.length + 1, 6)}
+            onChange={(e) => handleSelectInstance(e.target.value)}
+            defaultValue=""
+          >
+            {onlineInstances.length === 0 ? (
+              <option value="" disabled>
+                No online instances found
+              </option>
+            ) : (
+              <>
+                <option value="" disabled>
+                  Select an instance...
+                </option>
+                {onlineInstances.map((i) => (
+                  <option key={i.instanceId} value={i.instanceId}>
+                    {i.instanceId}
+                    {i.computerName ? ` (${i.computerName})` : ""}
+                    {i.ipAddress ? ` - ${i.ipAddress}` : ""}
+                  </option>
+                ))}
+              </>
+            )}
+          </select>
         )}
+        <span className="form-hint">
+          Type an instance ID directly or browse available instances.
+        </span>
       </div>
 
       <div className="form-field">

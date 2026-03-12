@@ -8,6 +8,23 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
+/// Kill an entire process group (the process and all its children).
+/// Falls back to killing just the process if PGID lookup fails.
+#[cfg(unix)]
+fn kill_process_group(child: &tokio::process::Child) {
+    use nix::sys::signal::{killpg, Signal};
+    use nix::unistd::Pid;
+
+    if let Some(pid) = child.id() {
+        let pgid = Pid::from_raw(pid as i32);
+        if let Err(e) = killpg(pgid, Signal::SIGTERM) {
+            warn!("killpg({pgid}) failed: {e}, will try SIGKILL on pid");
+            // Fallback: kill just the process
+            let _ = killpg(pgid, Signal::SIGKILL);
+        }
+    }
+}
+
 use crate::commands::resolve_aws_cli;
 
 // ---------------------------------------------------------------------------
@@ -132,6 +149,8 @@ impl TunnelState {
         let mut handles = self.handles.lock().await;
         for (id, handle) in handles.iter_mut() {
             info!("Killing tunnel {id} on app exit");
+            #[cfg(unix)]
+            kill_process_group(&handle.child);
             let _ = handle.child.kill().await;
         }
         handles.clear();
@@ -441,26 +460,38 @@ pub async fn start_tunnel(
     })
     .to_string();
 
-    // Spawn the SSM session
-    let child = tokio::process::Command::new(resolve_aws_cli())
-        .args([
-            "ssm",
-            "start-session",
-            "--target",
-            &instance_id,
-            "--document-name",
-            "AWS-StartPortForwardingSessionToRemoteHost",
-            "--parameters",
-            &params,
-            "--region",
-            &region,
-        ])
-        .env("AWS_CONFIG_FILE", "/dev/null")
-        .env("AWS_ACCESS_KEY_ID", &ak)
-        .env("AWS_SECRET_ACCESS_KEY", &sk)
-        .env("AWS_SESSION_TOKEN", &st)
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
+    // Spawn the SSM session in its own process group so we can kill the
+    // entire tree (aws cli + session-manager-plugin) on disconnect.
+    let mut cmd = tokio::process::Command::new(resolve_aws_cli());
+    cmd.args([
+        "ssm",
+        "start-session",
+        "--target",
+        &instance_id,
+        "--document-name",
+        "AWS-StartPortForwardingSessionToRemoteHost",
+        "--parameters",
+        &params,
+        "--region",
+        &region,
+    ])
+    .env("AWS_CONFIG_FILE", "/dev/null")
+    .env("AWS_ACCESS_KEY_ID", &ak)
+    .env("AWS_SECRET_ACCESS_KEY", &sk)
+    .env("AWS_SESSION_TOKEN", &st)
+    .stdout(std::process::Stdio::piped())
+    .stderr(std::process::Stdio::piped());
+
+    // Create a new process group so killpg() reaches all children
+    #[cfg(unix)]
+    unsafe {
+        cmd.pre_exec(|| {
+            libc::setsid();
+            Ok(())
+        });
+    }
+
+    let child = cmd
         .spawn()
         .map_err(|e| format!("Failed to start SSM session: {e}"))?;
 
@@ -501,11 +532,13 @@ pub async fn stop_tunnel(
 
     let mut handles = state.handles.lock().await;
     if let Some(mut handle) = handles.remove(&tunnel_id) {
-        handle
-            .child
-            .kill()
-            .await
-            .map_err(|e| format!("Failed to kill tunnel process: {e}"))?;
+        // Kill the entire process group (aws cli + session-manager-plugin)
+        #[cfg(unix)]
+        kill_process_group(&handle.child);
+
+        // Also call kill() to ensure the tokio child handle is cleaned up
+        let _ = handle.child.kill().await;
+
         info!("Tunnel {tunnel_id} stopped");
         Ok(())
     } else {

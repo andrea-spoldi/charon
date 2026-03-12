@@ -25,3 +25,7 @@
 ### 2026-02-19 - v0.3.4: Isolate CLI commands from broken [default] config
 - **Status**: Completed
 - **Description**: AWS CLI commands for listing accounts/roles now set AWS_CONFIG_FILE=/dev/null to prevent broken [default] profile from interfering
+
+### 2026-03-12 - v0.5.0: SSM Port-Forwarding Tunnels
+- **Status**: Completed
+- **Description**: New "Tunnels" page for SSM port-forwarding. Users list SSM-managed EC2 instances, pick one as bridge, enter remote host:port, and start local port-forwarding tunnels. Supports saving named tunnel configs for quick re-use. Introduces long-lived child process management (tokio::process) with Tauri managed state. 8 new Tauri commands (check_session_manager_plugin, list_ssm_instances, start_tunnel, stop_tunnel, list_active_tunnels, list_tunnel_configs, save_tunnel_config, delete_tunnel_config), 4 new frontend files (TunnelsPage, TunnelForm, ActiveTunnelCard, useTunnels hook).

@@ -5,7 +5,7 @@
 - **Name**: Charon
 - **Purpose**: Desktop app for managing connections to multiple AWS accounts via AWS Identity Center
 - **Tech Stack**: Tauri 2 (Rust) + React 19 + TypeScript + Vite 6
-- **Current Version**: 0.3.4
+- **Current Version**: 0.4.0 (0.5.0 planned with SSM tunnels)
 
 ## AWS Config Files
 

@@ -7,9 +7,11 @@ import { AccountsPage } from "./pages/AccountsPage";
 import { SessionsPage } from "./pages/SessionsPage";
 import { ProfilesPage } from "./pages/ProfilesPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { TunnelsPage } from "./pages/TunnelsPage";
 import { useSsoStatus } from "./hooks/useSsoStatus";
 import { useProfiles } from "./hooks/useProfiles";
 import { useAccounts } from "./hooks/useAccounts";
+import { useTunnels } from "./hooks/useTunnels";
 import { useToast } from "./hooks/useToast";
 import { useFontSize } from "./components/FontSizeToggle";
 import type { Page, AppSettings } from "./types";
@@ -38,6 +40,7 @@ function App() {
     fetchRoles,
     reset: resetAccounts,
   } = useAccounts();
+  const tunnels = useTunnels();
   const { toasts, addToast, dismissToast } = useToast();
   const { fontSize, setFontSize } = useFontSize();
   const hasFetched = useRef(false);
@@ -130,6 +133,29 @@ function App() {
           <ProfilesPage
             ssoStatus={ssoStatus}
             settings={settings}
+            onError={addToast}
+          />
+        );
+      case "tunnels":
+        return (
+          <TunnelsPage
+            ssoStatus={ssoStatus}
+            accounts={accounts}
+            roles={roles}
+            instances={tunnels.instances}
+            activeTunnels={tunnels.activeTunnels}
+            configs={tunnels.configs}
+            settings={settings}
+            pluginInstalled={tunnels.pluginInstalled}
+            loadingInstances={tunnels.loadingInstances}
+            onFetchRoles={fetchRoles}
+            onFetchInstances={tunnels.fetchInstances}
+            onConnect={async (params) => {
+              await tunnels.startTunnel(params);
+            }}
+            onStop={tunnels.stopTunnel}
+            onSaveConfig={tunnels.saveConfig}
+            onDeleteConfig={tunnels.deleteConfig}
             onError={addToast}
           />
         );

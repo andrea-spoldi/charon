@@ -979,3 +979,297 @@
     transform: translateY(0);
   }
 }
+
+/* ===== Tunnels ===== */
+
+.tunnels-section {
+  margin-bottom: 16px;
+}
+
+.tunnels-section h3 {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--color-text-bright);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Active tunnel cards */
+.tunnel-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tunnel-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  border-left: 3px solid var(--color-border);
+}
+
+.tunnel-card.tunnel-status-connected {
+  border-left-color: var(--color-success);
+}
+
+.tunnel-card.tunnel-status-connecting {
+  border-left-color: var(--color-warning);
+}
+
+.tunnel-card.tunnel-status-error {
+  border-left-color: var(--color-danger);
+}
+
+.tunnel-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tunnel-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.tunnel-status-dot.tunnel-status-connected {
+  background: var(--color-success);
+}
+
+.tunnel-status-dot.tunnel-status-connecting {
+  background: var(--color-warning);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.tunnel-status-dot.tunnel-status-error {
+  background: var(--color-danger);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.tunnel-card-name {
+  font-weight: 500;
+  color: var(--color-text-bright);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tunnel-card-status {
+  font-size: 0.85em;
+  color: var(--color-muted);
+  text-transform: capitalize;
+}
+
+.tunnel-card-details {
+  font-size: 0.9em;
+  margin-bottom: 8px;
+}
+
+.tunnel-card-row {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.tunnel-card-row span:first-child {
+  min-width: 60px;
+}
+
+.tunnel-local-port {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: monospace;
+}
+
+.tunnel-error {
+  color: var(--color-danger);
+  font-size: 0.85em;
+}
+
+.tunnel-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Saved config cards */
+.config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.config-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.config-card-name {
+  font-weight: 500;
+  color: var(--color-text-bright);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-card-info .text-muted {
+  font-size: 0.85em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Tunnel form */
+.tunnel-form {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+
+.tunnel-form h3 {
+  margin-bottom: 12px;
+}
+
+.form-row-inline {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row-inline > .form-row {
+  flex: 1;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: normal;
+  font-size: 0.9em;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.form-hint {
+  font-size: 0.85em;
+  margin-top: 2px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-tertiary);
+  color: var(--color-text);
+  font-size: 0.9em;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-bg-hover);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: white;
+}
+
+.btn-outline {
+  background: transparent;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.85em;
+}
+
+/* Warning banner */
+.warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(220, 220, 170, 0.1);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  font-size: 0.9em;
+  color: var(--color-warning);
+}
+
+.warning-banner a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.warning-banner svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}

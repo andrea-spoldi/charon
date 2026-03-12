@@ -61,5 +61,54 @@ export interface AppSettings {
   session_timeout_hours: number;
 }
 
+// SSM instance from describe-instance-information
+export interface SsmInstance {
+  instanceId: string;
+  computerName: string | null;
+  ipAddress: string | null;
+  platformType: string | null;
+  pingStatus: string;
+}
+
+// Saved tunnel configuration
+export interface TunnelConfig {
+  id: string;
+  name: string;
+  accountId: string;
+  roleName: string;
+  instanceId: string;
+  remoteHost: string;
+  remotePort: number;
+  localPort: number;
+  region: string;
+  useRandomPort: boolean;
+}
+
+// Active tunnel status
+export type TunnelStatus =
+  | "connecting"
+  | "connected"
+  | "disconnected"
+  | "error";
+
+// Active tunnel runtime state
+export interface ActiveTunnel {
+  id: string;
+  configName: string | null;
+  instanceId: string;
+  remoteHost: string;
+  remotePort: number;
+  localPort: number;
+  region: string;
+  status: TunnelStatus;
+  startedAt: string;
+  errorMessage: string | null;
+}
+
 // Navigation pages
-export type Page = "accounts" | "sessions" | "profiles" | "settings";
+export type Page =
+  | "accounts"
+  | "sessions"
+  | "profiles"
+  | "settings"
+  | "tunnels";

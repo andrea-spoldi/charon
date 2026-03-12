@@ -2,6 +2,7 @@ pub mod accounts;
 pub mod profiles;
 pub mod settings;
 pub mod sso;
+pub mod tunnels;
 
 use std::path::PathBuf;
 

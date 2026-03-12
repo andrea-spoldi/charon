@@ -27,7 +27,9 @@ function App() {
   });
   const { status: ssoStatus, refresh: refreshSsoStatus } = useSsoStatus();
   const {
+    profiles,
     sessions,
+    defaultProfile,
     loading: sessionsLoading,
     refresh: refreshProfiles,
   } = useProfiles();
@@ -140,15 +142,14 @@ function App() {
         return (
           <TunnelsPage
             ssoStatus={ssoStatus}
-            accounts={accounts}
-            roles={roles}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
             instances={tunnels.instances}
             activeTunnels={tunnels.activeTunnels}
             configs={tunnels.configs}
             settings={settings}
             pluginInstalled={tunnels.pluginInstalled}
             loadingInstances={tunnels.loadingInstances}
-            onFetchRoles={fetchRoles}
             onFetchInstances={tunnels.fetchInstances}
             onConnect={async (params) => {
               await tunnels.startTunnel(params);

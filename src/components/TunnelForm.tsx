@@ -2,8 +2,7 @@ import { useState } from "react";
 import { RefreshCw, Save, Zap } from "lucide-react";
 import type {
   SsoTokenInfo,
-  SsoAccount,
-  AccountRole,
+  AwsProfile,
   SsmInstance,
   TunnelConfig,
   AppSettings,
@@ -11,16 +10,10 @@ import type {
 
 interface TunnelFormProps {
   ssoStatus: SsoTokenInfo;
-  accounts: SsoAccount[];
-  roles: Record<string, AccountRole[]>;
+  profile: AwsProfile;
   instances: SsmInstance[];
   settings: AppSettings;
   loadingInstances: boolean;
-  onFetchRoles: (
-    accessToken: string,
-    accountId: string,
-    region: string,
-  ) => void;
   onFetchInstances: (
     accessToken: string,
     accountId: string,
@@ -46,19 +39,15 @@ interface TunnelFormProps {
 
 export function TunnelForm({
   ssoStatus,
-  accounts,
-  roles,
+  profile,
   instances,
   settings,
   loadingInstances,
-  onFetchRoles,
   onFetchInstances,
   onConnect,
   onSave,
   onError,
 }: TunnelFormProps) {
-  const [accountId, setAccountId] = useState("");
-  const [roleName, setRoleName] = useState("");
   const [instanceId, setInstanceId] = useState("");
   const [remoteHost, setRemoteHost] = useState("");
   const [remotePort, setRemotePort] = useState("");
@@ -67,31 +56,15 @@ export function TunnelForm({
   const [tunnelName, setTunnelName] = useState("");
   const [connecting, setConnecting] = useState(false);
 
-  const region = settings.default_region;
+  const accountId = profile.sso_account_id!;
+  const roleName = profile.sso_role_name!;
+  const region = profile.region ?? settings.default_region;
   const accessToken = ssoStatus.access_token;
   const ssoRegion = ssoStatus.region;
-  const accountRoles = accountId ? roles[accountId] || [] : [];
   const onlineInstances = instances.filter((i) => i.pingStatus === "Online");
 
-  const handleAccountChange = (newAccountId: string) => {
-    setAccountId(newAccountId);
-    setRoleName("");
-    setInstanceId("");
-    if (newAccountId && accessToken && ssoRegion) {
-      onFetchRoles(accessToken, newAccountId, ssoRegion);
-    }
-  };
-
-  const handleRoleChange = (newRoleName: string) => {
-    setRoleName(newRoleName);
-    setInstanceId("");
-    if (accountId && newRoleName && accessToken && ssoRegion) {
-      onFetchInstances(accessToken, accountId, newRoleName, ssoRegion, region);
-    }
-  };
-
   const handleRefreshInstances = () => {
-    if (accountId && roleName && accessToken && ssoRegion) {
+    if (accessToken && ssoRegion) {
       onFetchInstances(accessToken, accountId, roleName, ssoRegion, region);
     }
   };
@@ -103,8 +76,6 @@ export function TunnelForm({
       : parseInt(remotePort, 10) || 0;
 
   const canConnect =
-    accountId &&
-    roleName &&
     instanceId &&
     remoteHost.trim() &&
     remotePort &&
@@ -154,57 +125,32 @@ export function TunnelForm({
   return (
     <div className="settings-form tunnel-form">
       <div className="form-field">
-        <label htmlFor="tunnel-account">Account</label>
-        <select
-          id="tunnel-account"
-          value={accountId}
-          onChange={(e) => handleAccountChange(e.target.value)}
-        >
-          <option value="">Select account...</option>
-          {accounts.map((a) => (
-            <option key={a.accountId} value={a.accountId}>
-              {a.accountName} ({a.accountId})
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="form-field">
-        <label htmlFor="tunnel-role">Role</label>
-        <select
-          id="tunnel-role"
-          value={roleName}
-          onChange={(e) => handleRoleChange(e.target.value)}
-          disabled={!accountId}
-        >
-          <option value="">Select role...</option>
-          {accountRoles.map((r) => (
-            <option key={r.roleName} value={r.roleName}>
-              {r.roleName}
-            </option>
-          ))}
-        </select>
+        <label>Profile</label>
+        <span className="form-value">
+          {profile.name}{" "}
+          <span className="text-muted">
+            ({accountId} / {roleName})
+          </span>
+        </span>
       </div>
 
       <div className="form-field">
         <label htmlFor="tunnel-instance">
           Bridge Instance
-          {roleName && (
-            <button
-              className="icon-btn inline-icon-btn"
-              title="Refresh instances"
-              onClick={handleRefreshInstances}
-              disabled={loadingInstances}
-            >
-              <RefreshCw size={12} className={loadingInstances ? "spin" : ""} />
-            </button>
-          )}
+          <button
+            className="icon-btn inline-icon-btn"
+            title="Refresh instances"
+            onClick={handleRefreshInstances}
+            disabled={loadingInstances}
+          >
+            <RefreshCw size={12} className={loadingInstances ? "spin" : ""} />
+          </button>
         </label>
         <select
           id="tunnel-instance"
           value={instanceId}
           onChange={(e) => setInstanceId(e.target.value)}
-          disabled={!roleName || loadingInstances}
+          disabled={loadingInstances}
         >
           <option value="">
             {loadingInstances ? "Loading instances..." : "Select instance..."}

@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AlertTriangle, Trash2, Zap } from "lucide-react";
 import type {
   SsoTokenInfo,
-  SsoAccount,
-  AccountRole,
+  AwsProfile,
   SsmInstance,
   TunnelConfig,
   ActiveTunnel,
@@ -14,19 +13,14 @@ import { ActiveTunnelCard } from "../components/ActiveTunnelCard";
 
 interface TunnelsPageProps {
   ssoStatus: SsoTokenInfo;
-  accounts: SsoAccount[];
-  roles: Record<string, AccountRole[]>;
+  profiles: AwsProfile[];
+  defaultProfile: string | null;
   instances: SsmInstance[];
   activeTunnels: ActiveTunnel[];
   configs: TunnelConfig[];
   settings: AppSettings;
   pluginInstalled: boolean | null;
   loadingInstances: boolean;
-  onFetchRoles: (
-    accessToken: string,
-    accountId: string,
-    region: string,
-  ) => void;
   onFetchInstances: (
     accessToken: string,
     accountId: string,
@@ -54,15 +48,14 @@ interface TunnelsPageProps {
 
 export function TunnelsPage({
   ssoStatus,
-  accounts,
-  roles,
+  profiles,
+  defaultProfile,
   instances,
   activeTunnels,
   configs,
   settings,
   pluginInstalled,
   loadingInstances,
-  onFetchRoles,
   onFetchInstances,
   onConnect,
   onStop,
@@ -72,6 +65,52 @@ export function TunnelsPage({
 }: TunnelsPageProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [quickConnecting, setQuickConnecting] = useState<string | null>(null);
+  const hasFetchedInstances = useRef(false);
+
+  // Resolve the active profile
+  const activeProfile = defaultProfile
+    ? (profiles.find((p) => p.name === defaultProfile) ?? null)
+    : null;
+
+  const profileAccountId = activeProfile?.sso_account_id ?? null;
+  const profileRoleName = activeProfile?.sso_role_name ?? null;
+  const profileRegion = activeProfile?.region ?? settings.default_region;
+
+  // Auto-fetch instances when profile is available and SSO is active
+  useEffect(() => {
+    if (
+      ssoStatus.status === "active" &&
+      ssoStatus.access_token &&
+      ssoStatus.region &&
+      profileAccountId &&
+      profileRoleName &&
+      !hasFetchedInstances.current
+    ) {
+      hasFetchedInstances.current = true;
+      onFetchInstances(
+        ssoStatus.access_token,
+        profileAccountId,
+        profileRoleName,
+        ssoStatus.region,
+        profileRegion,
+      );
+    }
+  }, [
+    ssoStatus.status,
+    ssoStatus.access_token,
+    ssoStatus.region,
+    profileAccountId,
+    profileRoleName,
+    profileRegion,
+    onFetchInstances,
+  ]);
+
+  // Reset fetch flag when session ends
+  useEffect(() => {
+    if (ssoStatus.status !== "active") {
+      hasFetchedInstances.current = false;
+    }
+  }, [ssoStatus.status]);
 
   const handleDeleteConfig = (id: string) => {
     if (deleteConfirm === id) {
@@ -116,6 +155,22 @@ export function TunnelsPage({
           <p>Login to SSO to use port-forwarding tunnels.</p>
           <p className="text-muted">
             Use the Login button in the top bar to authenticate.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeProfile || !profileAccountId || !profileRoleName) {
+    return (
+      <div className="page">
+        <div className="page-header">
+          <h2>Tunnels</h2>
+        </div>
+        <div className="empty-state">
+          <p>No default profile configured.</p>
+          <p className="text-muted">
+            Set a default profile in the Profiles page to use tunnels.
           </p>
         </div>
       </div>
@@ -216,12 +271,10 @@ export function TunnelsPage({
       <section className="tunnels-section">
         <TunnelForm
           ssoStatus={ssoStatus}
-          accounts={accounts}
-          roles={roles}
+          profile={activeProfile}
           instances={instances}
           settings={settings}
           loadingInstances={loadingInstances}
-          onFetchRoles={onFetchRoles}
           onFetchInstances={onFetchInstances}
           onConnect={async (params) => {
             await onConnect(params);

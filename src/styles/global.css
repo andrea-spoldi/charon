@@ -356,6 +356,31 @@
   background: var(--color-bg-hover);
 }
 
+.btn-outline {
+  background: transparent;
+  border-color: var(--color-border-light);
+  color: var(--color-text);
+}
+
+.btn-outline:hover {
+  background: var(--color-bg-hover);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 85%, black);
+}
+
+.btn-sm {
+  padding: 3px 10px;
+  font-size: 0.846rem;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;
@@ -620,7 +645,8 @@
 
 /* ===== Forms ===== */
 .profile-form,
-.settings-form {
+.settings-form,
+.tunnel-form {
   max-width: 500px;
   display: flex;
   flex-direction: column;
@@ -657,13 +683,72 @@
   outline: none;
 }
 
-.form-field input:disabled {
+.form-field input:disabled,
+.form-field select:disabled {
   opacity: 0.5;
+}
+
+.form-field-inline {
+  display: flex;
+  gap: 12px;
+}
+
+.form-field-inline > .form-field {
+  flex: 1;
+}
+
+.inline-icon-btn {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: normal;
+  font-size: 0.846rem;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
+  margin: 0;
 }
 
 .form-hint {
   font-size: 0.846rem;
   color: var(--color-muted);
+}
+
+.form-value {
+  font-size: 0.923rem;
+  padding: 6px 0;
+}
+
+.input-with-action {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.input-with-action input {
+  flex: 1;
+}
+
+.instance-picker {
+  width: 100%;
+  margin-top: 4px;
+  font-size: 0.923rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.instance-picker option {
+  padding: 4px 8px;
 }
 
 .form-actions {
@@ -978,4 +1063,202 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* ===== Tunnels ===== */
+
+.tunnels-section {
+  margin-bottom: 16px;
+}
+
+.tunnels-section h3 {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--color-text-bright);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Active tunnel cards */
+.tunnel-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tunnel-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  border-left: 3px solid var(--color-border);
+}
+
+.tunnel-card.tunnel-status-connected {
+  border-left-color: var(--color-success);
+}
+
+.tunnel-card.tunnel-status-connecting {
+  border-left-color: var(--color-warning);
+}
+
+.tunnel-card.tunnel-status-error {
+  border-left-color: var(--color-danger);
+}
+
+.tunnel-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.tunnel-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-muted);
+  flex-shrink: 0;
+}
+
+.tunnel-status-dot.tunnel-status-connected {
+  background: var(--color-success);
+}
+
+.tunnel-status-dot.tunnel-status-connecting {
+  background: var(--color-warning);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.tunnel-status-dot.tunnel-status-error {
+  background: var(--color-danger);
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.tunnel-card-name {
+  font-weight: 500;
+  color: var(--color-text-bright);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tunnel-card-status {
+  font-size: 0.85em;
+  color: var(--color-muted);
+  text-transform: capitalize;
+}
+
+.tunnel-card-details {
+  font-size: 0.9em;
+  margin-bottom: 8px;
+}
+
+.tunnel-card-row {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.tunnel-card-row span:first-child {
+  min-width: 60px;
+}
+
+.tunnel-local-port {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: monospace;
+}
+
+.tunnel-error {
+  color: var(--color-danger);
+  font-size: 0.85em;
+}
+
+.tunnel-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Saved config cards */
+.config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.config-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.config-card-name {
+  font-weight: 500;
+  color: var(--color-text-bright);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-card-info .text-muted {
+  font-size: 0.85em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.config-card-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* Tunnel form — extends .settings-form via shared class */
+
+/* Warning banner */
+.warning-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(220, 220, 170, 0.1);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  font-size: 0.9em;
+  color: var(--color-warning);
+}
+
+.warning-banner a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.warning-banner svg {
+  flex-shrink: 0;
+  margin-top: 2px;
 }

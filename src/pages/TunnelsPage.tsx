@@ -1,0 +1,273 @@
+import { useState } from "react";
+import { AlertTriangle, Plus, Trash2, Zap } from "lucide-react";
+import type {
+  SsoTokenInfo,
+  AwsProfile,
+  SsmInstance,
+  TunnelConfig,
+  ActiveTunnel,
+  AppSettings,
+} from "../types";
+import { TunnelForm } from "../components/TunnelForm";
+import { ActiveTunnelCard } from "../components/ActiveTunnelCard";
+
+interface TunnelsPageProps {
+  ssoStatus: SsoTokenInfo;
+  profiles: AwsProfile[];
+  defaultProfile: string | null;
+  instances: SsmInstance[];
+  activeTunnels: ActiveTunnel[];
+  configs: TunnelConfig[];
+  settings: AppSettings;
+  pluginInstalled: boolean | null;
+  loadingInstances: boolean;
+  onFetchInstances: (
+    accessToken: string,
+    accountId: string,
+    roleName: string,
+    ssoRegion: string,
+    targetRegion: string,
+  ) => void;
+  onConnect: (params: {
+    accessToken: string;
+    accountId: string;
+    roleName: string;
+    ssoRegion: string;
+    instanceId: string;
+    remoteHost: string;
+    remotePort: number;
+    localPort: number;
+    region: string;
+    configName?: string;
+  }) => Promise<void>;
+  onStop: (tunnelId: string) => void;
+  onSaveConfig: (config: TunnelConfig) => void;
+  onDeleteConfig: (id: string) => void;
+  onError: (msg: string, type?: "error" | "info") => void;
+}
+
+export function TunnelsPage({
+  ssoStatus,
+  profiles,
+  defaultProfile,
+  instances,
+  activeTunnels,
+  configs,
+  settings,
+  pluginInstalled,
+  loadingInstances,
+  onFetchInstances,
+  onConnect,
+  onStop,
+  onSaveConfig,
+  onDeleteConfig,
+  onError,
+}: TunnelsPageProps) {
+  const [showForm, setShowForm] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [connectingId, setConnectingId] = useState<string | null>(null);
+
+  // Resolve the active profile
+  const activeProfile = defaultProfile
+    ? (profiles.find((p) => p.name === defaultProfile) ?? null)
+    : null;
+
+  const profileAccountId = activeProfile?.sso_account_id ?? null;
+  const profileRoleName = activeProfile?.sso_role_name ?? null;
+
+  const handleDeleteConfig = (id: string) => {
+    if (deleteConfirm === id) {
+      onDeleteConfig(id);
+      setDeleteConfirm(null);
+    } else {
+      setDeleteConfirm(id);
+      setTimeout(() => setDeleteConfirm(null), 3000);
+    }
+  };
+
+  const handleConnect = async (config: TunnelConfig) => {
+    if (!ssoStatus.access_token || !ssoStatus.region) return;
+    setConnectingId(config.id);
+    try {
+      await onConnect({
+        accessToken: ssoStatus.access_token,
+        accountId: config.accountId,
+        roleName: config.roleName,
+        ssoRegion: ssoStatus.region,
+        instanceId: config.instanceId,
+        remoteHost: config.remoteHost,
+        remotePort: config.remotePort,
+        localPort: config.useRandomPort ? 0 : config.localPort,
+        region: config.region,
+        configName: config.name,
+      });
+    } catch (err) {
+      onError(String(err), "error");
+    } finally {
+      setConnectingId(null);
+    }
+  };
+
+  const handleSaveConfig = (config: TunnelConfig) => {
+    onSaveConfig(config);
+    setShowForm(false);
+  };
+
+  if (ssoStatus.status !== "active") {
+    return (
+      <div className="page">
+        <div className="page-header">
+          <h2>Tunnels</h2>
+        </div>
+        <div className="empty-state">
+          <p>Login to SSO to use port-forwarding tunnels.</p>
+          <p className="text-muted">
+            Use the Login button in the top bar to authenticate.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeProfile || !profileAccountId || !profileRoleName) {
+    return (
+      <div className="page">
+        <div className="page-header">
+          <h2>Tunnels</h2>
+        </div>
+        <div className="empty-state">
+          <p>No default profile configured.</p>
+          <p className="text-muted">
+            Set a default profile in the Profiles page to use tunnels.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="page">
+      <div className="page-header">
+        <h2>Tunnels</h2>
+        <div className="page-header-actions">
+          {activeTunnels.length > 0 && (
+            <span className="text-muted">
+              {activeTunnels.filter((t) => t.status === "connected").length}{" "}
+              active
+            </span>
+          )}
+          {!showForm && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowForm(true)}
+            >
+              <Plus size={14} />
+              <span>New</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {pluginInstalled === false && (
+        <div className="warning-banner">
+          <AlertTriangle size={16} />
+          <span>
+            <strong>session-manager-plugin</strong> is not installed. Install it
+            from the{" "}
+            <a
+              href="https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              AWS documentation
+            </a>{" "}
+            to use port-forwarding.
+          </span>
+        </div>
+      )}
+
+      {/* New Tunnel Form (collapsible) */}
+      {showForm && (
+        <section className="tunnels-section">
+          <TunnelForm
+            ssoStatus={ssoStatus}
+            profile={activeProfile}
+            instances={instances}
+            settings={settings}
+            loadingInstances={loadingInstances}
+            onFetchInstances={onFetchInstances}
+            onSave={handleSaveConfig}
+            onCancel={() => setShowForm(false)}
+          />
+        </section>
+      )}
+
+      {/* Active Tunnels */}
+      {activeTunnels.length > 0 && (
+        <section className="tunnels-section">
+          <h3>Active Tunnels</h3>
+          <div className="tunnel-cards">
+            {activeTunnels.map((tunnel) => (
+              <ActiveTunnelCard
+                key={tunnel.id}
+                tunnel={tunnel}
+                onStop={onStop}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Saved Tunnel Configs */}
+      {configs.length > 0 ? (
+        <section className="tunnels-section">
+          <h3>Saved Tunnels</h3>
+          <div className="config-list">
+            {configs.map((config) => (
+              <div key={config.id} className="config-card">
+                <div className="config-card-info">
+                  <span className="config-card-name">{config.name}</span>
+                  <span className="text-muted">
+                    {config.remoteHost}:{config.remotePort} via{" "}
+                    {config.instanceId}
+                  </span>
+                </div>
+                <div className="config-card-actions">
+                  <button
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleConnect(config)}
+                    disabled={connectingId === config.id}
+                    title="Connect"
+                  >
+                    <Zap size={12} />
+                    {connectingId === config.id ? "Connecting..." : "Connect"}
+                  </button>
+                  <button
+                    className={`btn btn-sm ${deleteConfirm === config.id ? "btn-danger" : "btn-outline"}`}
+                    onClick={() => handleDeleteConfig(config.id)}
+                    title={
+                      deleteConfirm === config.id
+                        ? "Click again to confirm"
+                        : "Delete"
+                    }
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : (
+        !showForm && (
+          <div className="empty-state">
+            <p>No saved tunnels yet.</p>
+            <p className="text-muted">
+              Click <strong>New</strong> to create a tunnel configuration.
+            </p>
+          </div>
+        )
+      )}
+    </div>
+  );
+}

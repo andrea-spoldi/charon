@@ -9,6 +9,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .manage(commands::tunnels::TunnelState::default())
         .invoke_handler(tauri::generate_handler![
             // SSO
             commands::sso::get_sso_status,
@@ -34,6 +35,15 @@ pub fn run() {
             // Settings
             commands::settings::get_settings,
             commands::settings::save_settings,
+            // Tunnels
+            commands::tunnels::check_session_manager_plugin,
+            commands::tunnels::list_ssm_instances,
+            commands::tunnels::start_tunnel,
+            commands::tunnels::stop_tunnel,
+            commands::tunnels::list_active_tunnels,
+            commands::tunnels::list_tunnel_configs,
+            commands::tunnels::save_tunnel_config,
+            commands::tunnels::delete_tunnel_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

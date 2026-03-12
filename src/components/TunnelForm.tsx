@@ -152,12 +152,11 @@ export function TunnelForm({
   };
 
   return (
-    <div className="tunnel-form">
-      <h3>New Tunnel</h3>
-
-      <div className="form-row">
-        <label>Account</label>
+    <div className="settings-form tunnel-form">
+      <div className="form-field">
+        <label htmlFor="tunnel-account">Account</label>
         <select
+          id="tunnel-account"
           value={accountId}
           onChange={(e) => handleAccountChange(e.target.value)}
         >
@@ -170,9 +169,10 @@ export function TunnelForm({
         </select>
       </div>
 
-      <div className="form-row">
-        <label>Role</label>
+      <div className="form-field">
+        <label htmlFor="tunnel-role">Role</label>
         <select
+          id="tunnel-role"
           value={roleName}
           onChange={(e) => handleRoleChange(e.target.value)}
           disabled={!accountId}
@@ -186,12 +186,12 @@ export function TunnelForm({
         </select>
       </div>
 
-      <div className="form-row">
-        <label>
+      <div className="form-field">
+        <label htmlFor="tunnel-instance">
           Bridge Instance
           {roleName && (
             <button
-              className="icon-btn"
+              className="icon-btn inline-icon-btn"
               title="Refresh instances"
               onClick={handleRefreshInstances}
               disabled={loadingInstances}
@@ -201,6 +201,7 @@ export function TunnelForm({
           )}
         </label>
         <select
+          id="tunnel-instance"
           value={instanceId}
           onChange={(e) => setInstanceId(e.target.value)}
           disabled={!roleName || loadingInstances}
@@ -217,15 +218,14 @@ export function TunnelForm({
           ))}
         </select>
         {instances.length > 0 && onlineInstances.length === 0 && (
-          <span className="text-muted form-hint">
-            No online instances found
-          </span>
+          <span className="form-hint">No online instances found</span>
         )}
       </div>
 
-      <div className="form-row">
-        <label>Remote Host</label>
+      <div className="form-field">
+        <label htmlFor="tunnel-remote-host">Remote Host</label>
         <input
+          id="tunnel-remote-host"
           type="text"
           placeholder="e.g., mydb.cluster-abc.us-east-1.rds.amazonaws.com"
           value={remoteHost}
@@ -233,10 +233,11 @@ export function TunnelForm({
         />
       </div>
 
-      <div className="form-row-inline">
-        <div className="form-row">
-          <label>Remote Port</label>
+      <div className="form-field-inline">
+        <div className="form-field">
+          <label htmlFor="tunnel-remote-port">Remote Port</label>
           <input
+            id="tunnel-remote-port"
             type="number"
             placeholder="e.g., 5432"
             value={remotePort}
@@ -250,8 +251,8 @@ export function TunnelForm({
             max={65535}
           />
         </div>
-        <div className="form-row">
-          <label>
+        <div className="form-field">
+          <label htmlFor="tunnel-local-port">
             Local Port
             <label className="checkbox-label">
               <input
@@ -263,6 +264,7 @@ export function TunnelForm({
             </label>
           </label>
           <input
+            id="tunnel-local-port"
             type="number"
             placeholder={remotePort || "Same as remote"}
             value={useRandomPort ? "" : localPort}
@@ -274,14 +276,18 @@ export function TunnelForm({
         </div>
       </div>
 
-      <div className="form-row">
-        <label>Name (optional)</label>
+      <div className="form-field">
+        <label htmlFor="tunnel-name">Name (optional)</label>
         <input
+          id="tunnel-name"
           type="text"
           placeholder="e.g., Production DB"
           value={tunnelName}
           onChange={(e) => setTunnelName(e.target.value)}
         />
+        <span className="form-hint">
+          A friendly name for saving this tunnel configuration.
+        </span>
       </div>
 
       <div className="form-actions">
@@ -290,8 +296,8 @@ export function TunnelForm({
           onClick={handleConnect}
           disabled={!canConnect || connecting}
         >
-          <Zap size={14} />
-          {connecting ? "Connecting..." : "Connect"}
+          <Zap size={16} />
+          <span>{connecting ? "Connecting..." : "Connect"}</span>
         </button>
         <button
           className="btn btn-outline"
@@ -299,8 +305,8 @@ export function TunnelForm({
           disabled={!canConnect}
           title="Save configuration for quick re-use"
         >
-          <Save size={14} />
-          Save Config
+          <Save size={16} />
+          <span>Save Config</span>
         </button>
       </div>
     </div>

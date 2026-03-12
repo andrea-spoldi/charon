@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { AlertTriangle, Trash2, Zap } from "lucide-react";
+import { AlertTriangle, Plus, Trash2, Zap } from "lucide-react";
 import type {
   SsoTokenInfo,
   AwsProfile,
@@ -63,8 +63,9 @@ export function TunnelsPage({
   onDeleteConfig,
   onError,
 }: TunnelsPageProps) {
+  const [showForm, setShowForm] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [quickConnecting, setQuickConnecting] = useState<string | null>(null);
+  const [connectingId, setConnectingId] = useState<string | null>(null);
   const hasFetchedInstances = useRef(false);
 
   // Resolve the active profile
@@ -122,9 +123,9 @@ export function TunnelsPage({
     }
   };
 
-  const handleQuickConnect = async (config: TunnelConfig) => {
+  const handleConnect = async (config: TunnelConfig) => {
     if (!ssoStatus.access_token || !ssoStatus.region) return;
-    setQuickConnecting(config.id);
+    setConnectingId(config.id);
     try {
       await onConnect({
         accessToken: ssoStatus.access_token,
@@ -141,8 +142,13 @@ export function TunnelsPage({
     } catch (err) {
       onError(String(err), "error");
     } finally {
-      setQuickConnecting(null);
+      setConnectingId(null);
     }
+  };
+
+  const handleSaveConfig = (config: TunnelConfig) => {
+    onSaveConfig(config);
+    setShowForm(false);
   };
 
   if (ssoStatus.status !== "active") {
@@ -181,12 +187,23 @@ export function TunnelsPage({
     <div className="page">
       <div className="page-header">
         <h2>Tunnels</h2>
-        {activeTunnels.length > 0 && (
-          <span className="text-muted">
-            {activeTunnels.filter((t) => t.status === "connected").length}{" "}
-            active
-          </span>
-        )}
+        <div className="page-header-actions">
+          {activeTunnels.length > 0 && (
+            <span className="text-muted">
+              {activeTunnels.filter((t) => t.status === "connected").length}{" "}
+              active
+            </span>
+          )}
+          {!showForm && (
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => setShowForm(true)}
+            >
+              <Plus size={14} />
+              <span>New</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {pluginInstalled === false && (
@@ -207,6 +224,22 @@ export function TunnelsPage({
         </div>
       )}
 
+      {/* New Tunnel Form (collapsible) */}
+      {showForm && (
+        <section className="tunnels-section">
+          <TunnelForm
+            ssoStatus={ssoStatus}
+            profile={activeProfile}
+            instances={instances}
+            settings={settings}
+            loadingInstances={loadingInstances}
+            onFetchInstances={onFetchInstances}
+            onSave={handleSaveConfig}
+            onCancel={() => setShowForm(false)}
+          />
+        </section>
+      )}
+
       {/* Active Tunnels */}
       {activeTunnels.length > 0 && (
         <section className="tunnels-section">
@@ -223,10 +256,10 @@ export function TunnelsPage({
         </section>
       )}
 
-      {/* Saved Configs */}
-      {configs.length > 0 && (
+      {/* Saved Tunnel Configs */}
+      {configs.length > 0 ? (
         <section className="tunnels-section">
-          <h3>Saved Configurations</h3>
+          <h3>Saved Tunnels</h3>
           <div className="config-list">
             {configs.map((config) => (
               <div key={config.id} className="config-card">
@@ -240,14 +273,12 @@ export function TunnelsPage({
                 <div className="config-card-actions">
                   <button
                     className="btn btn-sm btn-primary"
-                    onClick={() => handleQuickConnect(config)}
-                    disabled={quickConnecting === config.id}
-                    title="Quick connect"
+                    onClick={() => handleConnect(config)}
+                    disabled={connectingId === config.id}
+                    title="Connect"
                   >
                     <Zap size={12} />
-                    {quickConnecting === config.id
-                      ? "Connecting..."
-                      : "Connect"}
+                    {connectingId === config.id ? "Connecting..." : "Connect"}
                   </button>
                   <button
                     className={`btn btn-sm ${deleteConfirm === config.id ? "btn-danger" : "btn-outline"}`}
@@ -255,7 +286,7 @@ export function TunnelsPage({
                     title={
                       deleteConfirm === config.id
                         ? "Click again to confirm"
-                        : "Delete config"
+                        : "Delete"
                     }
                   >
                     <Trash2 size={12} />
@@ -265,24 +296,16 @@ export function TunnelsPage({
             ))}
           </div>
         </section>
+      ) : (
+        !showForm && (
+          <div className="empty-state">
+            <p>No saved tunnels yet.</p>
+            <p className="text-muted">
+              Click <strong>New</strong> to create a tunnel configuration.
+            </p>
+          </div>
+        )
       )}
-
-      {/* New Tunnel Form */}
-      <section className="tunnels-section">
-        <TunnelForm
-          ssoStatus={ssoStatus}
-          profile={activeProfile}
-          instances={instances}
-          settings={settings}
-          loadingInstances={loadingInstances}
-          onFetchInstances={onFetchInstances}
-          onConnect={async (params) => {
-            await onConnect(params);
-          }}
-          onSave={onSaveConfig}
-          onError={(msg) => onError(msg, "error")}
-        />
-      </section>
     </div>
   );
 }

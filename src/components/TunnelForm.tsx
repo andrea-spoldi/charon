@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RefreshCw, Save, Zap } from "lucide-react";
+import { RefreshCw, Save, X } from "lucide-react";
 import type {
   SsoTokenInfo,
   AwsProfile,
@@ -21,20 +21,8 @@ interface TunnelFormProps {
     ssoRegion: string,
     targetRegion: string,
   ) => void;
-  onConnect: (params: {
-    accessToken: string;
-    accountId: string;
-    roleName: string;
-    ssoRegion: string;
-    instanceId: string;
-    remoteHost: string;
-    remotePort: number;
-    localPort: number;
-    region: string;
-    configName?: string;
-  }) => Promise<void>;
   onSave: (config: TunnelConfig) => void;
-  onError: (msg: string) => void;
+  onCancel: () => void;
 }
 
 export function TunnelForm({
@@ -44,9 +32,8 @@ export function TunnelForm({
   settings,
   loadingInstances,
   onFetchInstances,
-  onConnect,
   onSave,
-  onError,
+  onCancel,
 }: TunnelFormProps) {
   const [instanceId, setInstanceId] = useState("");
   const [remoteHost, setRemoteHost] = useState("");
@@ -54,7 +41,6 @@ export function TunnelForm({
   const [localPort, setLocalPort] = useState("");
   const [useRandomPort, setUseRandomPort] = useState(false);
   const [tunnelName, setTunnelName] = useState("");
-  const [connecting, setConnecting] = useState(false);
 
   const accountId = profile.sso_account_id!;
   const roleName = profile.sso_role_name!;
@@ -75,39 +61,14 @@ export function TunnelForm({
       ? parseInt(localPort, 10)
       : parseInt(remotePort, 10) || 0;
 
-  const canConnect =
+  const canSave =
     instanceId &&
     remoteHost.trim() &&
     remotePort &&
-    parseInt(remotePort, 10) > 0 &&
-    accessToken &&
-    ssoRegion;
-
-  const handleConnect = async () => {
-    if (!canConnect || !accessToken || !ssoRegion) return;
-    setConnecting(true);
-    try {
-      await onConnect({
-        accessToken,
-        accountId,
-        roleName,
-        ssoRegion,
-        instanceId,
-        remoteHost: remoteHost.trim(),
-        remotePort: parseInt(remotePort, 10),
-        localPort: effectiveLocalPort,
-        region,
-        configName: tunnelName || undefined,
-      });
-    } catch (err) {
-      onError(String(err));
-    } finally {
-      setConnecting(false);
-    }
-  };
+    parseInt(remotePort, 10) > 0;
 
   const handleSave = () => {
-    if (!canConnect) return;
+    if (!canSave) return;
     onSave({
       id: "",
       name: tunnelName || `${remoteHost}:${remotePort}`,
@@ -232,27 +193,22 @@ export function TunnelForm({
           onChange={(e) => setTunnelName(e.target.value)}
         />
         <span className="form-hint">
-          A friendly name for saving this tunnel configuration.
+          A friendly name for this tunnel configuration.
         </span>
       </div>
 
       <div className="form-actions">
         <button
           className="btn btn-primary"
-          onClick={handleConnect}
-          disabled={!canConnect || connecting}
-        >
-          <Zap size={16} />
-          <span>{connecting ? "Connecting..." : "Connect"}</span>
-        </button>
-        <button
-          className="btn btn-outline"
           onClick={handleSave}
-          disabled={!canConnect}
-          title="Save configuration for quick re-use"
+          disabled={!canSave}
         >
           <Save size={16} />
-          <span>Save Config</span>
+          <span>Save Tunnel</span>
+        </button>
+        <button className="btn btn-outline" onClick={onCancel}>
+          <X size={16} />
+          <span>Cancel</span>
         </button>
       </div>
     </div>

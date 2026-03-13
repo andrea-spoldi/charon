@@ -1,10 +1,83 @@
 use log::info;
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::sync::Mutex;
 
 mod aws;
 mod commands;
 
+/// Initialise logging to both stdout and `~/.charon/charon.log`.
+///
+/// Log level priority: `CHARON_LOG_LEVEL` > `RUST_LOG` > default `info`.
+fn init_logging() {
+    let home = commands::charon_home_dir();
+    let log_file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(home.join("charon.log"))
+        .expect("Failed to open log file");
+    let log_file = Mutex::new(log_file);
+
+    let level = std::env::var("CHARON_LOG_LEVEL")
+        .or_else(|_| std::env::var("RUST_LOG"))
+        .unwrap_or_else(|_| "info".to_string());
+
+    env_logger::Builder::new()
+        .parse_filters(&level)
+        .format(move |buf, record| {
+            let ts = buf.timestamp_seconds();
+            let line = format!(
+                "{} [{}] {} - {}\n",
+                ts,
+                record.level(),
+                record.target(),
+                record.args()
+            );
+            // Append to log file
+            if let Ok(mut f) = log_file.lock() {
+                let _ = f.write_all(line.as_bytes());
+            }
+            // Also write to stdout
+            write!(buf, "{line}")
+        })
+        .init();
+}
+
+/// Migrate config files from the old platform-specific location to `~/.charon/`.
+fn migrate_legacy_configs() {
+    let new_dir = commands::charon_home_dir();
+
+    // Old location: dirs::config_dir()/charon  (~/Library/Application Support/charon on macOS,
+    // ~/.config/charon on Linux)
+    let old_dir = match dirs::config_dir() {
+        Some(d) => d.join("charon"),
+        None => return,
+    };
+
+    if !old_dir.exists() {
+        return;
+    }
+
+    for filename in &["settings.json", "tunnels.json"] {
+        let old_file = old_dir.join(filename);
+        let new_file = new_dir.join(filename);
+        if old_file.exists() && !new_file.exists() {
+            match std::fs::copy(&old_file, &new_file) {
+                Ok(_) => info!(
+                    "Migrated {} from {} to {}",
+                    filename,
+                    old_file.display(),
+                    new_file.display()
+                ),
+                Err(e) => log::warn!("Failed to migrate {}: {}", old_file.display(), e),
+            }
+        }
+    }
+}
+
 pub fn run() {
-    env_logger::init();
+    init_logging();
+    migrate_legacy_configs();
     info!("Starting Charon");
 
     tauri::Builder::default()

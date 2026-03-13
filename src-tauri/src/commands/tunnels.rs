@@ -203,12 +203,7 @@ fn resolve_session_manager_plugin() -> Option<String> {
 // ---------------------------------------------------------------------------
 
 fn tunnels_config_path() -> PathBuf {
-    let dir = dirs::config_dir()
-        .unwrap_or_else(|| dirs::home_dir().expect("No home dir").join(".config"))
-        .join("charon");
-
-    fs::create_dir_all(&dir).ok();
-    dir.join("tunnels.json")
+    super::charon_home_dir().join("tunnels.json")
 }
 
 fn load_tunnel_configs() -> Vec<TunnelConfig> {

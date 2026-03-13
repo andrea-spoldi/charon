@@ -1,3 +1,9 @@
+## [0.8.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.7.1...v0.8.0) (2026-03-13)
+
+### 🚀 Features
+
+* tunnel edit, profile selection, and profile copy icon ([54ab445](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/54ab4455f74bc047948840ce62947eb606fbd370))
+
 ## [0.7.1](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.7.0...v0.7.1) (2026-03-13)
 
 ### 🐛 Bug Fixes

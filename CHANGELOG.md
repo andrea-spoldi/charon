@@ -1,3 +1,9 @@
+## [0.7.1](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.7.0...v0.7.1) (2026-03-13)
+
+### 🐛 Bug Fixes
+
+* remote port not fully mirrored to local port field ([042f4ad](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/042f4adacf2479c1a5e509d57c2e546173dec409))
+
 ## [0.7.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.6.0...v0.7.0) (2026-03-13)
 
 ### 🚀 Features

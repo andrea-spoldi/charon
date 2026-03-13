@@ -37,6 +37,8 @@ use crate::commands::resolve_aws_cli;
 pub struct SsmInstance {
     pub instance_id: String,
     #[serde(default)]
+    pub instance_name: Option<String>,
+    #[serde(default)]
     pub computer_name: Option<String>,
     #[serde(default, alias = "IPAddress")]
     pub ip_address: Option<String>,
@@ -51,6 +53,22 @@ pub struct SsmInstance {
 #[serde(rename_all = "PascalCase")]
 struct DescribeInstancesResponse {
     instance_information_list: Vec<SsmInstanceRaw>,
+}
+
+/// EC2 instance from describe-instances --query (Name tag lookup)
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct Ec2Instance {
+    instance_id: String,
+    #[serde(default)]
+    tags: Vec<Ec2Tag>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "PascalCase")]
+struct Ec2Tag {
+    key: String,
+    value: String,
 }
 
 /// Raw SSM instance from AWS CLI (PascalCase fields)
@@ -72,6 +90,7 @@ impl From<SsmInstanceRaw> for SsmInstance {
     fn from(raw: SsmInstanceRaw) -> Self {
         Self {
             instance_id: raw.instance_id,
+            instance_name: None, // enriched later via ec2 describe-instances
             computer_name: raw.computer_name,
             ip_address: raw.ip_address,
             platform_type: raw.platform_type,
@@ -345,6 +364,66 @@ fn fetch_role_credentials(
 }
 
 // ---------------------------------------------------------------------------
+// Helper: fetch EC2 Name tags for a list of instance IDs
+// ---------------------------------------------------------------------------
+
+fn fetch_instance_names(
+    ak: &str,
+    sk: &str,
+    st: &str,
+    region: &str,
+    instance_ids: &[&str],
+) -> Result<HashMap<String, String>, String> {
+    let count = instance_ids.len();
+    let output = Command::new(resolve_aws_cli())
+        .args([
+            "ec2",
+            "describe-instances",
+            "--region",
+            region,
+            "--instance-ids",
+        ])
+        .args(instance_ids)
+        .args([
+            "--query",
+            "Reservations[].Instances[].{InstanceId:InstanceId,Tags:Tags}",
+            "--output",
+            "json",
+        ])
+        .env("AWS_CONFIG_FILE", "/dev/null")
+        .env("AWS_ACCESS_KEY_ID", ak)
+        .env("AWS_SECRET_ACCESS_KEY", sk)
+        .env("AWS_SESSION_TOKEN", st)
+        .output()
+        .map_err(|e| format!("Failed to run ec2 describe-instances: {e}"))?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("ec2 describe-instances failed: {stderr}"));
+    }
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let items: Vec<Ec2Instance> =
+        serde_json::from_str(&stdout).map_err(|e| format!("Failed to parse EC2 response: {e}"))?;
+
+    let mut name_map = HashMap::new();
+    for item in items {
+        if let Some(name_tag) = item.tags.iter().find(|t| t.key == "Name") {
+            if !name_tag.value.is_empty() {
+                name_map.insert(item.instance_id.clone(), name_tag.value.clone());
+            }
+        }
+    }
+
+    info!(
+        "Resolved Name tags for {}/{} instances",
+        name_map.len(),
+        count
+    );
+    Ok(name_map)
+}
+
+// ---------------------------------------------------------------------------
 // Helper: current ISO8601 timestamp
 // ---------------------------------------------------------------------------
 
@@ -452,11 +531,28 @@ pub fn list_ssm_instances(
     let response: DescribeInstancesResponse =
         serde_json::from_str(&stdout).map_err(|e| format!("Failed to parse response: {e}"))?;
 
-    let instances: Vec<SsmInstance> = response
+    let mut instances: Vec<SsmInstance> = response
         .instance_information_list
         .into_iter()
         .map(SsmInstance::from)
         .collect();
+
+    // Enrich with EC2 Name tags
+    if !instances.is_empty() {
+        let instance_ids: Vec<&str> = instances.iter().map(|i| i.instance_id.as_str()).collect();
+        match fetch_instance_names(&ak, &sk, &st, target_region, &instance_ids) {
+            Ok(name_map) => {
+                for inst in &mut instances {
+                    if let Some(name) = name_map.get(&inst.instance_id) {
+                        inst.instance_name = Some(name.clone());
+                    }
+                }
+            }
+            Err(e) => {
+                warn!("Could not fetch EC2 Name tags (non-fatal): {e}");
+            }
+        }
+    }
 
     info!("Found {} SSM instances", instances.len());
     Ok(instances)
@@ -743,10 +839,49 @@ mod tests {
         let raw: SsmInstanceRaw = serde_json::from_str(json).unwrap();
         let instance = SsmInstance::from(raw);
         assert_eq!(instance.instance_id, "i-0abc123def456");
+        assert!(instance.instance_name.is_none()); // enriched separately
         assert_eq!(instance.computer_name.as_deref(), Some("bastion-01"));
         assert_eq!(instance.ip_address.as_deref(), Some("10.0.1.50"));
         assert_eq!(instance.platform_type.as_deref(), Some("Linux"));
         assert_eq!(instance.ping_status, "Online");
+    }
+
+    #[test]
+    fn test_ec2_name_tag_parsing() {
+        let json = r#"[
+            {
+                "InstanceId": "i-001",
+                "Tags": [
+                    {"Key": "Name", "Value": "bastion-prod"},
+                    {"Key": "Env", "Value": "production"}
+                ]
+            },
+            {
+                "InstanceId": "i-002",
+                "Tags": [
+                    {"Key": "Env", "Value": "staging"}
+                ]
+            },
+            {
+                "InstanceId": "i-003",
+                "Tags": []
+            }
+        ]"#;
+        let items: Vec<Ec2Instance> = serde_json::from_str(json).unwrap();
+        assert_eq!(items.len(), 3);
+
+        let mut name_map = HashMap::new();
+        for item in &items {
+            if let Some(name_tag) = item.tags.iter().find(|t| t.key == "Name") {
+                if !name_tag.value.is_empty() {
+                    name_map.insert(item.instance_id.clone(), name_tag.value.clone());
+                }
+            }
+        }
+        assert_eq!(name_map.len(), 1);
+        assert_eq!(name_map.get("i-001").unwrap(), "bastion-prod");
+        assert!(!name_map.contains_key("i-002"));
+        assert!(!name_map.contains_key("i-003"));
     }
 
     #[test]

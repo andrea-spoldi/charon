@@ -146,9 +146,8 @@ export function TunnelForm({
                 </option>
                 {onlineInstances.map((i) => (
                   <option key={i.instanceId} value={i.instanceId}>
-                    {i.instanceId}
-                    {i.computerName ? ` (${i.computerName})` : ""}
-                    {i.ipAddress ? ` - ${i.ipAddress}` : ""}
+                    {i.instanceName ?? i.computerName ?? "—"} – {i.instanceId}
+                    {i.ipAddress ? ` – ${i.ipAddress}` : ""}
                   </option>
                 ))}
               </>

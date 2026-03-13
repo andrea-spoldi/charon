@@ -452,6 +452,22 @@
   vertical-align: middle;
 }
 
+.default-badge-corner {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  margin-left: 0;
+}
+
+.icon-btn-inline {
+  display: inline-flex;
+  margin-left: 4px;
+  padding: 0;
+  width: auto;
+  height: auto;
+  vertical-align: middle;
+}
+
 .copied-tooltip {
   position: absolute;
   top: -24px;
@@ -618,6 +634,7 @@
 }
 
 .profile-card {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;

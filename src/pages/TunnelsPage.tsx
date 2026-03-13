@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, Plus, Trash2, Zap } from "lucide-react";
+import { AlertTriangle, Edit3, Plus, Trash2, Zap } from "lucide-react";
 import type {
   SsoTokenInfo,
   AwsProfile,
@@ -64,16 +64,9 @@ export function TunnelsPage({
   onError,
 }: TunnelsPageProps) {
   const [showForm, setShowForm] = useState(false);
+  const [editingConfig, setEditingConfig] = useState<TunnelConfig | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [connectingId, setConnectingId] = useState<string | null>(null);
-
-  // Resolve the active profile
-  const activeProfile = defaultProfile
-    ? (profiles.find((p) => p.name === defaultProfile) ?? null)
-    : null;
-
-  const profileAccountId = activeProfile?.sso_account_id ?? null;
-  const profileRoleName = activeProfile?.sso_role_name ?? null;
 
   const handleDeleteConfig = (id: string) => {
     if (deleteConfirm === id) {
@@ -111,6 +104,17 @@ export function TunnelsPage({
   const handleSaveConfig = (config: TunnelConfig) => {
     onSaveConfig(config);
     setShowForm(false);
+    setEditingConfig(null);
+  };
+
+  const handleEdit = (config: TunnelConfig) => {
+    setEditingConfig(config);
+    setShowForm(true);
+  };
+
+  const handleCancel = () => {
+    setShowForm(false);
+    setEditingConfig(null);
   };
 
   if (ssoStatus.status !== "active") {
@@ -123,22 +127,6 @@ export function TunnelsPage({
           <p>Login to SSO to use port-forwarding tunnels.</p>
           <p className="text-muted">
             Use the Login button in the top bar to authenticate.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!activeProfile || !profileAccountId || !profileRoleName) {
-    return (
-      <div className="page">
-        <div className="page-header">
-          <h2>Tunnels</h2>
-        </div>
-        <div className="empty-state">
-          <p>No default profile configured.</p>
-          <p className="text-muted">
-            Set a default profile in the Profiles page to use tunnels.
           </p>
         </div>
       </div>
@@ -159,7 +147,10 @@ export function TunnelsPage({
           {!showForm && (
             <button
               className="btn btn-primary btn-sm"
-              onClick={() => setShowForm(true)}
+              onClick={() => {
+                setEditingConfig(null);
+                setShowForm(true);
+              }}
             >
               <Plus size={14} />
               <span>New</span>
@@ -186,18 +177,20 @@ export function TunnelsPage({
         </div>
       )}
 
-      {/* New Tunnel Form (collapsible) */}
+      {/* New / Edit Tunnel Form (collapsible) */}
       {showForm && (
         <section className="tunnels-section">
           <TunnelForm
             ssoStatus={ssoStatus}
-            profile={activeProfile}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
             instances={instances}
             settings={settings}
             loadingInstances={loadingInstances}
+            initial={editingConfig}
             onFetchInstances={onFetchInstances}
             onSave={handleSaveConfig}
-            onCancel={() => setShowForm(false)}
+            onCancel={handleCancel}
           />
         </section>
       )}
@@ -243,7 +236,14 @@ export function TunnelsPage({
                     {connectingId === config.id ? "Connecting..." : "Connect"}
                   </button>
                   <button
-                    className={`btn btn-sm ${deleteConfirm === config.id ? "btn-danger" : "btn-outline"}`}
+                    className="icon-btn"
+                    onClick={() => handleEdit(config)}
+                    title="Edit"
+                  >
+                    <Edit3 size={14} />
+                  </button>
+                  <button
+                    className={`icon-btn icon-btn-danger ${deleteConfirm === config.id ? "icon-btn-confirm" : ""}`}
                     onClick={() => handleDeleteConfig(config.id)}
                     title={
                       deleteConfirm === config.id
@@ -251,7 +251,7 @@ export function TunnelsPage({
                         : "Delete"
                     }
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>

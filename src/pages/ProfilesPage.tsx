@@ -7,6 +7,7 @@ import {
   Terminal,
   CircleCheck,
   Circle,
+  Copy,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useProfiles } from "../hooks/useProfiles";
@@ -38,6 +39,7 @@ export function ProfilesPage({
   const [actionStatus, setActionStatus] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [copiedProfile, setCopiedProfile] = useState<string | null>(null);
 
   const handleSave = async (profile: AwsProfile) => {
     await saveProfile(profile);
@@ -142,6 +144,16 @@ export function ProfilesPage({
     }, 5000);
   };
 
+  const handleCopyName = async (name: string) => {
+    try {
+      await navigator.clipboard.writeText(name);
+      setCopiedProfile(name);
+      setTimeout(() => setCopiedProfile(null), 2000);
+    } catch {
+      // Fallback ignored
+    }
+  };
+
   const canConnect = (profile: AwsProfile) =>
     ssoStatus.status === "active" &&
     !!ssoStatus.access_token &&
@@ -192,12 +204,24 @@ export function ProfilesPage({
               const isDefault = defaultProfile === profile.name;
               return (
                 <div key={profile.name} className="profile-card">
+                  {isDefault && (
+                    <span className="default-badge default-badge-corner">
+                      default
+                    </span>
+                  )}
                   <div className="profile-info">
                     <span className="profile-name">
                       {profile.name}
-                      {isDefault && (
-                        <span className="default-badge">default</span>
-                      )}
+                      <button
+                        className="icon-btn icon-btn-inline"
+                        title="Copy profile name"
+                        onClick={() => handleCopyName(profile.name)}
+                      >
+                        <Copy size={12} />
+                        {copiedProfile === profile.name && (
+                          <span className="copied-tooltip">Copied!</span>
+                        )}
+                      </button>
                     </span>
                     {profile.sso_session && (
                       <span className="text-muted">

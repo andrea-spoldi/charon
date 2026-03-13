@@ -1,3 +1,13 @@
+## [0.6.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.5.0...v0.6.0) (2026-03-13)
+
+### 🚀 Features
+
+* move config to ~/.charon and add file-based logging ([07c97ed](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/07c97edde742535f96a497f4e7290b479cd18137))
+
+### 🐛 Bug Fixes
+
+* enrich PATH for spawned SSM tunnel process in .app bundle ([756495c](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/756495ca021aa0006ef065c3540ab7930523c3c4))
+
 ## [0.5.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.4.0...v0.5.0) (2026-03-12)
 
 ### 🚀 Features

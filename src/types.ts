@@ -64,6 +64,7 @@ export interface AppSettings {
 // SSM instance from describe-instance-information
 export interface SsmInstance {
   instanceId: string;
+  instanceName: string | null;
   computerName: string | null;
   ipAddress: string | null;
   platformType: string | null;

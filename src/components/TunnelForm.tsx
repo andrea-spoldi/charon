@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { List, RefreshCw, Save, X } from "lucide-react";
 import type {
   SsoTokenInfo,
@@ -10,10 +10,12 @@ import type {
 
 interface TunnelFormProps {
   ssoStatus: SsoTokenInfo;
-  profile: AwsProfile;
+  profiles: AwsProfile[];
+  defaultProfile: string | null;
   instances: SsmInstance[];
   settings: AppSettings;
   loadingInstances: boolean;
+  initial?: TunnelConfig | null;
   onFetchInstances: (
     accessToken: string,
     accountId: string,
@@ -27,31 +29,70 @@ interface TunnelFormProps {
 
 export function TunnelForm({
   ssoStatus,
-  profile,
+  profiles,
+  defaultProfile,
   instances,
   settings,
   loadingInstances,
+  initial,
   onFetchInstances,
   onSave,
   onCancel,
 }: TunnelFormProps) {
-  const [instanceId, setInstanceId] = useState("");
-  const [showBrowser, setShowBrowser] = useState(false);
-  const [remoteHost, setRemoteHost] = useState("");
-  const [remotePort, setRemotePort] = useState("");
-  const [localPort, setLocalPort] = useState("");
-  const [useRandomPort, setUseRandomPort] = useState(false);
-  const [tunnelName, setTunnelName] = useState("");
+  // Eligible profiles: must have account + role
+  const eligibleProfiles = profiles.filter(
+    (p) => p.name !== "default" && p.sso_account_id && p.sso_role_name,
+  );
 
-  const accountId = profile.sso_account_id!;
-  const roleName = profile.sso_role_name!;
-  const region = profile.region ?? settings.default_region;
+  // Resolve initial profile: if editing, match by accountId+roleName; else use default
+  const resolveInitialProfile = (): string => {
+    if (initial) {
+      const match = eligibleProfiles.find(
+        (p) =>
+          p.sso_account_id === initial.accountId &&
+          p.sso_role_name === initial.roleName,
+      );
+      if (match) return match.name;
+    }
+    return defaultProfile ?? eligibleProfiles[0]?.name ?? "";
+  };
+
+  const [selectedProfileName, setSelectedProfileName] = useState(
+    resolveInitialProfile,
+  );
+  const [instanceId, setInstanceId] = useState(initial?.instanceId ?? "");
+  const [showBrowser, setShowBrowser] = useState(false);
+  const [remoteHost, setRemoteHost] = useState(initial?.remoteHost ?? "");
+  const [remotePort, setRemotePort] = useState(
+    initial ? String(initial.remotePort) : "",
+  );
+  const [localPort, setLocalPort] = useState(
+    initial && initial.localPort && !initial.useRandomPort
+      ? String(initial.localPort)
+      : "",
+  );
+  const [useRandomPort, setUseRandomPort] = useState(
+    initial?.useRandomPort ?? false,
+  );
+  const [tunnelName, setTunnelName] = useState(initial?.name ?? "");
+
+  const selectedProfile = eligibleProfiles.find(
+    (p) => p.name === selectedProfileName,
+  );
+  const accountId = selectedProfile?.sso_account_id ?? "";
+  const roleName = selectedProfile?.sso_role_name ?? "";
+  const region = selectedProfile?.region ?? settings.default_region;
   const accessToken = ssoStatus.access_token;
   const ssoRegion = ssoStatus.region;
   const onlineInstances = instances.filter((i) => i.pingStatus === "Online");
 
+  // Reset instance browser when profile changes
+  useEffect(() => {
+    setShowBrowser(false);
+  }, [selectedProfileName]);
+
   const handleBrowseInstances = () => {
-    if (accessToken && ssoRegion) {
+    if (accessToken && ssoRegion && accountId && roleName) {
       setShowBrowser(true);
       onFetchInstances(accessToken, accountId, roleName, ssoRegion, region);
     }
@@ -71,6 +112,7 @@ export function TunnelForm({
       : parseInt(remotePort, 10) || 0;
 
   const canSave =
+    selectedProfile &&
     instanceId.trim() &&
     remoteHost.trim() &&
     remotePort &&
@@ -79,7 +121,7 @@ export function TunnelForm({
   const handleSave = () => {
     if (!canSave) return;
     onSave({
-      id: "",
+      id: initial?.id ?? "",
       name: tunnelName || `${remoteHost}:${remotePort}`,
       accountId,
       roleName,
@@ -95,13 +137,27 @@ export function TunnelForm({
   return (
     <div className="settings-form tunnel-form">
       <div className="form-field">
-        <label>Profile</label>
-        <span className="form-value">
-          {profile.name}{" "}
-          <span className="text-muted">
-            ({accountId} / {roleName})
+        <label htmlFor="tunnel-profile">Profile</label>
+        {eligibleProfiles.length <= 1 ? (
+          <span className="form-value">
+            {selectedProfile?.name ?? "—"}{" "}
+            <span className="text-muted">
+              ({accountId} / {roleName})
+            </span>
           </span>
-        </span>
+        ) : (
+          <select
+            id="tunnel-profile"
+            value={selectedProfileName}
+            onChange={(e) => setSelectedProfileName(e.target.value)}
+          >
+            {eligibleProfiles.map((p) => (
+              <option key={p.name} value={p.name}>
+                {p.name} ({p.sso_account_id} / {p.sso_role_name})
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="form-field">
@@ -117,7 +173,7 @@ export function TunnelForm({
           <button
             className="btn btn-sm btn-outline"
             onClick={handleBrowseInstances}
-            disabled={loadingInstances}
+            disabled={loadingInstances || !selectedProfile}
             title="Browse instances"
           >
             {loadingInstances ? (
@@ -229,7 +285,7 @@ export function TunnelForm({
           disabled={!canSave}
         >
           <Save size={16} />
-          <span>Save Tunnel</span>
+          <span>{initial ? "Update Tunnel" : "Save Tunnel"}</span>
         </button>
         <button className="btn btn-outline" onClick={onCancel}>
           <X size={16} />

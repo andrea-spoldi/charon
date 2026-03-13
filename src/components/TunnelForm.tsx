@@ -178,12 +178,7 @@ export function TunnelForm({
             type="number"
             placeholder="e.g., 5432"
             value={remotePort}
-            onChange={(e) => {
-              setRemotePort(e.target.value);
-              if (!localPort && !useRandomPort) {
-                setLocalPort(e.target.value);
-              }
-            }}
+            onChange={(e) => setRemotePort(e.target.value)}
             min={1}
             max={65535}
           />

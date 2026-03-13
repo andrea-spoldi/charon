@@ -12,6 +12,7 @@ Built with [Tauri 2](https://v2.tauri.app/) (Rust backend + React 19 / TypeScrip
 | [Node.js](https://nodejs.org/) | >= 22 | Frontend toolchain |
 | [pnpm](https://pnpm.io/) | >= 9 | Enable with `corepack enable` |
 | [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) | v2 | Required for SSO login and credential management |
+| [Session Manager plugin](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html) | — | Required for SSM port-forwarding tunnels |
 | [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/) | — | Platform-specific system libraries |
 | [pre-commit](https://pre-commit.com/) | — | Optional, for git hooks |
 
@@ -45,17 +46,21 @@ charon/
 │   │   ├── StatusBar.tsx       # Bottom status bar (SSO token info)
 │   │   ├── ToastContainer.tsx  # Toast notification system
 │   │   └── TopBar.tsx          # Top application bar
+│   │   ├── ActiveTunnelCard.tsx # Active tunnel status card
+│   │   └── TunnelForm.tsx      # Tunnel creation/edit form
 │   ├── hooks/                  # Custom React hooks
 │   │   ├── useAccounts.ts      # AWS account data fetching
 │   │   ├── useProfiles.ts      # SSO profile management
 │   │   ├── useSsoStatus.ts     # SSO session status polling
-│   │   └── useToast.ts         # Toast notification state
+│   │   ├── useToast.ts         # Toast notification state
+│   │   └── useTunnels.ts       # SSM tunnel state management
 │   ├── pages/                  # Application pages
 │   │   ├── AccountsPage.tsx    # AWS account listing
 │   │   ├── ProfileForm.tsx     # SSO profile editor
 │   │   ├── ProfilesPage.tsx    # SSO profile management
 │   │   ├── SessionsPage.tsx    # Active sessions view
-│   │   └── SettingsPage.tsx    # Application settings
+│   │   ├── SettingsPage.tsx    # Application settings
+│   │   └── TunnelsPage.tsx     # SSM port-forwarding tunnels
 │   ├── styles/                 # CSS styles
 │   ├── types.ts                # Shared TypeScript types
 │   ├── App.tsx                 # Main application component
@@ -71,7 +76,8 @@ charon/
 │   │   │   ├── accounts.rs     # Account listing commands
 │   │   │   ├── profiles.rs     # Profile CRUD commands
 │   │   │   ├── settings.rs     # Settings commands
-│   │   │   └── sso.rs          # SSO login/status commands
+│   │   │   ├── sso.rs          # SSO login/status commands
+│   │   │   └── tunnels.rs      # SSM port-forwarding commands
 │   │   ├── lib.rs              # Tauri app builder, plugin setup
 │   │   └── main.rs             # Application entry point
 │   ├── icons/                  # Platform icons (png, icns, ico)

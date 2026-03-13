@@ -1,3 +1,9 @@
+## [0.7.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.6.0...v0.7.0) (2026-03-13)
+
+### 🚀 Features
+
+* show instance name, ID, and IP in tunnel instance browser ([98a6dfa](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/98a6dfa322928c498508c331dd1612dd3df0c4c0))
+
 ## [0.6.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.5.0...v0.6.0) (2026-03-13)
 
 ### 🚀 Features

@@ -198,17 +198,76 @@ fn resolve_session_manager_plugin() -> Option<String> {
     None
 }
 
+/// Build a PATH that includes common locations for `session-manager-plugin`
+/// and `aws`. Inside a macOS `.app` bundle the inherited PATH is typically
+/// just `/usr/bin:/bin:/usr/sbin:/sbin`, which is not enough.
+fn build_enriched_path() -> String {
+    let mut dirs: Vec<String> = Vec::new();
+
+    // Directory of the resolved session-manager-plugin binary
+    if let Some(plugin_path) = resolve_session_manager_plugin() {
+        if let Some(parent) = std::path::Path::new(&plugin_path).parent() {
+            dirs.push(parent.to_string_lossy().to_string());
+        }
+    }
+
+    // Directory of the resolved aws CLI binary
+    let aws_path = resolve_aws_cli();
+    if let Some(parent) = std::path::Path::new(&aws_path).parent() {
+        let p = parent.to_string_lossy().to_string();
+        if !dirs.contains(&p) {
+            dirs.push(p);
+        }
+    }
+
+    // Well-known locations that may not be on the default .app PATH
+    let extra = [
+        "/usr/local/sessionmanagerplugin/bin",
+        "/usr/local/bin",
+        "/opt/homebrew/bin",
+        "/usr/bin",
+        "/bin",
+        "/usr/sbin",
+        "/sbin",
+    ];
+    for d in &extra {
+        let s = d.to_string();
+        if !dirs.contains(&s) {
+            dirs.push(s);
+        }
+    }
+
+    // ~/.local/bin
+    if let Some(home) = dirs::home_dir() {
+        let local_bin = home
+            .join(".local")
+            .join("bin")
+            .to_string_lossy()
+            .to_string();
+        if !dirs.contains(&local_bin) {
+            dirs.push(local_bin);
+        }
+    }
+
+    // Append the current PATH (if any) to preserve anything else
+    if let Ok(current) = std::env::var("PATH") {
+        for segment in current.split(':') {
+            let s = segment.to_string();
+            if !s.is_empty() && !dirs.contains(&s) {
+                dirs.push(s);
+            }
+        }
+    }
+
+    dirs.join(":")
+}
+
 // ---------------------------------------------------------------------------
 // Config persistence
 // ---------------------------------------------------------------------------
 
 fn tunnels_config_path() -> PathBuf {
-    let dir = dirs::config_dir()
-        .unwrap_or_else(|| dirs::home_dir().expect("No home dir").join(".config"))
-        .join("charon");
-
-    fs::create_dir_all(&dir).ok();
-    dir.join("tunnels.json")
+    super::charon_home_dir().join("tunnels.json")
 }
 
 fn load_tunnel_configs() -> Vec<TunnelConfig> {
@@ -460,6 +519,10 @@ pub async fn start_tunnel(
     })
     .to_string();
 
+    // Build a rich PATH so the spawned aws CLI can find session-manager-plugin
+    // even inside a macOS .app bundle (which has a minimal default PATH).
+    let enriched_path = build_enriched_path();
+
     // Spawn the SSM session in its own process group so we can kill the
     // entire tree (aws cli + session-manager-plugin) on disconnect.
     let mut cmd = tokio::process::Command::new(resolve_aws_cli());
@@ -475,6 +538,7 @@ pub async fn start_tunnel(
         "--region",
         &region,
     ])
+    .env("PATH", &enriched_path)
     .env("AWS_CONFIG_FILE", "/dev/null")
     .env("AWS_ACCESS_KEY_ID", &ak)
     .env("AWS_SECRET_ACCESS_KEY", &sk)
@@ -558,15 +622,30 @@ pub async fn list_active_tunnels(
     for (id, handle) in handles.iter_mut() {
         match handle.child.try_wait() {
             Ok(Some(exit_status)) => {
-                // Process has exited
+                // Process has exited — try to read stderr for details
+                let mut stderr_msg = String::new();
+                if let Some(mut stderr) = handle.child.stderr.take() {
+                    use tokio::io::AsyncReadExt;
+                    let mut buf = Vec::new();
+                    let _ = stderr.read_to_end(&mut buf).await;
+                    stderr_msg = String::from_utf8_lossy(&buf).trim().to_string();
+                }
+
                 if exit_status.success() {
                     handle.info.status = TunnelStatus::Disconnected;
                 } else {
+                    let code = exit_status.code().unwrap_or(-1);
+                    warn!(
+                        "Tunnel {} exited with code {code}: {stderr_msg}",
+                        handle.info.id
+                    );
                     handle.info.status = TunnelStatus::Error;
-                    handle.info.error_message = Some(format!(
-                        "Process exited with code {}",
-                        exit_status.code().unwrap_or(-1)
-                    ));
+                    let detail = if stderr_msg.is_empty() {
+                        format!("Process exited with code {code}")
+                    } else {
+                        format!("Exit code {code}: {stderr_msg}")
+                    };
+                    handle.info.error_message = Some(detail);
                 }
                 dead_ids.push(id.clone());
             }

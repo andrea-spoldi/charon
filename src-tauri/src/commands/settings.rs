@@ -1,7 +1,6 @@
 use log::info;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
@@ -22,13 +21,8 @@ impl Default for AppSettings {
     }
 }
 
-fn settings_path() -> PathBuf {
-    let dir = dirs::config_dir()
-        .unwrap_or_else(|| dirs::home_dir().expect("No home dir").join(".config"))
-        .join("charon");
-
-    fs::create_dir_all(&dir).ok();
-    dir.join("settings.json")
+fn settings_path() -> std::path::PathBuf {
+    super::charon_home_dir().join("settings.json")
 }
 
 #[tauri::command]

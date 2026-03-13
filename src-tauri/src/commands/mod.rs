@@ -4,7 +4,15 @@ pub mod settings;
 pub mod sso;
 pub mod tunnels;
 
+use std::fs;
 use std::path::PathBuf;
+
+/// Return the Charon home directory (`~/.charon/`), creating it if needed.
+pub fn charon_home_dir() -> PathBuf {
+    let dir = dirs::home_dir().expect("No home dir").join(".charon");
+    fs::create_dir_all(&dir).ok();
+    dir
+}
 
 /// Resolve the full path to the AWS CLI binary.
 /// Checks settings first, then probes common install locations.

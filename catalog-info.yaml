@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: charon
+  title: Charon
+  description: AWS SSO credentials - console access manager
+  annotations:
+    gitlab.com/project-slug: docebo/application-platform-team/internal-utilities/charon
+    docebo.atlassian.net/release_deployment_process: Autonomous
+spec:
+  type: tool
+  lifecycle: internal
+  owner: group:default/team-application-platform

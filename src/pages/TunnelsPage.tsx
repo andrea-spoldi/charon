@@ -117,21 +117,7 @@ export function TunnelsPage({
     setEditingConfig(null);
   };
 
-  if (ssoStatus.status !== "active") {
-    return (
-      <div className="page">
-        <div className="page-header">
-          <h2>Tunnels</h2>
-        </div>
-        <div className="empty-state">
-          <p>Login to SSO to use port-forwarding tunnels.</p>
-          <p className="text-muted">
-            Use the Login button in the top bar to authenticate.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const ssoActive = ssoStatus.status === "active";
 
   return (
     <div className="page">
@@ -158,6 +144,16 @@ export function TunnelsPage({
           )}
         </div>
       </div>
+
+      {!ssoActive && (
+        <div className="warning-banner">
+          <AlertTriangle size={16} />
+          <span>
+            SSO session expired — connect and browse instances are disabled. Use
+            the Login button in the top bar to authenticate.
+          </span>
+        </div>
+      )}
 
       {pluginInstalled === false && (
         <div className="warning-banner">
@@ -229,8 +225,8 @@ export function TunnelsPage({
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={() => handleConnect(config)}
-                    disabled={connectingId === config.id}
-                    title="Connect"
+                    disabled={!ssoActive || connectingId === config.id}
+                    title={ssoActive ? "Connect" : "SSO session required"}
                   >
                     <Zap size={12} />
                     {connectingId === config.id ? "Connecting..." : "Connect"}

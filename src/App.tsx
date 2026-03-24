@@ -46,11 +46,45 @@ function App() {
   const { toasts, addToast, dismissToast } = useToast();
   const { fontSize, setFontSize } = useFontSize();
   const hasFetched = useRef(false);
+  const [profileExpiration, setProfileExpiration] = useState<number | null>(
+    null,
+  );
 
   // Load settings once on mount
   useEffect(() => {
     invoke<AppSettings>("get_settings").then(setSettings).catch(console.error);
   }, []);
+
+  // Fetch default profile credential expiration when SSO is active
+  useEffect(() => {
+    if (
+      ssoStatus.status !== "active" ||
+      !ssoStatus.access_token ||
+      !ssoStatus.region
+    ) {
+      setProfileExpiration(null);
+      return;
+    }
+    const defaultProf = profiles.find((p) => p.name === defaultProfile);
+    if (!defaultProf?.sso_account_id || !defaultProf?.sso_role_name) {
+      setProfileExpiration(null);
+      return;
+    }
+    invoke<{ expiration: number }>("get_role_credentials", {
+      accessToken: ssoStatus.access_token,
+      accountId: defaultProf.sso_account_id,
+      roleName: defaultProf.sso_role_name,
+      region: ssoStatus.region,
+    })
+      .then((creds) => setProfileExpiration(creds.expiration))
+      .catch(() => setProfileExpiration(null));
+  }, [
+    ssoStatus.status,
+    ssoStatus.access_token,
+    ssoStatus.region,
+    defaultProfile,
+    profiles,
+  ]);
 
   // Login trigger: when TopBar login is clicked, navigate to Sessions and start login
   const [loginSessionName, setLoginSessionName] = useState<string | null>(null);
@@ -185,7 +219,12 @@ function App() {
       <Sidebar activePage={activePage} onNavigate={setActivePage} />
       <main>{renderPage()}</main>
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
-      <StatusBar ssoStatus={ssoStatus} settings={settings} />
+      <StatusBar
+        ssoStatus={ssoStatus}
+        settings={settings}
+        defaultProfile={defaultProfile}
+        profileExpiration={profileExpiration}
+      />
     </div>
   );
 }

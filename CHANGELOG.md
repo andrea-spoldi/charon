@@ -1,3 +1,9 @@
+## [0.8.1](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.8.0...v0.8.1) (2026-03-25)
+
+### 🐛 Bug Fixes
+
+* show saved tunnels and new form even when SSO is expired ([4d8fafd](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/4d8fafdb474e845917a6f2ee9cbe10afad1414c8))
+
 ## [0.8.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.7.1...v0.8.0) (2026-03-13)
 
 ### 🚀 Features

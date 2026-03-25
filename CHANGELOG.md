@@ -1,3 +1,17 @@
+## [0.10.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.9.0...v0.10.0) (2026-03-25)
+
+### 🚀 Features
+
+* embedded SSM shell sessions with xterm.js + portable-pty ([d80357d](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/d80357d2f8be9e3bdef7b87730a5b63dccf8fbeb))
+
+### 🐛 Bug Fixes
+
+* add manual profile refresh to Tunnels and Shell pages ([5467650](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/5467650cd72c5198e1230406feac55fc2c05b618))
+* add Tauri event permissions and align Shell page with Tunnels style ([d713fc0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/d713fc06966c5fcc26e1a3fe219a6be8e2f072e6))
+* remove empty-state message from Shell page ([3bddd9b](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/3bddd9b98fac65cb765dccabb32cb355816885ee))
+* share single profiles state across all pages ([0eff702](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/0eff702e02debc22d212d3830676ad637913634d))
+* sync Cargo.toml version to 0.9.0 and fix bump script for macOS ([ff7c896](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/ff7c8968375f5c035e1645513ea1b928c63c82d1))
+
 ## [0.9.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.8.1...v0.9.0) (2026-03-25)
 
 ### 🚀 Features

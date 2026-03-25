@@ -170,11 +170,6 @@ function App() {
           <ProfilesPage
             ssoStatus={ssoStatus}
             settings={settings}
-            profiles={profiles}
-            sessions={sessions}
-            defaultProfile={defaultProfile}
-            loading={sessionsLoading}
-            onRefresh={refreshProfiles}
             onError={addToast}
           />
         );
@@ -197,6 +192,7 @@ function App() {
             onStop={tunnels.stopTunnel}
             onSaveConfig={tunnels.saveConfig}
             onDeleteConfig={tunnels.deleteConfig}
+            onRefreshProfiles={refreshProfiles}
             onError={addToast}
           />
         );
@@ -211,6 +207,7 @@ function App() {
             pluginInstalled={tunnels.pluginInstalled}
             loadingInstances={tunnels.loadingInstances}
             onFetchInstances={tunnels.fetchInstances}
+            onRefreshProfiles={refreshProfiles}
             onError={addToast}
           />
         );

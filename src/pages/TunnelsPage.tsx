@@ -43,6 +43,7 @@ interface TunnelsPageProps {
   onStop: (tunnelId: string) => void;
   onSaveConfig: (config: TunnelConfig) => void;
   onDeleteConfig: (id: string) => void;
+  onRefreshProfiles: () => void;
   onError: (msg: string, type?: "error" | "info") => void;
 }
 
@@ -61,6 +62,7 @@ export function TunnelsPage({
   onStop,
   onSaveConfig,
   onDeleteConfig,
+  onRefreshProfiles,
   onError,
 }: TunnelsPageProps) {
   const [showForm, setShowForm] = useState(false);
@@ -185,6 +187,7 @@ export function TunnelsPage({
             loadingInstances={loadingInstances}
             initial={editingConfig}
             onFetchInstances={onFetchInstances}
+            onRefreshProfiles={onRefreshProfiles}
             onSave={handleSaveConfig}
             onCancel={handleCancel}
           />

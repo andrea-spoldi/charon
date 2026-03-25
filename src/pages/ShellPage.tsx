@@ -30,6 +30,7 @@ interface ShellPageProps {
     ssoRegion: string,
     targetRegion: string,
   ) => void;
+  onRefreshProfiles: () => void;
   onError: (msg: string, type?: "error" | "info" | "success") => void;
 }
 
@@ -42,6 +43,7 @@ export function ShellPage({
   pluginInstalled,
   loadingInstances,
   onFetchInstances,
+  onRefreshProfiles,
   onError,
 }: ShellPageProps) {
   const {
@@ -234,7 +236,16 @@ export function ShellPage({
       <section className="tunnels-section">
         <div className="settings-form tunnel-form">
           <div className="form-field">
-            <label htmlFor="shell-profile">Profile</label>
+            <label htmlFor="shell-profile">
+              Profile
+              <button
+                className="icon-btn icon-btn-inline"
+                title="Refresh profiles"
+                onClick={onRefreshProfiles}
+              >
+                <RefreshCw size={12} />
+              </button>
+            </label>
             {eligibleProfiles.length <= 1 ? (
               <span className="form-value">
                 {selectedProfile?.name ?? "—"}{" "}

@@ -14,7 +14,8 @@ echo "Bumping version to ${VERSION}"
 sed -i"" -e "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/" package.json
 
 # src-tauri/Cargo.toml (only the first occurrence under [package])
-sed -i"" -e "0,/^version = \".*\"/s//version = \"${VERSION}\"/" src-tauri/Cargo.toml
+# macOS sed does not support 0,/pattern/ — use awk to replace only the first match
+awk -v ver="$VERSION" '!done && /^version = ".*"/ { print "version = \"" ver "\""; done=1; next } { print }' src-tauri/Cargo.toml > src-tauri/Cargo.toml.tmp && mv src-tauri/Cargo.toml.tmp src-tauri/Cargo.toml
 
 # src-tauri/tauri.conf.json
 sed -i"" -e "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/" src-tauri/tauri.conf.json

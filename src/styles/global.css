@@ -1295,3 +1295,44 @@
   flex-shrink: 0;
   margin-top: 2px;
 }
+
+/* ===== Shell Sessions ===== */
+
+.shell-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.shell-page .page-header {
+  flex-shrink: 0;
+}
+
+.shell-page .page-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shell-terminal-wrapper {
+  flex: 1;
+  min-height: 0;
+  padding: 0 16px 16px;
+  overflow: hidden;
+}
+
+.terminal-container {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+/* Override xterm.js defaults to match Charon's look */
+.terminal-container .xterm {
+  padding: 8px;
+}
+
+.terminal-container .xterm-viewport {
+  border-radius: 6px;
+}

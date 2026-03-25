@@ -1,4 +1,11 @@
-import { Server, KeyRound, UserCog, Settings, Cable } from "lucide-react";
+import {
+  Server,
+  KeyRound,
+  UserCog,
+  Settings,
+  Cable,
+  TerminalSquare,
+} from "lucide-react";
 import type { Page } from "../types";
 
 interface SidebarProps {
@@ -9,6 +16,7 @@ interface SidebarProps {
 const NAV_ITEMS: { page: Page; label: string; icon: typeof Server }[] = [
   { page: "accounts", label: "Accounts", icon: Server },
   { page: "tunnels", label: "Tunnels", icon: Cable },
+  { page: "shell", label: "Shell", icon: TerminalSquare },
   { page: "sessions", label: "Sessions", icon: KeyRound },
   { page: "profiles", label: "Profiles", icon: UserCog },
   { page: "settings", label: "Settings", icon: Settings },

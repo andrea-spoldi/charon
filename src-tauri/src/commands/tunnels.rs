@@ -180,7 +180,7 @@ impl TunnelState {
 // Session manager plugin detection
 // ---------------------------------------------------------------------------
 
-fn resolve_session_manager_plugin() -> Option<String> {
+pub(crate) fn resolve_session_manager_plugin() -> Option<String> {
     let candidates = [
         "/usr/local/sessionmanagerplugin/bin/session-manager-plugin",
         "/usr/local/bin/session-manager-plugin",
@@ -220,7 +220,7 @@ fn resolve_session_manager_plugin() -> Option<String> {
 /// Build a PATH that includes common locations for `session-manager-plugin`
 /// and `aws`. Inside a macOS `.app` bundle the inherited PATH is typically
 /// just `/usr/bin:/bin:/usr/sbin:/sbin`, which is not enough.
-fn build_enriched_path() -> String {
+pub(crate) fn build_enriched_path() -> String {
     let mut dirs: Vec<String> = Vec::new();
 
     // Directory of the resolved session-manager-plugin binary
@@ -312,7 +312,7 @@ fn save_tunnel_configs(configs: &[TunnelConfig]) -> Result<(), String> {
 // Helper: get STS credentials via AWS CLI
 // ---------------------------------------------------------------------------
 
-fn fetch_role_credentials(
+pub(crate) fn fetch_role_credentials(
     access_token: &str,
     account_id: &str,
     role_name: &str,

@@ -1,3 +1,9 @@
+## [0.9.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.8.1...v0.9.0) (2026-03-25)
+
+### 🚀 Features
+
+* show default profile credential expiration in status bar ([0a5e195](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/0a5e19556f191ad1173e03e0f290a7e9baf1140e))
+
 ## [0.8.1](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.8.0...v0.8.1) (2026-03-25)
 
 ### 🐛 Bug Fixes

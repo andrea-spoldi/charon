@@ -325,16 +325,6 @@ export function ShellPage({
           </div>
         </div>
       </section>
-
-      {!session && (
-        <div className="empty-state">
-          <p>No active shell session.</p>
-          <p className="text-muted">
-            Select a profile and instance above, then click{" "}
-            <strong>Connect</strong> to start an interactive session.
-          </p>
-        </div>
-      )}
     </div>
   );
 }

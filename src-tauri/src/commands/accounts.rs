@@ -248,6 +248,31 @@ pub fn open_aws_console(
     Ok(())
 }
 
+/// Write a set of STS credentials into a named section of an INI file
+fn write_credentials_section(
+    conf: &mut ini::Ini,
+    section: &str,
+    creds: &RoleCredentials,
+    region: &str,
+) {
+    conf.set_to(
+        Some(section),
+        "aws_access_key_id".to_string(),
+        creds.access_key_id.clone(),
+    );
+    conf.set_to(
+        Some(section),
+        "aws_secret_access_key".to_string(),
+        creds.secret_access_key.clone(),
+    );
+    conf.set_to(
+        Some(section),
+        "aws_session_token".to_string(),
+        creds.session_token.clone(),
+    );
+    conf.set_to(Some(section), "region".to_string(), region.to_string());
+}
+
 /// Write temporary STS credentials to ~/.aws/credentials for CLI use
 #[tauri::command]
 pub fn configure_cli_credentials(
@@ -275,26 +300,16 @@ pub fn configure_cli_credentials(
         ini::Ini::new()
     };
 
-    conf.set_to(
-        Some(profile_name),
-        "aws_access_key_id".to_string(),
-        creds.access_key_id.clone(),
-    );
-    conf.set_to(
-        Some(profile_name),
-        "aws_secret_access_key".to_string(),
-        creds.secret_access_key.clone(),
-    );
-    conf.set_to(
-        Some(profile_name),
-        "aws_session_token".to_string(),
-        creds.session_token.clone(),
-    );
-    conf.set_to(
-        Some(profile_name),
-        "region".to_string(),
-        cli_region.to_string(),
-    );
+    // Write credentials under the named profile
+    write_credentials_section(&mut conf, profile_name, &creds, cli_region);
+
+    // If this profile is the default, also write to [default] so bare `aws` commands work
+    let store = load_profile_store();
+    let is_default = store.default_profile.as_deref() == Some(profile_name);
+    if is_default {
+        write_credentials_section(&mut conf, "default", &creds, cli_region);
+        info!("Also wrote credentials to [default] section");
+    }
 
     conf.write_to_file(&path)
         .map_err(|e| format!("Failed to write credentials: {e}"))?;

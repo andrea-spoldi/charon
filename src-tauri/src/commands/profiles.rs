@@ -81,6 +81,11 @@ pub fn set_default_profile(name: &str) -> Result<String, String> {
     // Also write region/output to [default] in ~/.aws/config (no SSO fields)
     if let Some(profile) = store.profiles.iter().find(|p| p.name == name) {
         write_default_region_to_aws_config(profile.region.as_deref());
+
+        // If this profile has an active session, mirror its credentials to [default]
+        if profile.session_active {
+            mirror_credentials_to_default(name);
+        }
     }
 
     Ok(format!("Profile '{name}' set as default"))
@@ -101,6 +106,41 @@ pub fn migrate_profiles() -> Result<String, String> {
     Ok(format!(
         "Imported {imported} profile(s), cleaned {cleaned} from ~/.aws/config"
     ))
+}
+
+/// Copy credentials from a named profile section to [default] in ~/.aws/credentials
+fn mirror_credentials_to_default(profile_name: &str) {
+    let path = config::aws_credentials_path();
+    if !path.exists() {
+        return;
+    }
+    let Ok(mut conf) = ini::Ini::load_from_file(&path) else {
+        return;
+    };
+
+    // Read the named profile's credentials
+    let fields: Vec<(String, String)> = conf
+        .section(Some(profile_name))
+        .map(|props| {
+            props
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    if fields.is_empty() {
+        return;
+    }
+
+    // Write them to [default]
+    conf.delete(Some("default"));
+    for (k, v) in &fields {
+        conf.set_to(Some("default"), k.clone(), v.clone());
+    }
+
+    let _ = conf.write_to_file(&path);
+    info!("Mirrored credentials from [{profile_name}] to [default]");
 }
 
 /// Write only region to [default] section of ~/.aws/config (no SSO fields)

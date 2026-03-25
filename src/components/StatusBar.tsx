@@ -1,4 +1,4 @@
-import { Globe, AlertCircle } from "lucide-react";
+import { Globe, AlertCircle, StopCircle } from "lucide-react";
 import type { SsoTokenInfo, AppSettings } from "../types";
 
 interface StatusBarProps {
@@ -6,6 +6,7 @@ interface StatusBarProps {
   settings: AppSettings;
   defaultProfile?: string | null;
   profileExpiration?: number | null;
+  onStopAllSessions?: () => void;
   error?: string | null;
 }
 
@@ -14,6 +15,7 @@ export function StatusBar({
   settings,
   defaultProfile,
   profileExpiration,
+  onStopAllSessions,
   error,
 }: StatusBarProps) {
   return (
@@ -45,13 +47,22 @@ export function StatusBar({
         {ssoStatus.status === "active" &&
           profileExpiration != null &&
           defaultProfile && (
-            <span
-              className="statusbar-item"
-              title={`Profile "${defaultProfile}" credential expiry — credentials auto-refresh on use`}
-            >
-              Profile Expires:{" "}
-              {new Date(profileExpiration).toLocaleTimeString()}
-            </span>
+            <>
+              <button
+                className="statusbar-stop-btn"
+                onClick={onStopAllSessions}
+                title="Stop all active CLI sessions"
+              >
+                <StopCircle size={12} />
+              </button>
+              <span
+                className="statusbar-item"
+                title={`Profile "${defaultProfile}" credential expiry`}
+              >
+                Profile Expires:{" "}
+                {new Date(profileExpiration).toLocaleTimeString()}
+              </span>
+            </>
           )}
         <span
           className={`statusbar-dot ${ssoStatus.status === "active" ? "statusbar-dot-active" : "statusbar-dot-inactive"}`}

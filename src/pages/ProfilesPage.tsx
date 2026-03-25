@@ -4,7 +4,8 @@ import {
   Trash2,
   Edit3,
   ExternalLink,
-  Terminal,
+  Play,
+  Square,
   CircleCheck,
   Circle,
   Copy,
@@ -30,6 +31,7 @@ export function ProfilesPage({
     sessions,
     defaultProfile,
     loading,
+    refresh,
     saveProfile,
     deleteProfile,
     setDefault,
@@ -112,13 +114,8 @@ export function ProfilesPage({
     }, 2000);
   };
 
-  const handleConfigureCli = async (profile: AwsProfile) => {
-    if (
-      !ssoStatus.access_token ||
-      !profile.sso_account_id ||
-      !profile.sso_role_name
-    )
-      return;
+  const handleStartSession = async (profile: AwsProfile) => {
+    if (!ssoStatus.access_token) return;
     const cliRegion = profile.region || settings.default_region;
     const key = `${profile.name}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
@@ -132,16 +129,34 @@ export function ProfilesPage({
         profileName: profile.name,
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
+      onError?.(`Session started for ${profile.name}`, "success");
+      refresh();
     } catch (err) {
-      console.error("Failed to configure CLI:", err);
-      setActionError(`CLI config: ${err}`);
-      onError?.(`CLI config: ${err}`, "error");
+      console.error("Failed to start session:", err);
+      onError?.(`Start session: ${err}`, "error");
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
     setTimeout(() => {
       setActionStatus((prev) => ({ ...prev, [key]: "" }));
-      setActionError(null);
-    }, 5000);
+    }, 3000);
+  };
+
+  const handleStopSession = async (profile: AwsProfile) => {
+    const key = `${profile.name}-cli`;
+    setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
+    try {
+      await invoke("stop_session", { profileName: profile.name });
+      setActionStatus((prev) => ({ ...prev, [key]: "stopped" }));
+      onError?.(`Session stopped for ${profile.name}`, "info");
+      refresh();
+    } catch (err) {
+      console.error("Failed to stop session:", err);
+      onError?.(`Stop session: ${err}`, "error");
+      setActionStatus((prev) => ({ ...prev, [key]: "error" }));
+    }
+    setTimeout(() => {
+      setActionStatus((prev) => ({ ...prev, [key]: "" }));
+    }, 3000);
   };
 
   const handleCopyName = async (name: string) => {
@@ -273,23 +288,31 @@ export function ProfilesPage({
                     >
                       <ExternalLink size={14} />
                     </button>
-                    <button
-                      className={`icon-btn ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[cliKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[cliKey] === "error" ? "icon-btn-error" : ""}`}
-                      title={
-                        connectable
-                          ? "Configure CLI credentials (~/.aws/credentials)"
-                          : "Login to SSO first"
-                      }
-                      onClick={() => handleConfigureCli(profile)}
-                      disabled={
-                        !connectable || actionStatus[cliKey] === "loading"
-                      }
-                    >
-                      <Terminal size={14} />
-                      {actionStatus[cliKey] === "done" && (
-                        <span className="copied-tooltip">Configured!</span>
-                      )}
-                    </button>
+                    {profile.session_active ? (
+                      <button
+                        className={`icon-btn icon-btn-active ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""}`}
+                        title="Stop CLI session"
+                        onClick={() => handleStopSession(profile)}
+                        disabled={actionStatus[cliKey] === "loading"}
+                      >
+                        <Square size={14} />
+                      </button>
+                    ) : (
+                      <button
+                        className={`icon-btn ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[cliKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[cliKey] === "error" ? "icon-btn-error" : ""}`}
+                        title={
+                          connectable
+                            ? "Start CLI session"
+                            : "Login to SSO first"
+                        }
+                        onClick={() => handleStartSession(profile)}
+                        disabled={
+                          !connectable || actionStatus[cliKey] === "loading"
+                        }
+                      >
+                        <Play size={14} />
+                      </button>
+                    )}
                     <button
                       className="icon-btn"
                       title="Edit"

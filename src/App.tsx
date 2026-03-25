@@ -224,6 +224,15 @@ function App() {
         settings={settings}
         defaultProfile={defaultProfile}
         profileExpiration={profileExpiration}
+        onStopAllSessions={async () => {
+          try {
+            const msg = await invoke<string>("stop_all_sessions");
+            setProfileExpiration(null);
+            addToast(msg, "info");
+          } catch (err) {
+            addToast(`Failed to stop sessions: ${err}`, "error");
+          }
+        }}
       />
     </div>
   );

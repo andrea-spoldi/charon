@@ -1,4 +1,4 @@
-use log::info;
+use log::{info, warn};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::sync::Mutex;
@@ -75,9 +75,38 @@ fn migrate_legacy_configs() {
     }
 }
 
+/// Auto-migrate profiles from ~/.aws/config to ~/.charon/profiles.json on first run.
+/// Also removes SSO-backed profiles from ~/.aws/config so the CLI can't auto-derive credentials.
+fn migrate_profiles_if_needed() {
+    use crate::aws::config::{
+        cleanup_aws_config_profiles, import_profiles_from_aws_config, load_profile_store,
+    };
+
+    let store = load_profile_store();
+    if !store.profiles.is_empty() {
+        // Already have profiles in the new store — skip migration
+        return;
+    }
+
+    match import_profiles_from_aws_config() {
+        Ok(count) if count > 0 => {
+            info!("Auto-migrated {count} profiles from ~/.aws/config");
+            match cleanup_aws_config_profiles() {
+                Ok(cleaned) => {
+                    info!("Cleaned {cleaned} SSO-backed profiles from ~/.aws/config")
+                }
+                Err(e) => warn!("Failed to clean up ~/.aws/config: {e}"),
+            }
+        }
+        Ok(_) => info!("No profiles to migrate from ~/.aws/config"),
+        Err(e) => warn!("Profile migration failed: {e}"),
+    }
+}
+
 pub fn run() {
     init_logging();
     migrate_legacy_configs();
+    migrate_profiles_if_needed();
     info!("Starting Charon");
 
     tauri::Builder::default()
@@ -96,6 +125,8 @@ pub fn run() {
             commands::accounts::get_role_credentials,
             commands::accounts::open_aws_console,
             commands::accounts::configure_cli_credentials,
+            commands::accounts::stop_session,
+            commands::accounts::stop_all_sessions,
             // Profiles
             commands::profiles::list_sso_sessions,
             commands::profiles::list_profiles,
@@ -105,6 +136,7 @@ pub fn run() {
             commands::profiles::delete_sso_session,
             commands::profiles::set_default_profile,
             commands::profiles::get_default_profile,
+            commands::profiles::migrate_profiles,
             // Settings
             commands::settings::get_settings,
             commands::settings::save_settings,

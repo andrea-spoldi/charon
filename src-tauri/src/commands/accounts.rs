@@ -1,8 +1,9 @@
 use log::info;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::process::Command;
 
-use crate::aws::config::aws_credentials_path;
+use crate::aws::config::{aws_credentials_path, load_profile_store, save_profile_store};
 use crate::commands::resolve_aws_cli;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -299,9 +300,93 @@ pub fn configure_cli_credentials(
         .map_err(|e| format!("Failed to write credentials: {e}"))?;
 
     info!("Configured CLI credentials for profile [{profile_name}]");
+
+    // Mark the profile as active in Charon's store
+    let mut store = load_profile_store();
+    if let Some(p) = store.profiles.iter_mut().find(|p| p.name == profile_name) {
+        p.session_active = true;
+        let _ = save_profile_store(&store);
+    }
+
     Ok(format!(
         "Credentials saved to profile [{profile_name}]. They expire in ~12 hours."
     ))
+}
+
+/// Stop a session: remove credentials for a profile from ~/.aws/credentials
+/// and clear the CLI cache.  The SSO session stays alive.
+#[tauri::command]
+pub fn stop_session(profile_name: &str) -> Result<String, String> {
+    info!("Stopping session for profile [{profile_name}]");
+
+    // 1. Remove the profile section from ~/.aws/credentials
+    let creds_path = aws_credentials_path();
+    if creds_path.exists() {
+        let mut conf = ini::Ini::load_from_file(&creds_path)
+            .map_err(|e| format!("Failed to read credentials: {e}"))?;
+
+        conf.delete(Some(profile_name));
+
+        // Also remove the [default] section if it has a session token
+        // (it was written as a mirror of the active profile)
+        if let Some(default) = conf.section(Some("default")) {
+            if default.contains_key("aws_session_token") {
+                conf.delete(Some("default"));
+            }
+        }
+
+        conf.write_to_file(&creds_path)
+            .map_err(|e| format!("Failed to write credentials: {e}"))?;
+    }
+
+    // 2. Clear CLI cache
+    if let Some(home) = dirs::home_dir() {
+        let cli_cache = home.join(".aws").join("cli").join("cache");
+        if cli_cache.is_dir() {
+            if let Ok(entries) = fs::read_dir(&cli_cache) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().is_some_and(|ext| ext == "json") {
+                        let _ = fs::remove_file(&path);
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. Mark the profile as inactive in Charon's store
+    let mut store = load_profile_store();
+    if let Some(p) = store.profiles.iter_mut().find(|p| p.name == profile_name) {
+        p.session_active = false;
+        let _ = save_profile_store(&store);
+    }
+
+    info!("Session stopped for profile [{profile_name}]");
+    Ok(format!("Session stopped for [{profile_name}]"))
+}
+
+/// Stop all active sessions
+#[tauri::command]
+pub fn stop_all_sessions() -> Result<String, String> {
+    info!("Stopping all active sessions");
+
+    let store = load_profile_store();
+    let active: Vec<String> = store
+        .profiles
+        .iter()
+        .filter(|p| p.session_active)
+        .map(|p| p.name.clone())
+        .collect();
+
+    if active.is_empty() {
+        return Ok("No active sessions".to_string());
+    }
+
+    for name in &active {
+        stop_session(name)?;
+    }
+
+    Ok(format!("Stopped {} session(s)", active.len()))
 }
 
 #[cfg(test)]

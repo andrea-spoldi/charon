@@ -3,6 +3,196 @@ use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
+// ---------------------------------------------------------------------------
+// Charon profile store (~/.charon/profiles.json)
+// ---------------------------------------------------------------------------
+
+/// A profile stored in Charon's own JSON config.
+/// Contains all the data needed to resolve credentials via SSO.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CharonProfile {
+    pub name: String,
+    pub sso_session: String,
+    pub sso_account_id: String,
+    pub sso_role_name: String,
+    pub region: Option<String>,
+    pub output: Option<String>,
+    /// Whether this profile currently has active CLI credentials written
+    #[serde(default)]
+    pub session_active: bool,
+}
+
+/// The full profile store persisted to disk
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct ProfileStore {
+    pub profiles: Vec<CharonProfile>,
+    pub default_profile: Option<String>,
+}
+
+fn profiles_path() -> PathBuf {
+    crate::commands::charon_home_dir().join("profiles.json")
+}
+
+pub fn load_profile_store() -> ProfileStore {
+    let path = profiles_path();
+    if !path.exists() {
+        return ProfileStore::default();
+    }
+    match std::fs::read_to_string(&path) {
+        Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
+        Err(e) => {
+            warn!("Failed to read profiles.json: {e}");
+            ProfileStore::default()
+        }
+    }
+}
+
+pub fn save_profile_store(store: &ProfileStore) -> Result<(), String> {
+    let path = profiles_path();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create .charon directory: {e}"))?;
+    }
+    let json = serde_json::to_string_pretty(store)
+        .map_err(|e| format!("Failed to serialize profiles: {e}"))?;
+    std::fs::write(&path, json).map_err(|e| format!("Failed to write profiles.json: {e}"))?;
+    Ok(())
+}
+
+/// Detect which named profile matches [default] in ~/.aws/config (for migration).
+fn detect_default_profile_from_aws_config() -> Option<String> {
+    let path = aws_config_path();
+    let conf = Ini::load_from_file(&path).ok()?;
+    let default_props = conf.section(Some("default"))?;
+    let ds = default_props.get("sso_session");
+    let da = default_props.get("sso_account_id");
+    let dr = default_props.get("sso_role_name");
+    if ds.is_none() && da.is_none() && dr.is_none() {
+        return None;
+    }
+    for (section, props) in &conf {
+        let name = section?.strip_prefix("profile ")?;
+        if props.get("sso_session") == ds
+            && props.get("sso_account_id") == da
+            && props.get("sso_role_name") == dr
+        {
+            return Some(name.to_string());
+        }
+    }
+    None
+}
+
+/// Import existing SSO-backed profiles from ~/.aws/config into Charon's store.
+/// Returns the number of profiles imported.
+pub fn import_profiles_from_aws_config() -> Result<usize, String> {
+    let mut store = load_profile_store();
+    let aws_profiles = parse_profiles();
+
+    let mut imported = 0;
+    for ap in &aws_profiles {
+        // Skip [default] and profiles without SSO settings
+        if ap.name == "default" {
+            continue;
+        }
+        let (Some(ref session), Some(ref account_id), Some(ref role_name)) =
+            (&ap.sso_session, &ap.sso_account_id, &ap.sso_role_name)
+        else {
+            continue;
+        };
+
+        // Skip if already exists in store
+        if store.profiles.iter().any(|p| p.name == ap.name) {
+            continue;
+        }
+
+        store.profiles.push(CharonProfile {
+            name: ap.name.clone(),
+            sso_session: session.clone(),
+            sso_account_id: account_id.clone(),
+            sso_role_name: role_name.clone(),
+            region: ap.region.clone(),
+            output: ap.output.clone(),
+            session_active: false,
+        });
+        imported += 1;
+    }
+
+    // Try to detect which profile is currently [default] in ~/.aws/config
+    if store.default_profile.is_none() {
+        if let Some(default_name) = detect_default_profile_from_aws_config() {
+            if store.profiles.iter().any(|p| p.name == default_name) {
+                store.default_profile = Some(default_name);
+            }
+        }
+    }
+
+    save_profile_store(&store)?;
+    if imported > 0 {
+        info!("Imported {imported} profiles from ~/.aws/config");
+    }
+    Ok(imported)
+}
+
+/// Remove SSO-backed profile sections from ~/.aws/config after migration.
+/// Preserves [sso-session X] sections and [default] (which gets region-only).
+pub fn cleanup_aws_config_profiles() -> Result<usize, String> {
+    let path = aws_config_path();
+    if !path.exists() {
+        return Ok(0);
+    }
+
+    let conf = Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
+
+    // Find profile sections with sso_session (SSO-backed)
+    let sso_profiles: Vec<String> = conf
+        .iter()
+        .filter_map(|(section, props)| {
+            let name = section?;
+            if name.starts_with("profile ") && props.contains_key("sso_session") {
+                Some(name.to_string())
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    if sso_profiles.is_empty() {
+        return Ok(0);
+    }
+
+    let mut conf = conf;
+    let count = sso_profiles.len();
+    for section in &sso_profiles {
+        info!("Removing SSO-backed profile [{section}] from ~/.aws/config");
+        conf.delete(Some(section.as_str()));
+    }
+
+    // Also clean up [default] — remove SSO fields, keep region/output only
+    if let Some(default) = conf.section(Some("default")) {
+        if default.contains_key("sso_session") {
+            let region = default.get("region").map(|s| s.to_string());
+            let output = default.get("output").map(|s| s.to_string());
+            conf.delete(Some("default"));
+            if let Some(r) = region {
+                conf.set_to(Some("default"), "region".to_string(), r);
+            }
+            if let Some(o) = output {
+                conf.set_to(Some("default"), "output".to_string(), o);
+            }
+        }
+    }
+
+    conf.write_to_file(&path)
+        .map_err(|e| format!("Failed to write config: {e}"))?;
+
+    info!("Removed {count} SSO-backed profiles from ~/.aws/config");
+    Ok(count)
+}
+
+// ---------------------------------------------------------------------------
+// Legacy: AwsProfile / ~/.aws/config (kept for reading/migration)
+// ---------------------------------------------------------------------------
+
 /// Represents an SSO session block in ~/.aws/config
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SsoSession {
@@ -126,87 +316,6 @@ pub fn parse_profiles() -> Vec<AwsProfile> {
     profiles
 }
 
-/// Helper: write profile fields into a given section
-fn write_profile_to_section(conf: &mut Ini, section: &str, profile: &AwsProfile) {
-    if let Some(ref session) = profile.sso_session {
-        conf.set_to(Some(section), "sso_session".to_string(), session.clone());
-    }
-    if let Some(ref account_id) = profile.sso_account_id {
-        conf.set_to(
-            Some(section),
-            "sso_account_id".to_string(),
-            account_id.clone(),
-        );
-    }
-    if let Some(ref role_name) = profile.sso_role_name {
-        conf.set_to(
-            Some(section),
-            "sso_role_name".to_string(),
-            role_name.clone(),
-        );
-    }
-    if let Some(ref region) = profile.region {
-        conf.set_to(Some(section), "region".to_string(), region.clone());
-    }
-    if let Some(ref output) = profile.output {
-        conf.set_to(Some(section), "output".to_string(), output.clone());
-    }
-}
-
-/// Check if a named profile is currently the [default] by comparing SSO fields
-fn is_current_default(conf: &Ini, profile_section: &str) -> bool {
-    let default_props = match conf.section(Some("default")) {
-        Some(p) => p,
-        None => return false,
-    };
-    let profile_props = match conf.section(Some(profile_section)) {
-        Some(p) => p,
-        None => return false,
-    };
-
-    default_props.get("sso_session") == profile_props.get("sso_session")
-        && default_props.get("sso_account_id") == profile_props.get("sso_account_id")
-        && default_props.get("sso_role_name") == profile_props.get("sso_role_name")
-}
-
-/// Save/update a profile in ~/.aws/config
-pub fn save_profile(profile: &AwsProfile) -> Result<(), String> {
-    let path = aws_config_path();
-    let mut conf = if path.exists() {
-        Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?
-    } else {
-        Ini::new()
-    };
-
-    let section_name = if profile.name == "default" {
-        "default".to_string()
-    } else {
-        format!("profile {}", profile.name)
-    };
-
-    // Check if this profile is currently the default BEFORE updating it
-    let was_default = profile.name != "default" && is_current_default(&conf, &section_name);
-
-    // Update the profile section
-    write_profile_to_section(&mut conf, &section_name, profile);
-
-    // If this profile was the default, also sync the [default] section
-    if was_default {
-        conf.delete(Some("default"));
-        write_profile_to_section(&mut conf, "default", profile);
-        info!(
-            "Also updated [default] section (synced with profile '{}')",
-            profile.name
-        );
-    }
-
-    conf.write_to_file(&path)
-        .map_err(|e| format!("Failed to write config: {e}"))?;
-
-    info!("Saved profile: {}", profile.name);
-    Ok(())
-}
-
 /// Save/update an SSO session in ~/.aws/config
 pub fn save_sso_session(session: &SsoSession) -> Result<(), String> {
     let path = aws_config_path();
@@ -267,110 +376,6 @@ pub fn delete_sso_session(name: &str) -> Result<(), String> {
 
     info!("Deleted SSO session: {name}");
     Ok(())
-}
-
-/// Delete a profile from ~/.aws/config
-pub fn delete_profile(name: &str) -> Result<(), String> {
-    let path = aws_config_path();
-    if !path.exists() {
-        return Err("AWS config file not found".to_string());
-    }
-
-    let mut conf = Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
-
-    let section_name = if name == "default" {
-        "default".to_string()
-    } else {
-        format!("profile {name}")
-    };
-
-    // Check if this profile is currently the default BEFORE deleting it
-    let was_default = name != "default" && is_current_default(&conf, &section_name);
-
-    conf.delete(Some(&section_name));
-
-    // If this profile was the default, also remove the [default] section
-    if was_default {
-        conf.delete(Some("default"));
-        info!("Also removed [default] section (was synced with profile '{name}')");
-    }
-
-    conf.write_to_file(&path)
-        .map_err(|e| format!("Failed to write config: {e}"))?;
-
-    info!("Deleted profile: {name}");
-    Ok(())
-}
-
-/// Set a profile as the default by copying its SSO settings into [default]
-pub fn set_default_profile(name: &str) -> Result<(), String> {
-    let path = aws_config_path();
-    if !path.exists() {
-        return Err("AWS config file not found".to_string());
-    }
-
-    let mut conf = Ini::load_from_file(&path).map_err(|e| format!("Failed to read config: {e}"))?;
-
-    let source_section = format!("profile {name}");
-    let props: Vec<(String, String)> = conf
-        .section(Some(&source_section))
-        .ok_or_else(|| format!("Profile '{name}' not found"))?
-        .iter()
-        .map(|(k, v)| (k.to_string(), v.to_string()))
-        .collect();
-
-    // Clear existing [default] section and write new values
-    conf.delete(Some("default"));
-    for (k, v) in &props {
-        conf.set_to(Some("default"), k.clone(), v.clone());
-    }
-
-    conf.write_to_file(&path)
-        .map_err(|e| format!("Failed to write config: {e}"))?;
-
-    info!("Set default profile to: {name}");
-    Ok(())
-}
-
-/// Get the name of the profile whose settings match [default], if any
-pub fn get_default_profile_name() -> Option<String> {
-    let path = aws_config_path();
-    if !path.exists() {
-        return None;
-    }
-
-    let conf = Ini::load_from_file(&path).ok()?;
-    let default_props = conf.section(Some("default"))?;
-
-    let default_session = default_props.get("sso_session");
-    let default_account = default_props.get("sso_account_id");
-    let default_role = default_props.get("sso_role_name");
-
-    // No SSO settings in default — not pointing to any profile
-    if default_session.is_none() && default_account.is_none() && default_role.is_none() {
-        return None;
-    }
-
-    for (section, props) in &conf {
-        let section_name = match section {
-            Some(s) => s,
-            None => continue,
-        };
-
-        let name = match section_name.strip_prefix("profile ") {
-            Some(n) => n,
-            None => continue,
-        };
-
-        if props.get("sso_session") == default_session
-            && props.get("sso_account_id") == default_account
-            && props.get("sso_role_name") == default_role
-        {
-            return Some(name.to_string());
-        }
-    }
-
-    None
 }
 
 #[cfg(test)]

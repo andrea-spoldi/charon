@@ -988,6 +988,22 @@
   background: var(--color-muted);
 }
 
+.statusbar-stop-btn {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  padding: 0 2px;
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.statusbar-stop-btn:hover {
+  opacity: 1;
+}
+
 /* ===== Form Validation ===== */
 .input-error {
   border-color: var(--color-danger) !important;

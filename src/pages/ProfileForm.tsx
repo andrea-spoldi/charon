@@ -24,13 +24,15 @@ export function ProfileForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ssoSession || !accountId || !roleName) return;
     onSave({
       name,
-      sso_session: ssoSession || null,
-      sso_account_id: accountId || null,
-      sso_role_name: roleName || null,
+      sso_session: ssoSession,
+      sso_account_id: accountId,
+      sso_role_name: roleName,
       region: region || null,
       output: initial?.output ?? null,
+      session_active: initial?.session_active ?? false,
     });
   };
 
@@ -56,7 +58,7 @@ export function ProfileForm({
           value={ssoSession}
           onChange={(e) => setSsoSession(e.target.value)}
         >
-          <option value="">None</option>
+          <option value="">Select an SSO session…</option>
           {sessions.map((s) => (
             <option key={s.name} value={s.name}>
               {s.name} ({s.sso_start_url})

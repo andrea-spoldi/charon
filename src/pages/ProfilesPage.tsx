@@ -31,6 +31,7 @@ export function ProfilesPage({
     sessions,
     defaultProfile,
     loading,
+    refresh,
     saveProfile,
     deleteProfile,
     setDefault,

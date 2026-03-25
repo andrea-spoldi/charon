@@ -342,12 +342,11 @@ pub fn stop_session(profile_name: &str) -> Result<String, String> {
 
         conf.delete(Some(profile_name));
 
-        // Also remove the [default] section if it has a session token
-        // (it was written as a mirror of the active profile)
-        if let Some(default) = conf.section(Some("default")) {
-            if default.contains_key("aws_session_token") {
-                conf.delete(Some("default"));
-            }
+        // Only remove the [default] mirror when stopping the profile that owns it
+        let store = load_profile_store();
+        let is_default = store.default_profile.as_deref() == Some(profile_name);
+        if is_default {
+            conf.delete(Some("default"));
         }
 
         conf.write_to_file(&creds_path)

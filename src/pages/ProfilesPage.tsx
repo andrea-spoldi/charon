@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   Plus,
   Trash2,
@@ -10,30 +10,58 @@ import {
   Copy,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
-import { useProfiles } from "../hooks/useProfiles";
 import { ProfileForm } from "./ProfileForm";
-import type { AwsProfile, SsoTokenInfo, AppSettings } from "../types";
+import type {
+  AwsProfile,
+  SsoSession,
+  SsoTokenInfo,
+  AppSettings,
+} from "../types";
 
 interface ProfilesPageProps {
   ssoStatus: SsoTokenInfo;
   settings: AppSettings;
+  profiles: AwsProfile[];
+  sessions: SsoSession[];
+  defaultProfile: string | null;
+  loading: boolean;
+  onRefresh: () => void;
   onError?: (message: string, type?: "error" | "success" | "info") => void;
 }
 
 export function ProfilesPage({
   ssoStatus,
   settings,
+  profiles,
+  sessions,
+  defaultProfile,
+  loading,
+  onRefresh,
   onError,
 }: ProfilesPageProps) {
-  const {
-    profiles,
-    sessions,
-    defaultProfile,
-    loading,
-    saveProfile,
-    deleteProfile,
-    setDefault,
-  } = useProfiles();
+  const saveProfile = useCallback(
+    async (profile: AwsProfile) => {
+      await invoke("save_profile", { profile });
+      onRefresh();
+    },
+    [onRefresh],
+  );
+
+  const deleteProfile = useCallback(
+    async (name: string) => {
+      await invoke("delete_profile", { name });
+      onRefresh();
+    },
+    [onRefresh],
+  );
+
+  const setDefault = useCallback(
+    async (name: string) => {
+      await invoke("set_default_profile", { name });
+      onRefresh();
+    },
+    [onRefresh],
+  );
   const [editing, setEditing] = useState<AwsProfile | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [actionStatus, setActionStatus] = useState<Record<string, string>>({});

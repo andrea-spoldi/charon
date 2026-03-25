@@ -170,6 +170,11 @@ function App() {
           <ProfilesPage
             ssoStatus={ssoStatus}
             settings={settings}
+            profiles={profiles}
+            sessions={sessions}
+            defaultProfile={defaultProfile}
+            loading={sessionsLoading}
+            onRefresh={refreshProfiles}
             onError={addToast}
           />
         );

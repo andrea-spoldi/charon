@@ -130,7 +130,7 @@ export function ProfilesPage({
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
       onError?.(`Session started for ${profile.name}`, "success");
-      onRefresh();
+      refresh();
     } catch (err) {
       console.error("Failed to start session:", err);
       onError?.(`Start session: ${err}`, "error");
@@ -148,7 +148,7 @@ export function ProfilesPage({
       await invoke("stop_session", { profileName: profile.name });
       setActionStatus((prev) => ({ ...prev, [key]: "stopped" }));
       onError?.(`Session stopped for ${profile.name}`, "info");
-      onRefresh();
+      refresh();
     } catch (err) {
       console.error("Failed to stop session:", err);
       onError?.(`Stop session: ${err}`, "error");

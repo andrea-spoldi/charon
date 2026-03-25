@@ -83,6 +83,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(commands::tunnels::TunnelState::default())
+        .manage(commands::sessions::ShellState::default())
         .invoke_handler(tauri::generate_handler![
             // SSO
             commands::sso::get_sso_status,
@@ -105,6 +106,12 @@ pub fn run() {
             commands::profiles::delete_sso_session,
             commands::profiles::set_default_profile,
             commands::profiles::get_default_profile,
+            // Shell Sessions
+            commands::sessions::start_shell_session,
+            commands::sessions::write_shell_input,
+            commands::sessions::resize_shell,
+            commands::sessions::stop_shell_session,
+            commands::sessions::list_shell_sessions,
             // Settings
             commands::settings::get_settings,
             commands::settings::save_settings,

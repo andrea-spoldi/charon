@@ -23,6 +23,7 @@ interface TunnelFormProps {
     ssoRegion: string,
     targetRegion: string,
   ) => void;
+  onRefreshProfiles: () => void;
   onSave: (config: TunnelConfig) => void;
   onCancel: () => void;
 }
@@ -36,6 +37,7 @@ export function TunnelForm({
   loadingInstances,
   initial,
   onFetchInstances,
+  onRefreshProfiles,
   onSave,
   onCancel,
 }: TunnelFormProps) {
@@ -137,7 +139,16 @@ export function TunnelForm({
   return (
     <div className="settings-form tunnel-form">
       <div className="form-field">
-        <label htmlFor="tunnel-profile">Profile</label>
+        <label htmlFor="tunnel-profile">
+          Profile
+          <button
+            className="icon-btn icon-btn-inline"
+            title="Refresh profiles"
+            onClick={onRefreshProfiles}
+          >
+            <RefreshCw size={12} />
+          </button>
+        </label>
         {eligibleProfiles.length <= 1 ? (
           <span className="form-value">
             {selectedProfile?.name ?? "—"}{" "}

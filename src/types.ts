@@ -112,4 +112,5 @@ export type Page =
   | "sessions"
   | "profiles"
   | "settings"
-  | "tunnels";
+  | "tunnels"
+  | "shell";

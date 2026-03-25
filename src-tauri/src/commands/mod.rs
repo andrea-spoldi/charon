@@ -1,5 +1,6 @@
 pub mod accounts;
 pub mod profiles;
+pub mod sessions;
 pub mod settings;
 pub mod sso;
 pub mod tunnels;

@@ -35,6 +35,8 @@ sha1 = "0.10"
 uuid = { version = "1", features = ["v4"] }
 nix = { version = "0.29", features = ["signal", "process"] }
 libc = "0.2"
+portable-pty = "0.9.0"
+base64 = "0.22.1"
 
 [dev-dependencies]
 tempfile = "3"

@@ -8,6 +8,7 @@ import { SessionsPage } from "./pages/SessionsPage";
 import { ProfilesPage } from "./pages/ProfilesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { TunnelsPage } from "./pages/TunnelsPage";
+import { ShellPage } from "./pages/ShellPage";
 import { useSsoStatus } from "./hooks/useSsoStatus";
 import { useProfiles } from "./hooks/useProfiles";
 import { useAccounts } from "./hooks/useAccounts";
@@ -191,6 +192,22 @@ function App() {
             onStop={tunnels.stopTunnel}
             onSaveConfig={tunnels.saveConfig}
             onDeleteConfig={tunnels.deleteConfig}
+            onRefreshProfiles={refreshProfiles}
+            onError={addToast}
+          />
+        );
+      case "shell":
+        return (
+          <ShellPage
+            ssoStatus={ssoStatus}
+            profiles={profiles}
+            defaultProfile={defaultProfile}
+            instances={tunnels.instances}
+            settings={settings}
+            pluginInstalled={tunnels.pluginInstalled}
+            loadingInstances={tunnels.loadingInstances}
+            onFetchInstances={tunnels.fetchInstances}
+            onRefreshProfiles={refreshProfiles}
             onError={addToast}
           />
         );

@@ -1,3 +1,21 @@
+## [0.11.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.10.0...v0.11.0) (2026-03-26)
+
+### 🚀 Features
+
+* credential model rework — Leapp-inspired session start/stop ([90e3c87](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/90e3c874576ab57e735dd7fcfb953378525c09df))
+* credential model rework — Leapp-inspired session start/stop ([b109fa1](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/b109fa10b2f4a97b1c3a0026caff3b07943c4ba6))
+* embedded SSM shell sessions with xterm.js + portable-pty ([61c9b37](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/61c9b37394b13f064abe3165495bd1d1cc08b3bb))
+
+### 🐛 Bug Fixes
+
+* add manual profile refresh to Tunnels and Shell pages ([a0d68ba](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/a0d68bab33a3365c0cca0538628598dad007e85f))
+* add Tauri event permissions and align Shell page with Tunnels style ([16b33db](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/16b33db3c1fe80c981a99af870f81562ef8d11e1))
+* mirror credentials to [default] section for bare aws CLI usage ([7a2198b](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/7a2198b53e044e689f0ae7b11b0184fac6045aca))
+* only remove [default] credentials when stopping the default profile ([c6d000d](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/c6d000d25851dc239a9fcc1cf5be93b2e167c3e4))
+* remove empty-state message from Shell page ([b51d229](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/b51d2295882fb99b8797b274d23b70258c9668a7))
+* replace stale onRefresh references with local refresh in ProfilesPage ([a589416](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/a589416fcf5630158546c332e1c7c6ecf0ebee80))
+* share single profiles state across all pages ([749a053](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/commit/749a05326684cb5900512fb6621bb7f78f7f76a0))
+
 ## [0.10.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.9.0...v0.10.0) (2026-03-25)
 
 ### 🚀 Features

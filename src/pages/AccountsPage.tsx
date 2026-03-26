@@ -160,11 +160,12 @@ export function AccountsPage({
       await invoke("save_profile", {
         profile: {
           name: profileName,
-          sso_session: sessions.length > 0 ? sessions[0].name : null,
+          sso_session: sessions.length > 0 ? sessions[0].name : "",
           sso_account_id: accountId,
           sso_role_name: roleName,
           region: settings.default_region,
           output: null,
+          session_active: false,
         },
       });
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));

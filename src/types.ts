@@ -17,14 +17,15 @@ export interface SsoSession {
   sso_registration_scopes: string | null;
 }
 
-// AWS profile from ~/.aws/config [profile X]
+// Charon profile stored in ~/.charon/profiles.json
 export interface AwsProfile {
   name: string;
-  sso_session: string | null;
-  sso_account_id: string | null;
-  sso_role_name: string | null;
+  sso_session: string;
+  sso_account_id: string;
+  sso_role_name: string;
   region: string | null;
   output: string | null;
+  session_active: boolean;
 }
 
 // Account from SSO list-accounts

@@ -9,10 +9,17 @@
 
 ## AWS Config Files
 
-- **Config**: `~/.aws/config` — SSO sessions (`[sso-session X]`), profiles (`[profile X]`), default (`[default]`)
-- **Credentials**: `~/.aws/credentials` — temporary STS credentials written by CLI config action
+- **Config**: `~/.aws/config` — SSO sessions (`[sso-session X]`) only; profiles NO LONGER stored here (see ADR-007)
+- **Credentials**: `~/.aws/credentials` — temporary STS credentials written on session start, removed on stop
 - **SSO Cache**: `~/.aws/sso/cache/{SHA1(session_name)}.json` — OIDC tokens for AWS CLI v2 compatibility
 - **Cache hash**: SHA1 of the **session name** (not start URL)
+
+## Charon Config Files
+
+- **Settings**: `~/.charon/settings.json` — app preferences (default region, session duration, etc.)
+- **Profiles**: `~/.charon/profiles.json` — Charon-managed AWS profiles (decoupled from `~/.aws/config` per ADR-007)
+- **Tunnels**: `~/.charon/tunnels.json` — saved SSM tunnel configurations
+- **Logs**: `~/.charon/charon.log` — application log (level configurable via `CHARON_LOG_LEVEL`)
 
 ## SSO Start URL Format
 
@@ -25,7 +32,8 @@
 - **No window.confirm()**: Tauri 2 webview doesn't support it — use double-click confirm pattern
 - **React.StrictMode**: Double-fires effects in dev — guard side-effectful useEffect with refs
 - **Timestamp format**: Rust produces `UTC` suffix, JS needs `Z` — normalise before `new Date()`
-- **[default] mirror**: Kept in sync by `is_current_default()` checks in `save_profile` and `delete_profile`
+- **[default] mirror**: Kept in sync by `is_current_default()` checks in `save_profile` and `delete_profile` (credentials only, no SSO config fields)
+- **Credential model**: Leapp-inspired start/stop — profiles in Charon's own store, raw STS creds to `~/.aws/credentials` on start, removed on stop (ADR-007)
 - **CLI config isolation**: AWS CLI commands with explicit params use `AWS_CONFIG_FILE=/dev/null` to avoid `[default]` profile interference
 - **Toast errors**: All `catch` blocks must call `onError()` toast callback, not just `console.error`
 

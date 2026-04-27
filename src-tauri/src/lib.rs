@@ -113,6 +113,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .manage(commands::tunnels::TunnelState::default())
         .manage(commands::sessions::ShellState::default())
+        .manage(commands::google::GoogleAuthState::default())
         .invoke_handler(tauri::generate_handler![
             // SSO
             commands::sso::get_sso_status,
@@ -156,6 +157,14 @@ pub fn run() {
             commands::tunnels::list_tunnel_configs,
             commands::tunnels::save_tunnel_config,
             commands::tunnels::delete_tunnel_config,
+            // Google Workspace
+            commands::google::list_google_sessions,
+            commands::google::create_google_session,
+            commands::google::delete_google_session,
+            commands::google::start_google_auth,
+            commands::google::poll_google_auth,
+            commands::google::get_google_session_status,
+            commands::google::google_logout,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -30,6 +30,7 @@ function App() {
   const {
     profiles,
     sessions,
+    googleSessions,
     defaultProfile,
     loading: sessionsLoading,
     refresh: refreshProfiles,
@@ -157,6 +158,7 @@ function App() {
         return (
           <SessionsPage
             sessions={sessions}
+            googleSessions={googleSessions}
             loading={sessionsLoading}
             onRefresh={refreshProfiles}
             onStatusChange={refreshSsoStatus}

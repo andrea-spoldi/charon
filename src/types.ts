@@ -17,6 +17,37 @@ export interface SsoSession {
   sso_registration_scopes: string | null;
 }
 
+// Google Workspace SAML federation session (~/.charon/google_sessions.json)
+export interface GoogleWorkspaceSession {
+  name: string;
+  /** IDP-initiated SSO URL from the Google Workspace SAML app */
+  idp_initiated_url: string;
+  /** arn:aws:iam::ACCOUNT:saml-provider/NAME */
+  aws_saml_provider_arn: string;
+  /** IAM role ARN to assume via the SAML assertion */
+  aws_role_arn: string;
+  /** AWS region for STS calls */
+  aws_region: string;
+  /** Local port Charon listens on to receive the SAML POST (default 14173) */
+  callback_port: number;
+  /** Requested session duration in seconds (default 3600) */
+  session_duration_secs: number;
+}
+
+// Info returned by start_google_auth
+export interface GoogleAuthInfo {
+  session_name: string;
+  idp_url: string;
+  callback_port: number;
+}
+
+// Credential status for a Google Workspace session
+export interface GoogleSessionStatus {
+  status: "active" | "expired" | "none";
+  expiration: string | null;
+  region: string | null;
+}
+
 // Charon profile stored in ~/.charon/profiles.json
 export interface AwsProfile {
   name: string;

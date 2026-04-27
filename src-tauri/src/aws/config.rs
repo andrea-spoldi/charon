@@ -190,6 +190,102 @@ pub fn cleanup_aws_config_profiles() -> Result<usize, String> {
 }
 
 // ---------------------------------------------------------------------------
+// Google Workspace sessions (~/.charon/google_sessions.json)
+// ---------------------------------------------------------------------------
+
+/// A Google Workspace federation session stored in Charon's own JSON config.
+/// The user authenticates via a Google SAML app that is configured with
+/// this application's localhost ACS URL as its destination.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GoogleWorkspaceSession {
+    pub name: String,
+    /// IDP-initiated SSO URL from the Google Workspace SAML app
+    pub idp_initiated_url: String,
+    /// IAM SAML provider ARN (arn:aws:iam::ACCOUNT:saml-provider/NAME)
+    pub aws_saml_provider_arn: String,
+    /// IAM role ARN to assume via the SAML assertion
+    pub aws_role_arn: String,
+    /// AWS region to use for STS AssumeRoleWithSAML calls
+    pub aws_region: String,
+    /// Local TCP port Charon listens on to receive the SAML POST (default 14173)
+    pub callback_port: u16,
+    /// Requested session duration in seconds (max 43200 = 12 h, default 3600)
+    #[serde(default = "default_session_duration")]
+    pub session_duration_secs: u32,
+}
+
+fn default_session_duration() -> u32 {
+    3600
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+struct GoogleSessionStore {
+    sessions: Vec<GoogleWorkspaceSession>,
+}
+
+fn google_sessions_path() -> PathBuf {
+    crate::commands::charon_home_dir().join("google_sessions.json")
+}
+
+fn load_google_session_store() -> GoogleSessionStore {
+    let path = google_sessions_path();
+    if !path.exists() {
+        return GoogleSessionStore::default();
+    }
+    match std::fs::read_to_string(&path) {
+        Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
+        Err(e) => {
+            warn!("Failed to read google_sessions.json: {e}");
+            GoogleSessionStore::default()
+        }
+    }
+}
+
+fn save_google_session_store(store: &GoogleSessionStore) -> Result<(), String> {
+    let path = google_sessions_path();
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create .charon directory: {e}"))?;
+    }
+    let json = serde_json::to_string_pretty(store)
+        .map_err(|e| format!("Failed to serialize google sessions: {e}"))?;
+    std::fs::write(&path, json)
+        .map_err(|e| format!("Failed to write google_sessions.json: {e}"))?;
+    Ok(())
+}
+
+pub fn list_google_sessions() -> Vec<GoogleWorkspaceSession> {
+    load_google_session_store().sessions
+}
+
+pub fn save_google_session(session: &GoogleWorkspaceSession) -> Result<(), String> {
+    let mut store = load_google_session_store();
+    if let Some(existing) = store.sessions.iter_mut().find(|s| s.name == session.name) {
+        *existing = session.clone();
+    } else {
+        store.sessions.push(session.clone());
+    }
+    save_google_session_store(&store)?;
+    info!("Saved Google Workspace session: {}", session.name);
+    Ok(())
+}
+
+pub fn delete_google_session(name: &str) -> Result<(), String> {
+    let mut store = load_google_session_store();
+    store.sessions.retain(|s| s.name != name);
+    save_google_session_store(&store)?;
+    info!("Deleted Google Workspace session: {name}");
+    Ok(())
+}
+
+pub fn get_google_session(name: &str) -> Option<GoogleWorkspaceSession> {
+    load_google_session_store()
+        .sessions
+        .into_iter()
+        .find(|s| s.name == name)
+}
+
+// ---------------------------------------------------------------------------
 // Legacy: AwsProfile / ~/.aws/config (kept for reading/migration)
 // ---------------------------------------------------------------------------
 

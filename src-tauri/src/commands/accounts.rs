@@ -1,4 +1,4 @@
-use log::info;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::process::Command;
@@ -19,6 +19,18 @@ pub struct SsoAccount {
 pub struct AccountRole {
     pub role_name: String,
     pub account_id: String,
+}
+
+/// Account with the SSO session context it came from — used for multi-portal aggregation
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SsoAccountWithSession {
+    pub account_id: String,
+    pub account_name: String,
+    pub email_address: String,
+    pub session_name: String,
+    pub access_token: String,
+    pub sso_region: String,
 }
 
 /// AWS CLI JSON response for list-accounts
@@ -403,6 +415,64 @@ pub fn stop_all_sessions() -> Result<String, String> {
     Ok(format!("Stopped {} session(s)", active.len()))
 }
 
+/// List accounts from every configured AWS Identity Center portal that has an active token.
+/// Each account is tagged with the session name, access token, and region it came from
+/// so the frontend can route subsequent API calls (role listing, console, CLI) correctly.
+#[tauri::command]
+pub fn list_all_portal_accounts() -> Result<Vec<SsoAccountWithSession>, String> {
+    use crate::aws::config::parse_sso_sessions;
+    use crate::aws::sso_cache::{get_session_token, SsoSessionStatus};
+
+    let sessions = parse_sso_sessions();
+    let mut result: Vec<SsoAccountWithSession> = Vec::new();
+
+    for session in &sessions {
+        let token_info = match get_session_token(&session.name) {
+            Some(t) if t.status == SsoSessionStatus::Active => t,
+            _ => {
+                info!(
+                    "Skipping session '{}' — no active token",
+                    session.name
+                );
+                continue;
+            }
+        };
+
+        let access_token = match token_info.access_token {
+            Some(t) => t,
+            None => continue,
+        };
+
+        match list_sso_accounts(&access_token, &session.sso_region) {
+            Ok(accounts) => {
+                for account in accounts {
+                    result.push(SsoAccountWithSession {
+                        account_id: account.account_id,
+                        account_name: account.account_name,
+                        email_address: account.email_address,
+                        session_name: session.name.clone(),
+                        access_token: access_token.clone(),
+                        sso_region: session.sso_region.clone(),
+                    });
+                }
+            }
+            Err(e) => {
+                warn!(
+                    "Failed to list accounts for session '{}': {e}",
+                    session.name
+                );
+            }
+        }
+    }
+
+    info!(
+        "Found {} accounts across {} portal(s)",
+        result.len(),
+        sessions.len()
+    );
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -427,5 +497,21 @@ mod tests {
         let json = r#"{"accountList": [{"accountId": "111", "accountName": "Dev", "emailAddress": "a@b.com"}]}"#;
         let resp: ListAccountsResponse = serde_json::from_str(json).unwrap();
         assert_eq!(resp.account_list.len(), 1);
+    }
+
+    #[test]
+    fn test_sso_account_with_session_deserialize() {
+        let json = r#"{
+            "accountId": "111111111111",
+            "accountName": "Dev",
+            "emailAddress": "dev@example.com",
+            "sessionName": "my-sso",
+            "accessToken": "token-abc",
+            "ssoRegion": "us-east-1"
+        }"#;
+        let account: SsoAccountWithSession = serde_json::from_str(json).unwrap();
+        assert_eq!(account.account_id, "111111111111");
+        assert_eq!(account.session_name, "my-sso");
+        assert_eq!(account.sso_region, "us-east-1");
     }
 }

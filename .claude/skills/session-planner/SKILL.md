@@ -1,4 +1,5 @@
-## name: session-planner
+---
+name: session-planner
 description: >
   A token-efficient session planning and budgeting skill for Claude Code. Use this
   skill when the user says "plan my session", "what should I work on next", "start
@@ -10,6 +11,7 @@ description: >
   governs the full session lifecycle: planning, checkpointing, compacting, and
   closing. Always use it at session boundaries — do not wait for the user to ask
   explicitly.
+---
 
 # Session Planner
 

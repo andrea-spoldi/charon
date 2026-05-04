@@ -13,16 +13,14 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import type {
   SsoTokenInfo,
-  SsoSession,
-  SsoAccount,
+  SsoAccountWithSession,
   AccountRole,
   AppSettings,
 } from "../types";
 
 interface AccountsPageProps {
   ssoStatus: SsoTokenInfo;
-  sessions: SsoSession[];
-  accounts: SsoAccount[];
+  accounts: SsoAccountWithSession[];
   roles: Record<string, AccountRole[]>;
   loading: boolean;
   error: string | null;
@@ -37,7 +35,6 @@ interface AccountsPageProps {
 
 export function AccountsPage({
   ssoStatus,
-  sessions,
   accounts,
   roles,
   loading,
@@ -65,16 +62,19 @@ export function AccountsPage({
     );
   }, [accounts, search]);
 
-  const toggleExpand = (accountId: string) => {
+  const toggleExpand = (account: SsoAccountWithSession) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(accountId)) {
-        next.delete(accountId);
+      if (next.has(account.accountId)) {
+        next.delete(account.accountId);
       } else {
-        next.add(accountId);
-        // Fetch roles on-demand when expanding
-        if (!roles[accountId] && ssoStatus.access_token && ssoStatus.region) {
-          onFetchRoles(ssoStatus.access_token, accountId, ssoStatus.region);
+        next.add(account.accountId);
+        if (!roles[account.accountId]) {
+          onFetchRoles(
+            account.accessToken,
+            account.accountId,
+            account.ssoRegion,
+          );
         }
       }
       return next;
@@ -92,16 +92,18 @@ export function AccountsPage({
     searchRef.current?.focus();
   };
 
-  const handleOpenConsole = async (accountId: string, roleName: string) => {
-    if (!ssoStatus.access_token || !ssoStatus.region) return;
-    const key = `${accountId}-${roleName}-console`;
+  const handleOpenConsole = async (
+    account: SsoAccountWithSession,
+    roleName: string,
+  ) => {
+    const key = `${account.accountId}-${roleName}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
       await invoke("open_aws_console", {
-        accessToken: ssoStatus.access_token,
-        accountId,
+        accessToken: account.accessToken,
+        accountId: account.accountId,
         roleName,
-        ssoRegion: ssoStatus.region,
+        ssoRegion: account.ssoRegion,
         consoleRegion: settings.default_region,
         sessionDurationSecs: settings.session_timeout_hours * 3600,
       });
@@ -118,21 +120,18 @@ export function AccountsPage({
   };
 
   const handleConfigureCli = async (
-    accountId: string,
+    account: SsoAccountWithSession,
     roleName: string,
-    accountName: string,
   ) => {
-    if (!ssoStatus.access_token || !ssoStatus.region) return;
-    const key = `${accountId}-${roleName}-cli`;
+    const key = `${account.accountId}-${roleName}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
-    // Profile name: sanitized account name + role
-    const profileName = `${accountName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${roleName}`;
+    const profileName = `${account.accountName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${roleName}`;
     try {
       await invoke("configure_cli_credentials", {
-        accessToken: ssoStatus.access_token,
-        accountId,
+        accessToken: account.accessToken,
+        accountId: account.accountId,
         roleName,
-        ssoRegion: ssoStatus.region,
+        ssoRegion: account.ssoRegion,
         cliRegion: settings.default_region,
         profileName,
       });
@@ -149,19 +148,18 @@ export function AccountsPage({
   };
 
   const handleBookmark = async (
-    accountId: string,
+    account: SsoAccountWithSession,
     roleName: string,
-    accountName: string,
   ) => {
-    const key = `${accountId}-${roleName}-bookmark`;
+    const key = `${account.accountId}-${roleName}-bookmark`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
-    const profileName = `${accountName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${roleName}`;
+    const profileName = `${account.accountName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${roleName}`;
     try {
       await invoke("save_profile", {
         profile: {
           name: profileName,
-          sso_session: sessions.length > 0 ? sessions[0].name : "",
-          sso_account_id: accountId,
+          sso_session: account.sessionName,
+          sso_account_id: account.accountId,
           sso_role_name: roleName,
           region: settings.default_region,
           output: null,
@@ -248,7 +246,7 @@ export function AccountsPage({
           <div key={account.accountId} className="account-card">
             <button
               className="account-header"
-              onClick={() => toggleExpand(account.accountId)}
+              onClick={() => toggleExpand(account)}
             >
               <span className="account-chevron">
                 {expanded.has(account.accountId) ? (
@@ -293,7 +291,7 @@ export function AccountsPage({
                           className={`icon-btn ${actionStatus[consoleKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[consoleKey] === "error" ? "icon-btn-error" : ""}`}
                           title="Open AWS Console"
                           onClick={() =>
-                            handleOpenConsole(account.accountId, role.roleName)
+                            handleOpenConsole(account, role.roleName)
                           }
                           disabled={actionStatus[consoleKey] === "loading"}
                         >
@@ -303,11 +301,7 @@ export function AccountsPage({
                           className={`icon-btn ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[cliKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[cliKey] === "error" ? "icon-btn-error" : ""}`}
                           title={`Configure CLI credentials (~/.aws/credentials)`}
                           onClick={() =>
-                            handleConfigureCli(
-                              account.accountId,
-                              role.roleName,
-                              account.accountName,
-                            )
+                            handleConfigureCli(account, role.roleName)
                           }
                           disabled={actionStatus[cliKey] === "loading"}
                         >
@@ -320,11 +314,7 @@ export function AccountsPage({
                           className={`icon-btn ${actionStatus[bookmarkKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[bookmarkKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[bookmarkKey] === "error" ? "icon-btn-error" : ""}`}
                           title="Save as profile"
                           onClick={() =>
-                            handleBookmark(
-                              account.accountId,
-                              role.roleName,
-                              account.accountName,
-                            )
+                            handleBookmark(account, role.roleName)
                           }
                           disabled={actionStatus[bookmarkKey] === "loading"}
                         >

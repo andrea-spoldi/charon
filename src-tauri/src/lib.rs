@@ -116,12 +116,14 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             // SSO
             commands::sso::get_sso_status,
+            commands::sso::get_session_sso_token,
             commands::sso::sso_login,
             commands::sso::sso_logout,
             commands::sso::start_device_auth,
             commands::sso::poll_device_auth,
             // Accounts
             commands::accounts::list_sso_accounts,
+            commands::accounts::list_all_portal_accounts,
             commands::accounts::list_account_roles,
             commands::accounts::get_role_credentials,
             commands::accounts::open_aws_console,

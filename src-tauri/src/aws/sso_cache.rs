@@ -1,5 +1,6 @@
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
+use sha1::{Digest, Sha1};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -36,6 +37,32 @@ fn sso_cache_dir() -> PathBuf {
         .join(".aws")
         .join("sso")
         .join("cache")
+}
+
+/// Read the token cache for a specific SSO session by name (SHA1 of session_name → filename)
+pub fn get_session_token(session_name: &str) -> Option<SsoTokenInfo> {
+    let mut hasher = Sha1::new();
+    hasher.update(session_name.as_bytes());
+    let hash = format!("{:x}", hasher.finalize());
+
+    let cache_file = sso_cache_dir().join(format!("{hash}.json"));
+    let content = std::fs::read_to_string(&cache_file).ok()?;
+    let entry: SsoCacheEntry = serde_json::from_str(&content).ok()?;
+
+    let access_token = entry.access_token?;
+
+    let status = match &entry.expires_at {
+        Some(e) if !is_expired(e) => SsoSessionStatus::Active,
+        Some(_) | None => SsoSessionStatus::Expired,
+    };
+
+    Some(SsoTokenInfo {
+        status,
+        start_url: entry.start_url,
+        region: entry.region,
+        expires_at: entry.expires_at,
+        access_token: Some(access_token),
+    })
 }
 
 /// Read the SSO token cache and determine session status

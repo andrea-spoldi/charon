@@ -29,6 +29,14 @@ pub fn get_sso_status() -> SsoTokenInfo {
     sso_cache::get_sso_status()
 }
 
+/// Get the SSO token for a specific named session (used to resolve per-profile tokens)
+#[tauri::command]
+pub fn get_session_sso_token(session_name: String) -> Result<SsoTokenInfo, String> {
+    info!("Fetching SSO token for session '{session_name}'");
+    sso_cache::get_session_token(&session_name)
+        .ok_or_else(|| format!("No token found for session '{session_name}'"))
+}
+
 /// Initiate SSO login by running `aws sso login` (legacy / fallback)
 #[tauri::command]
 pub fn sso_login(session_name: &str) -> Result<String, String> {

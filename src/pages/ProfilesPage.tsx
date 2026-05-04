@@ -82,22 +82,33 @@ export function ProfilesPage({
     }
   };
 
+  const resolveSessionToken = async (
+    profile: AwsProfile,
+  ): Promise<SsoTokenInfo> => {
+    if (profile.sso_session) {
+      return await invoke<SsoTokenInfo>("get_session_sso_token", {
+        sessionName: profile.sso_session,
+      });
+    }
+    // Profiles without an explicit session fall back to the global active token
+    if (!ssoStatus.access_token || !ssoStatus.region) {
+      throw new Error("No active SSO session");
+    }
+    return ssoStatus;
+  };
+
   const handleOpenConsole = async (profile: AwsProfile) => {
-    if (
-      !ssoStatus.access_token ||
-      !profile.sso_account_id ||
-      !profile.sso_role_name
-    )
-      return;
+    if (!profile.sso_account_id || !profile.sso_role_name) return;
     const consoleRegion = profile.region || settings.default_region;
     const key = `${profile.name}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
+      const token = await resolveSessionToken(profile);
       await invoke("open_aws_console", {
-        accessToken: ssoStatus.access_token,
+        accessToken: token.access_token,
         accountId: profile.sso_account_id,
         roleName: profile.sso_role_name,
-        ssoRegion: ssoStatus.region,
+        ssoRegion: token.region,
         consoleRegion,
         sessionDurationSecs: settings.session_timeout_hours * 3600,
       });
@@ -115,16 +126,16 @@ export function ProfilesPage({
   };
 
   const handleStartSession = async (profile: AwsProfile) => {
-    if (!ssoStatus.access_token) return;
     const cliRegion = profile.region || settings.default_region;
     const key = `${profile.name}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
+      const token = await resolveSessionToken(profile);
       await invoke("configure_cli_credentials", {
-        accessToken: ssoStatus.access_token,
+        accessToken: token.access_token,
         accountId: profile.sso_account_id,
         roleName: profile.sso_role_name,
-        ssoRegion: ssoStatus.region,
+        ssoRegion: token.region,
         cliRegion,
         profileName: profile.name,
       });
@@ -171,7 +182,6 @@ export function ProfilesPage({
 
   const canConnect = (profile: AwsProfile) =>
     ssoStatus.status === "active" &&
-    !!ssoStatus.access_token &&
     !!profile.sso_account_id &&
     !!profile.sso_role_name;
 

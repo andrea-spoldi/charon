@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { SsoAccount, AccountRole } from "../types";
+import type { SsoAccountWithSession, AccountRole } from "../types";
 
 export function useAccounts() {
-  const [accounts, setAccounts] = useState<SsoAccount[]>([]);
+  const [accounts, setAccounts] = useState<SsoAccountWithSession[]>([]);
   const [roles, setRoles] = useState<Record<string, AccountRole[]>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,25 +25,21 @@ export function useAccounts() {
     [],
   );
 
-  const fetchAccounts = useCallback(
-    async (accessToken: string, region: string) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await invoke<SsoAccount[]>("list_sso_accounts", {
-          accessToken,
-          region,
-        });
-        setAccounts(result);
-      } catch (err) {
-        setError(String(err));
-        setAccounts([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+  const fetchAllPortalAccounts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await invoke<SsoAccountWithSession[]>(
+        "list_all_portal_accounts",
+      );
+      setAccounts(result);
+    } catch (err) {
+      setError(String(err));
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const reset = useCallback(() => {
     setAccounts([]);
@@ -56,7 +52,7 @@ export function useAccounts() {
     roles,
     loading,
     error,
-    fetchAccounts,
+    fetchAllPortalAccounts,
     fetchRoles,
     reset,
   };

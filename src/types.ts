@@ -35,6 +35,13 @@ export interface SsoAccount {
   emailAddress: string;
 }
 
+// Account with the SSO session context it came from (multi-portal)
+export interface SsoAccountWithSession extends SsoAccount {
+  sessionName: string;
+  accessToken: string;
+  ssoRegion: string;
+}
+
 // Role from SSO list-account-roles
 export interface AccountRole {
   roleName: string;

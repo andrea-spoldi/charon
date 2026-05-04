@@ -39,7 +39,7 @@ function App() {
     roles,
     loading: accountsLoading,
     error: accountsError,
-    fetchAccounts,
+    fetchAllPortalAccounts,
     fetchRoles,
     reset: resetAccounts,
   } = useAccounts();
@@ -97,23 +97,13 @@ function App() {
     }
   }, [accountsError, addToast]);
 
-  // Auto-fetch accounts once when SSO becomes active
+  // Auto-fetch accounts once when any SSO portal becomes active
   useEffect(() => {
-    if (
-      ssoStatus.status === "active" &&
-      ssoStatus.access_token &&
-      ssoStatus.region &&
-      !hasFetched.current
-    ) {
+    if (ssoStatus.status === "active" && !hasFetched.current) {
       hasFetched.current = true;
-      fetchAccounts(ssoStatus.access_token, ssoStatus.region);
+      fetchAllPortalAccounts();
     }
-  }, [
-    ssoStatus.status,
-    ssoStatus.access_token,
-    ssoStatus.region,
-    fetchAccounts,
-  ]);
+  }, [ssoStatus.status, fetchAllPortalAccounts]);
 
   // Reset when session ends
   useEffect(() => {
@@ -124,10 +114,8 @@ function App() {
   }, [ssoStatus.status, resetAccounts]);
 
   const refreshAccounts = useCallback(() => {
-    if (ssoStatus.access_token && ssoStatus.region) {
-      fetchAccounts(ssoStatus.access_token, ssoStatus.region);
-    }
-  }, [ssoStatus.access_token, ssoStatus.region, fetchAccounts]);
+    fetchAllPortalAccounts();
+  }, [fetchAllPortalAccounts]);
 
   // TopBar login: navigate to Sessions page and trigger login
   const handleTopBarLogin = useCallback(() => {
@@ -143,7 +131,6 @@ function App() {
         return (
           <AccountsPage
             ssoStatus={ssoStatus}
-            sessions={sessions}
             accounts={accounts}
             roles={roles}
             loading={accountsLoading}

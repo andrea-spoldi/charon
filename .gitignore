@@ -39,5 +39,4 @@ coverage/
 tsconfig.tsbuildinfo
 
 # AI tooling
-.claude/
 .cursor/

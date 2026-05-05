@@ -14,7 +14,17 @@
     "blocker": null
   },
 
-  "backlog": [],
+  "backlog": [
+    {
+      "id": "T-004",
+      "title": "Show per-session SSO token status in SessionsPage",
+      "description": "Each session card in SessionsPage should display its own token status (active/expired/none) and expiration time, fetched via get_session_sso_token(session_name). Currently only a single global token is shown in the status bar (introduced in 7b11bd7).",
+      "size": "M",
+      "priority": 1,
+      "status": "pending",
+      "tags": ["frontend", "sessions", "aws-sso"]
+    }
+  ],
 
   "decisions": [
     {

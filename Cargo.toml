@@ -6,6 +6,7 @@ resolver = "2"
 cargo-dist-version = "0.31.0"
 ci = ["github"]
 installers = []
+allow-dirty = ["ci"]
 targets = [
     "x86_64-apple-darwin",
     "aarch64-apple-darwin",

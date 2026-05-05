@@ -33,17 +33,6 @@ export function StatusBar({
           <Globe size={12} />
           {settings.default_region}
         </span>
-        {ssoStatus.status === "active" && ssoStatus.expires_at && (
-          <span
-            className="statusbar-item"
-            title="SSO token expiry — after this you'll need to log in again"
-          >
-            SSO Expires:{" "}
-            {new Date(
-              ssoStatus.expires_at.replace("UTC", "Z"),
-            ).toLocaleTimeString()}
-          </span>
-        )}
         {ssoStatus.status === "active" &&
           profileExpiration != null &&
           defaultProfile && (

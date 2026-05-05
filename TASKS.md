@@ -7,8 +7,8 @@
 
   "current_session": {
     "id": "S-003",
-    "goal": "TBD",
-    "task_ref": null,
+    "goal": "Show per-session SSO token status and expiration in SessionsPage",
+    "task_ref": "T-004",
     "started": "2026-05-05",
     "status": "in-progress",
     "blocker": null
@@ -21,8 +21,17 @@
       "description": "Each session card in SessionsPage should display its own token status (active/expired/none) and expiration time, fetched via get_session_sso_token(session_name). Currently only a single global token is shown in the status bar (introduced in 7b11bd7).",
       "size": "M",
       "priority": 1,
-      "status": "pending",
+      "status": "done",
       "tags": ["frontend", "sessions", "aws-sso"]
+    },
+    {
+      "id": "T-005",
+      "title": "Remove SSO token info from the status bar",
+      "description": "Now that each session card shows its own token status (active/expired/none + expiration), the global SSO token indicator in the status bar is redundant. Remove it from the TopBar/status bar component.",
+      "size": "S",
+      "priority": 1,
+      "status": "done",
+      "tags": ["frontend", "ui", "aws-sso"]
     }
   ],
 

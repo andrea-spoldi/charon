@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Plus,
   Trash2,
@@ -12,9 +12,12 @@ import {
   Check,
   Loader,
   ExternalLink,
+  ShieldCheck,
+  ShieldOff,
+  ShieldAlert,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
-import type { SsoSession, DeviceAuthInfo } from "../types";
+import type { SsoSession, SsoTokenInfo, DeviceAuthInfo } from "../types";
 
 const AWS_REGIONS = [
   "us-east-1",
@@ -74,12 +77,42 @@ export function SessionsPage({
     Record<string, string>
   >({});
 
+  // Per-session token status
+  const [sessionTokens, setSessionTokens] = useState<
+    Record<string, SsoTokenInfo>
+  >({});
+
   // Device authorization state
   const [deviceAuth, setDeviceAuth] = useState<DeviceAuthInfo | null>(null);
   const [loggingIn, setLoggingIn] = useState<string | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
   const pollAbortRef = useRef(false);
   const loginTriggeredRef = useRef<string | null>(null);
+
+  const fetchSessionTokens = useCallback(async (sessionList: SsoSession[]) => {
+    const results = await Promise.allSettled(
+      sessionList.map((s) =>
+        invoke<SsoTokenInfo>("get_session_sso_token", { sessionName: s.name }),
+      ),
+    );
+    setSessionTokens(
+      Object.fromEntries(
+        sessionList.map((s, i) => {
+          const r = results[i];
+          return [
+            s.name,
+            r.status === "fulfilled"
+              ? r.value
+              : ({ status: "none", expires_at: null, access_token: null, start_url: null, region: null } as SsoTokenInfo),
+          ];
+        }),
+      ),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (sessions.length > 0) fetchSessionTokens(sessions);
+  }, [sessions, fetchSessionTokens]);
 
   // Handle login trigger from TopBar (guard against StrictMode double-fire)
   useEffect(() => {
@@ -229,6 +262,7 @@ export function SessionsPage({
       // Success!
       setDeviceAuth(null);
       onStatusChange();
+      fetchSessionTokens(sessions);
     } catch (err) {
       if (!pollAbortRef.current) {
         const msg = String(err);
@@ -454,12 +488,40 @@ export function SessionsPage({
 
       {!showForm && sessions.length > 0 && (
         <div className="profile-list">
-          {sessions.map((session) => (
+          {sessions.map((session) => {
+            const token = sessionTokens[session.name];
+            return (
             <div key={session.name} className="profile-card">
               <div className="profile-info">
-                <span className="profile-name">{session.name}</span>
+                <div className="profile-name-row">
+                  <span className="profile-name">{session.name}</span>
+                  {token && (
+                    <span className={`sso-token-badge sso-token-badge--${token.status}`}>
+                      {token.status === "active" ? (
+                        <ShieldCheck size={13} />
+                      ) : token.status === "expired" ? (
+                        <ShieldOff size={13} />
+                      ) : (
+                        <ShieldAlert size={13} />
+                      )}
+                      <span>
+                        {token.status === "active"
+                          ? "Active"
+                          : token.status === "expired"
+                            ? "Expired"
+                            : "No token"}
+                      </span>
+                    </span>
+                  )}
+                </div>
                 <span className="text-muted">{session.sso_start_url}</span>
                 <span className="text-muted">Region: {session.sso_region}</span>
+                {token?.expires_at && (
+                  <span className="text-muted sso-token-expiry">
+                    {token.status === "active" ? "Expires" : "Expired"}:{" "}
+                    {new Date(token.expires_at).toLocaleString()}
+                  </span>
+                )}
                 {session.sso_registration_scopes && (
                   <span className="text-muted">
                     Scopes: {session.sso_registration_scopes}
@@ -498,7 +560,8 @@ export function SessionsPage({
                 </button>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -30,7 +30,7 @@
       "description": "Now that each session card shows its own token status (active/expired/none + expiration), the global SSO token indicator in the status bar is redundant. Remove it from the TopBar/status bar component.",
       "size": "S",
       "priority": 1,
-      "status": "pending",
+      "status": "done",
       "tags": ["frontend", "ui", "aws-sso"]
     }
   ],

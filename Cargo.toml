@@ -1,0 +1,19 @@
+[workspace]
+members = ["src-tauri"]
+resolver = "2"
+
+[workspace.metadata.dist]
+cargo-dist-version = "0.31.0"
+ci = ["github"]
+installers = []
+allow-dirty = ["ci"]
+targets = [
+    "x86_64-apple-darwin",
+    "aarch64-apple-darwin",
+    "x86_64-unknown-linux-gnu",
+    "x86_64-pc-windows-msvc",
+]
+
+[profile.dist]
+inherits = "release"
+lto = "thin"

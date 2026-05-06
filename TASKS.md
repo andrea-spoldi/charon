@@ -3,37 +3,18 @@
 ```json
 {
   "project": "charon",
-  "updated": "2026-05-05",
+  "updated": "2026-05-06",
 
   "current_session": {
-    "id": "S-003",
-    "goal": "Show per-session SSO token status and expiration in SessionsPage",
-    "task_ref": "T-004",
-    "started": "2026-05-05",
-    "status": "in-progress",
+    "id": "S-004",
+    "goal": null,
+    "task_ref": null,
+    "started": "2026-05-06",
+    "status": "planning",
     "blocker": null
   },
 
-  "backlog": [
-    {
-      "id": "T-004",
-      "title": "Show per-session SSO token status in SessionsPage",
-      "description": "Each session card in SessionsPage should display its own token status (active/expired/none) and expiration time, fetched via get_session_sso_token(session_name). Currently only a single global token is shown in the status bar (introduced in 7b11bd7).",
-      "size": "M",
-      "priority": 1,
-      "status": "done",
-      "tags": ["frontend", "sessions", "aws-sso"]
-    },
-    {
-      "id": "T-005",
-      "title": "Remove SSO token info from the status bar",
-      "description": "Now that each session card shows its own token status (active/expired/none + expiration), the global SSO token indicator in the status bar is redundant. Remove it from the TopBar/status bar component.",
-      "size": "S",
-      "priority": 1,
-      "status": "done",
-      "tags": ["frontend", "ui", "aws-sso"]
-    }
-  ],
+  "backlog": [],
 
   "decisions": [
     {
@@ -80,6 +61,20 @@
       "completed_date": "2026-05-05",
       "session_ref": "S-002",
       "notes": "Added root Cargo.toml workspace manifest, [workspace.metadata.dist] config with targets and allow-dirty, [profile.dist], repository field in src-tauri/Cargo.toml, Tauri GTK/WebKit apt deps step, and frontend build steps in release.yml."
+    },
+    {
+      "id": "T-004",
+      "title": "Show per-session SSO token status in SessionsPage",
+      "completed_date": "2026-05-06",
+      "session_ref": "S-003",
+      "notes": "Added sessionTokens state and fetchSessionTokens callback. Each session card now shows a status badge (Active/Expired/No token) with icon and formatted expiry timestamp, refreshed on mount and after login."
+    },
+    {
+      "id": "T-005",
+      "title": "Remove SSO token info from the status bar",
+      "completed_date": "2026-05-06",
+      "session_ref": "S-003",
+      "notes": "Removed the 'SSO Expires' span from StatusBar.tsx. Per-session cards in SessionsPage now carry this information."
     }
   ]
 }

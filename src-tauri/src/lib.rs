@@ -117,6 +117,7 @@ pub fn run() {
             // SSO
             commands::sso::get_sso_status,
             commands::sso::get_session_sso_token,
+            commands::sso::logout_sso_session,
             commands::sso::sso_login,
             commands::sso::sso_logout,
             commands::sso::start_device_auth,

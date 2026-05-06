@@ -4,6 +4,7 @@ import {
   Trash2,
   Edit3,
   LogIn,
+  LogOut,
   Globe,
   MapPin,
   ArrowRight,
@@ -50,9 +51,6 @@ interface SessionsPageProps {
   loading: boolean;
   onRefresh: () => void;
   onStatusChange: () => void;
-  /** Set externally (e.g. from TopBar) to trigger login for a session */
-  loginSessionName?: string | null;
-  onLoginHandled?: () => void;
   onError?: (message: string, type?: "error" | "success" | "info") => void;
 }
 
@@ -61,8 +59,6 @@ export function SessionsPage({
   loading,
   onRefresh,
   onStatusChange,
-  loginSessionName,
-  onLoginHandled,
   onError,
 }: SessionsPageProps) {
   const [showForm, setShowForm] = useState(false);
@@ -85,6 +81,7 @@ export function SessionsPage({
   // Device authorization state
   const [deviceAuth, setDeviceAuth] = useState<DeviceAuthInfo | null>(null);
   const [loggingIn, setLoggingIn] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState<string | null>(null);
   const [codeCopied, setCodeCopied] = useState(false);
   const pollAbortRef = useRef(false);
   const loginTriggeredRef = useRef<string | null>(null);
@@ -115,19 +112,6 @@ export function SessionsPage({
   }, [sessions, fetchSessionTokens]);
 
   // Handle login trigger from TopBar (guard against StrictMode double-fire)
-  useEffect(() => {
-    if (
-      loginSessionName &&
-      !deviceAuth &&
-      !loggingIn &&
-      loginTriggeredRef.current !== loginSessionName
-    ) {
-      loginTriggeredRef.current = loginSessionName;
-      handleLogin(loginSessionName);
-      onLoginHandled?.();
-    }
-  }, [loginSessionName]);
-
   const resetForm = () => {
     setSessionName("my-sso");
     setStartUrl("");
@@ -273,6 +257,21 @@ export function SessionsPage({
     } finally {
       setLoggingIn(null);
       loginTriggeredRef.current = null;
+    }
+  };
+
+  const handleLogout = async (name: string) => {
+    setLoggingOut(name);
+    try {
+      await invoke("logout_sso_session", { sessionName: name });
+      await fetchSessionTokens(sessions);
+      onStatusChange();
+    } catch (err) {
+      const msg = String(err);
+      setError(msg);
+      onError?.(msg, "error");
+    } finally {
+      setLoggingOut(null);
     }
   };
 
@@ -533,9 +532,17 @@ export function SessionsPage({
                   className="icon-btn"
                   title="Login"
                   onClick={() => handleLogin(session.name)}
-                  disabled={loggingIn === session.name}
+                  disabled={loggingIn === session.name || loggingOut === session.name}
                 >
                   <LogIn size={14} />
+                </button>
+                <button
+                  className="icon-btn"
+                  title="Logout"
+                  onClick={() => handleLogout(session.name)}
+                  disabled={loggingOut === session.name || loggingIn === session.name || token?.status !== "active"}
+                >
+                  <LogOut size={14} />
                 </button>
                 <button
                   className="icon-btn"

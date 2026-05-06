@@ -65,7 +65,23 @@ pub fn get_session_token(session_name: &str) -> Option<SsoTokenInfo> {
     })
 }
 
-/// Read the SSO token cache and determine session status
+/// Delete the token cache file for a specific SSO session.
+/// Returns true if the file was removed, false if it didn't exist.
+pub fn delete_session_token(session_name: &str) -> Result<bool, String> {
+    let mut hasher = Sha1::new();
+    hasher.update(session_name.as_bytes());
+    let hash = format!("{:x}", hasher.finalize());
+
+    let cache_file = sso_cache_dir().join(format!("{hash}.json"));
+    if cache_file.exists() {
+        std::fs::remove_file(&cache_file)
+            .map_err(|e| format!("Failed to delete token cache: {e}"))?;
+        info!("Deleted SSO token cache for session '{session_name}'");
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
 pub fn get_sso_status() -> SsoTokenInfo {
     let cache_dir = sso_cache_dir();
     if !cache_dir.exists() {

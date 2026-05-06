@@ -255,6 +255,13 @@ fn is_leap_year(year: u64) -> bool {
     (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
 }
 
+/// Logout from a single SSO session by deleting its token cache file
+#[tauri::command]
+pub fn logout_sso_session(session_name: String) -> Result<(), String> {
+    info!("Logging out SSO session '{session_name}'");
+    sso_cache::delete_session_token(&session_name).map(|_| ())
+}
+
 /// Logout from SSO
 #[tauri::command]
 pub fn sso_logout() -> Result<String, String> {

@@ -530,19 +530,19 @@ export function SessionsPage({
               <div className="profile-actions">
                 <button
                   className="icon-btn"
-                  title="Login"
-                  onClick={() => handleLogin(session.name)}
+                  title={token?.status === "active" ? "Logout" : "Login"}
+                  onClick={() =>
+                    token?.status === "active"
+                      ? handleLogout(session.name)
+                      : handleLogin(session.name)
+                  }
                   disabled={loggingIn === session.name || loggingOut === session.name}
                 >
-                  <LogIn size={14} />
-                </button>
-                <button
-                  className="icon-btn"
-                  title="Logout"
-                  onClick={() => handleLogout(session.name)}
-                  disabled={loggingOut === session.name || loggingIn === session.name || token?.status !== "active"}
-                >
-                  <LogOut size={14} />
+                  {token?.status === "active" ? (
+                    <LogOut size={14} />
+                  ) : (
+                    <LogIn size={14} />
+                  )}
                 </button>
                 <button
                   className="icon-btn"

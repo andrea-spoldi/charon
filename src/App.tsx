@@ -87,9 +87,6 @@ function App() {
     profiles,
   ]);
 
-  // Login trigger: when TopBar login is clicked, navigate to Sessions and start login
-  const [loginSessionName, setLoginSessionName] = useState<string | null>(null);
-
   // Surface account errors as toasts
   useEffect(() => {
     if (accountsError) {
@@ -117,14 +114,6 @@ function App() {
     fetchAllPortalAccounts();
   }, [fetchAllPortalAccounts]);
 
-  // TopBar login: navigate to Sessions page and trigger login
-  const handleTopBarLogin = useCallback(() => {
-    const firstSession = sessions.length > 0 ? sessions[0] : null;
-    if (!firstSession) return;
-    setActivePage("sessions");
-    setLoginSessionName(firstSession.name);
-  }, [sessions]);
-
   const renderPage = () => {
     switch (activePage) {
       case "accounts":
@@ -147,8 +136,6 @@ function App() {
             loading={sessionsLoading}
             onRefresh={refreshProfiles}
             onStatusChange={refreshSsoStatus}
-            loginSessionName={loginSessionName}
-            onLoginHandled={() => setLoginSessionName(null)}
             onError={addToast}
           />
         );
@@ -214,9 +201,6 @@ function App() {
       <TopBar
         ssoStatus={ssoStatus}
         sessions={sessions}
-        onStatusChange={refreshSsoStatus}
-        onLogin={handleTopBarLogin}
-        onError={addToast}
         fontSize={fontSize}
         onFontSizeChange={setFontSize}
       />

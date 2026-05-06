@@ -7,14 +7,24 @@
 
   "current_session": {
     "id": "S-004",
-    "goal": null,
-    "task_ref": null,
+    "goal": "Replace TopBar Login button with per-session login/logout actions in SessionsPage",
+    "task_ref": "T-006",
     "started": "2026-05-06",
-    "status": "planning",
+    "status": "in-progress",
     "blocker": null
   },
 
-  "backlog": [],
+  "backlog": [
+    {
+      "id": "T-006",
+      "title": "Replace TopBar Login with per-session login/logout in SessionsPage",
+      "description": "The global Login button in TopBar is meaningless now that multiple SSO sessions are supported. Remove it (and its loginSessionName wiring in App.tsx/SessionsPage). Add a per-session logout action to each session card using a LogOut icon; implement a logout_sso_session(session_name) Tauri command that deletes only that session's cache file (~/.aws/sso/cache/{sha1}.json).",
+      "size": "M",
+      "priority": 1,
+      "status": "in-progress",
+      "tags": ["frontend", "backend", "sessions", "aws-sso"]
+    }
+  ],
 
   "decisions": [
     {

@@ -117,20 +117,6 @@
         "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
       }
     ],
-    [
-      "@semantic-release/gitlab",
-      {
-        "gitlabUrl": "https://gitlab.com",
-        "assets": [
-          {
-            "path": "CHANGELOG.md",
-            "label": "Changelog"
-          }
-        ],
-        "milestones": false,
-        "addReleases": "bottom"
-      }
-    ]
   ],
   "tagFormat": "v${version}"
 }

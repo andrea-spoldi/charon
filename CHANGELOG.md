@@ -1,3 +1,17 @@
+## [0.14.0](https://github.com/andrea-spoldi/charon/compare/v0.13.0...v0.14.0) (2026-05-07)
+
+### 🚀 Features
+
+* replace TopBar login/logout with per-session actions in SessionsPage ([c158fdb](https://github.com/andrea-spoldi/charon/commit/c158fdbe8620aff4de781ae67ca701aa5d4547e9))
+
+### 🐛 Bug Fixes
+
+* Update Node.js version in semantic-release workflow ([11b1848](https://github.com/andrea-spoldi/charon/commit/11b1848061c97ebf27b2047289069b315e7d38f8))
+
+### ♻️ Code Refactoring
+
+* toggle login/logout icon on single button per session card ([6d93c99](https://github.com/andrea-spoldi/charon/commit/6d93c99e28cfca8944a03d1fe4e943c78cc72c6e))
+
 ## [0.11.0](https://gitlab.com/docebo/application-platform-team/internal-utilities/charon/compare/v0.10.0...v0.11.0) (2026-03-26)
 
 ### 🚀 Features

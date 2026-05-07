@@ -1,3 +1,9 @@
+## [0.14.1](https://github.com/andrea-spoldi/charon/compare/v0.14.0...v0.14.1) (2026-05-07)
+
+### 🐛 Bug Fixes
+
+* pin @tauri-apps/* to v2.11 to match tauri Rust crate ([f2409e1](https://github.com/andrea-spoldi/charon/commit/f2409e131e72675c3c8119909d350c6b268aecff))
+
 ## [0.14.0](https://github.com/andrea-spoldi/charon/compare/v0.13.0...v0.14.0) (2026-05-07)
 
 ### 🚀 Features

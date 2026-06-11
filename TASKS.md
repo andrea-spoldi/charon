@@ -3,28 +3,18 @@
 ```json
 {
   "project": "charon",
-  "updated": "2026-05-06",
+  "updated": "2026-06-11",
 
   "current_session": {
-    "id": "S-004",
-    "goal": "Replace TopBar Login button with per-session login/logout actions in SessionsPage",
-    "task_ref": "T-006",
-    "started": "2026-05-06",
-    "status": "in-progress",
+    "id": "S-005",
+    "goal": null,
+    "task_ref": null,
+    "started": "2026-06-11",
+    "status": "planning",
     "blocker": null
   },
 
-  "backlog": [
-    {
-      "id": "T-006",
-      "title": "Replace TopBar Login with per-session login/logout in SessionsPage",
-      "description": "The global Login button in TopBar is meaningless now that multiple SSO sessions are supported. Remove it (and its loginSessionName wiring in App.tsx/SessionsPage). Add a per-session logout action to each session card using a LogOut icon; implement a logout_sso_session(session_name) Tauri command that deletes only that session's cache file (~/.aws/sso/cache/{sha1}.json).",
-      "size": "M",
-      "priority": 1,
-      "status": "in-progress",
-      "tags": ["frontend", "backend", "sessions", "aws-sso"]
-    }
-  ],
+  "backlog": [],
 
   "decisions": [
     {
@@ -46,6 +36,13 @@
       "date": "2026-05-05",
       "decision": "Build the frontend (pnpm build) as a step in the release workflow before cargo-dist compiles the Rust backend.",
       "rationale": "tauri::generate_context!() embeds the frontend at compile time; without a pre-built dist/ the Rust compilation fails.",
+      "supersedes": null
+    },
+    {
+      "id": "D-004",
+      "date": "2026-06-11",
+      "decision": "Use semantic-release with @semantic-release/exec to automate version bumps across package.json, Cargo.toml, tauri.conf.json, and both Cargo.lock files. Requires RELEASE_TOKEN PAT because GITHUB_TOKEN pushes don't trigger downstream workflows.",
+      "rationale": "Eliminates manual version bumping in 4+ files. Tag push from semantic-release triggers existing cargo-dist release.yml.",
       "supersedes": null
     }
   ],
@@ -85,6 +82,20 @@
       "completed_date": "2026-05-06",
       "session_ref": "S-003",
       "notes": "Removed the 'SSO Expires' span from StatusBar.tsx. Per-session cards in SessionsPage now carry this information."
+    },
+    {
+      "id": "T-006",
+      "title": "Replace TopBar Login with per-session login/logout in SessionsPage",
+      "completed_date": "2026-06-11",
+      "session_ref": "S-004",
+      "notes": "Added logout_sso_session Tauri command (deletes per-session cache file). Replaced separate Login/Logout buttons with a single toggle icon per session card. Removed global Login/Logout from TopBar and all loginSessionName wiring from App.tsx."
+    },
+    {
+      "id": "T-007",
+      "title": "Automate version bumping with semantic-release",
+      "completed_date": "2026-06-11",
+      "session_ref": "S-004",
+      "notes": "Added .releaserc.json, scripts/bump-version.mjs, .github/workflows/semantic-release.yml. Semantic-release auto-bumps 5 version files and pushes tags that trigger cargo-dist."
     }
   ]
 }

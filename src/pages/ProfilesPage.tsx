@@ -13,7 +13,12 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { useProfiles } from "../hooks/useProfiles";
 import { ProfileForm } from "./ProfileForm";
-import type { AwsProfile, SsoTokenInfo, AppSettings } from "../types";
+import type {
+  AwsProfile,
+  SsoTokenInfo,
+  AppSettings,
+  ConfigureCliCredentialsResult,
+} from "../types";
 
 interface ProfilesPageProps {
   ssoStatus: SsoTokenInfo;
@@ -131,16 +136,19 @@ export function ProfilesPage({
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
       const token = await resolveSessionToken(profile);
-      await invoke("configure_cli_credentials", {
-        accessToken: token.access_token,
-        accountId: profile.sso_account_id,
-        roleName: profile.sso_role_name,
-        ssoRegion: token.region,
-        cliRegion,
-        profileName: profile.name,
-      });
+      const result = await invoke<ConfigureCliCredentialsResult>(
+        "configure_cli_credentials",
+        {
+          accessToken: token.access_token,
+          accountId: profile.sso_account_id,
+          roleName: profile.sso_role_name,
+          ssoRegion: token.region,
+          cliRegion,
+          profileName: profile.name,
+        },
+      );
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
-      onError?.(`Session started for ${profile.name}`, "success");
+      onError?.(result.message, "success");
       refresh();
     } catch (err) {
       console.error("Failed to start session:", err);

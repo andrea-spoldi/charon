@@ -7,14 +7,34 @@
 
   "current_session": {
     "id": "S-005",
-    "goal": null,
-    "task_ref": null,
-    "started": "2026-06-11",
-    "status": "planning",
+    "goal": "Auto-refresh profile credentials before SSO-session-bounded expiration (T-008 done; T-009/T-010 queued)",
+    "task_ref": "T-009",
+    "started": "2026-07-14",
+    "status": "in-progress",
     "blocker": null
   },
 
-  "backlog": [],
+  "backlog": [
+    {
+      "id": "T-009",
+      "title": "Frontend: auto-refresh a profile's CLI credentials shortly before expiry, only if its SSO session is still active",
+      "size": "M",
+      "notes": "Use expiresAt (epoch ms) now returned by configure_cli_credentials (T-008). Track per-profile expiry after Play is clicked; poll on an interval; before expiry, re-invoke configure_cli_credentials via resolveSessionToken() only if the profile's SSO session is not expired. No-op (do not refresh) if the session has expired."
+    },
+    {
+      "id": "T-010",
+      "title": "UI feedback for auto-refreshed profile credentials + test coverage",
+      "size": "S",
+      "notes": "Surface auto-refresh status per profile row (badge pattern from T-004). Vitest coverage for the T-009 refresh-scheduling logic using fake timers."
+    }
+  ],
+
+  "housekeeping": [
+    {
+      "date": "2026-07-14",
+      "notes": "Removed stale git worktree .claude/worktrees/happy-beaver-fb2f80 (branch claude/happy-beaver-fb2f80, already merged into main, dated May 4). Committed Cargo.lock version sync (0.13.0->0.14.1 drift from the 0.14.1 release) and regenerated Tauri capability schemas (acl-manifests.json, desktop-schema.json, macOS-schema.json). See commit 22c42a9."
+    }
+  ],
 
   "decisions": [
     {
@@ -48,6 +68,14 @@
   ],
 
   "completed": [
+    {
+      "id": "T-008",
+      "title": "Return credential expiration from configure_cli_credentials",
+      "completed_date": "2026-07-14",
+      "session_ref": "S-005",
+      "notes": "Changed configure_cli_credentials return type from String to ConfigureCliCredentialsResult { message, expires_at } (camelCase expiresAt), sourced from RoleCredentials.expiration (epoch ms). Updated ProfilesPage.tsx Play button call site and types.ts. Added Rust serialization test. Foundation for T-009 auto-refresh.",
+      "commit": "pending"
+    },
     {
       "id": "T-001",
       "title": "Handle accounts from multiple AWS Identity Center portals in Sessions",

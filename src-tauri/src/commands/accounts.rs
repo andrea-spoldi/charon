@@ -285,6 +285,16 @@ fn write_credentials_section(
     conf.set_to(Some(section), "region".to_string(), region.to_string());
 }
 
+/// Result of configuring CLI credentials, including when they expire
+/// (epoch milliseconds, as returned by SSO get-role-credentials) so callers
+/// can schedule a refresh before that point.
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConfigureCliCredentialsResult {
+    pub message: String,
+    pub expires_at: i64,
+}
+
 /// Write temporary STS credentials to ~/.aws/credentials for CLI use
 #[tauri::command]
 pub fn configure_cli_credentials(
@@ -294,7 +304,7 @@ pub fn configure_cli_credentials(
     sso_region: &str,
     cli_region: &str,
     profile_name: &str,
-) -> Result<String, String> {
+) -> Result<ConfigureCliCredentialsResult, String> {
     info!("Configuring CLI credentials for {role_name} in {account_id} as profile [{profile_name}] (sso_region: {sso_region}, cli_region: {cli_region})");
 
     let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
@@ -335,9 +345,10 @@ pub fn configure_cli_credentials(
         let _ = save_profile_store(&store);
     }
 
-    Ok(format!(
-        "Credentials saved to profile [{profile_name}]. They expire in ~12 hours."
-    ))
+    Ok(ConfigureCliCredentialsResult {
+        message: format!("Credentials saved to profile [{profile_name}]."),
+        expires_at: creds.expiration,
+    })
 }
 
 /// Stop a session: remove credentials for a profile from ~/.aws/credentials
@@ -513,5 +524,16 @@ mod tests {
         assert_eq!(account.account_id, "111111111111");
         assert_eq!(account.session_name, "my-sso");
         assert_eq!(account.sso_region, "us-east-1");
+    }
+
+    #[test]
+    fn test_configure_cli_credentials_result_serializes_camel_case() {
+        let result = ConfigureCliCredentialsResult {
+            message: "ok".to_string(),
+            expires_at: 1_700_000_000_000,
+        };
+        let json = serde_json::to_value(&result).unwrap();
+        assert_eq!(json["expiresAt"], 1_700_000_000_000i64);
+        assert_eq!(json["message"], "ok");
     }
 }

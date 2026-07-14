@@ -17,6 +17,12 @@ export interface SsoSession {
   sso_registration_scopes: string | null;
 }
 
+// Result of configuring CLI credentials for a profile
+export interface ConfigureCliCredentialsResult {
+  message: string;
+  expiresAt: number;
+}
+
 // Charon profile stored in ~/.charon/profiles.json
 export interface AwsProfile {
   name: string;

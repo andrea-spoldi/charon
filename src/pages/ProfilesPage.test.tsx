@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, act } from "@testing-library/react";
+import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import { ProfilesPage } from "./ProfilesPage";
 import type { AwsProfile, SsoTokenInfo, AppSettings } from "../types";
@@ -170,5 +170,17 @@ describe("ProfilesPage auto-refresh", () => {
 
     expect(getRoleCredentialsCallCount).toBe(0);
     expect(configureCallCount).toBe(0);
+
+    // Its persisted session_active flag is stale (true), but since it wasn't
+    // Played this session it should show "Play", not "Stop".
+    const staleCard = screen
+      .getByText(staleActiveProfile.name)
+      .closest(".profile-card") as HTMLElement;
+    expect(
+      within(staleCard).getByTitle("Start CLI session"),
+    ).toBeInTheDocument();
+    expect(
+      within(staleCard).queryByTitle("Stop CLI session"),
+    ).not.toBeInTheDocument();
   });
 });

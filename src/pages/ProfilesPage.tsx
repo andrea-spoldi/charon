@@ -213,7 +213,7 @@ export function ProfilesPage({
       const nowMs = Date.now();
       for (const profile of profiles) {
         const expiresAt = expirations[profile.name];
-        if (!profile.session_active || expiresAt == null) continue;
+        if (expiresAt == null) continue;
         if (expiresAt - nowMs > REFRESH_BUFFER_MS) continue;
         try {
           const token = await resolveSessionToken(profile);
@@ -318,7 +318,7 @@ export function ProfilesPage({
                           )}
                         </button>
                       </span>
-                      {profile.session_active && expiresAt != null && (
+                      {expiresAt != null && (
                         <span
                           className={`sso-token-badge sso-token-badge--${credentialsExpired ? "expired" : "active"}`}
                         >
@@ -391,7 +391,7 @@ export function ProfilesPage({
                     >
                       <ExternalLink size={14} />
                     </button>
-                    {profile.session_active ? (
+                    {expiresAt != null ? (
                       <button
                         className={`icon-btn icon-btn-active ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""}`}
                         title="Stop CLI session"

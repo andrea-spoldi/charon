@@ -204,50 +204,6 @@ export function ProfilesPage({
     }, 3000);
   };
 
-  // Seed expirations for profiles whose session was already active before
-  // this page mounted (e.g. after an app restart), so auto-refresh can
-  // track them without requiring another Play click.
-  useEffect(() => {
-    const toSeed = profiles.filter(
-      (p) =>
-        p.session_active &&
-        p.sso_account_id &&
-        p.sso_role_name &&
-        expirations[p.name] === undefined,
-    );
-    if (toSeed.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      for (const profile of toSeed) {
-        try {
-          const token = await resolveSessionToken(profile);
-          if (token.status !== "active") continue;
-          const creds = await invoke<{ expiration: number }>(
-            "get_role_credentials",
-            {
-              accessToken: token.access_token,
-              accountId: profile.sso_account_id,
-              roleName: profile.sso_role_name,
-              region: token.region,
-            },
-          );
-          if (!cancelled) {
-            setExpirations((prev) => ({
-              ...prev,
-              [profile.name]: creds.expiration,
-            }));
-          }
-        } catch {
-          // Session inactive or unreachable; leave this profile untracked
-          // until the user starts a new session for it.
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [profiles, resolveSessionToken, expirations]);
-
   // Background auto-refresh: shortly before a played profile's credentials
   // expire, reissue them — but only while its SSO session is still active.
   useEffect(() => {

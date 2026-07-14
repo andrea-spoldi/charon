@@ -14,15 +14,30 @@ const profile: AwsProfile = {
   session_active: false,
 };
 
+// A second profile whose session_active flag is stale/persisted from a
+// previous run (e.g. Played long ago and never Stopped) but was NOT
+// Played in the current page session.
+const staleActiveProfile: AwsProfile = {
+  name: "staging",
+  sso_session: "my-sso",
+  sso_account_id: "222222222222",
+  sso_role_name: "ReadOnly",
+  region: null,
+  output: null,
+  session_active: true,
+};
+
 let profileState: AwsProfile;
+let profilesListState: AwsProfile[];
 let sessionStatus: "active" | "expired";
 let configureCallCount: number;
+let getRoleCredentialsCallCount: number;
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(async (cmd: string) => {
     switch (cmd) {
       case "list_profiles":
-        return [profileState];
+        return profilesListState;
       case "list_sso_sessions":
         return [];
       case "get_default_profile":
@@ -35,9 +50,13 @@ vi.mock("@tauri-apps/api/core", () => ({
           expires_at: null,
           access_token: "session-token",
         } satisfies SsoTokenInfo;
+      case "get_role_credentials":
+        getRoleCredentialsCallCount += 1;
+        return { expiration: Date.now() + 1000 };
       case "configure_cli_credentials":
         configureCallCount += 1;
         profileState = { ...profileState, session_active: true };
+        profilesListState = [profileState];
         return { message: "ok", expiresAt: Date.now() + 1000 };
       default:
         return null;
@@ -63,8 +82,10 @@ const settings: AppSettings = {
 describe("ProfilesPage auto-refresh", () => {
   beforeEach(() => {
     profileState = { ...profile };
+    profilesListState = [profileState];
     sessionStatus = "active";
     configureCallCount = 0;
+    getRoleCredentialsCallCount = 0;
     vi.useFakeTimers();
   });
 
@@ -125,5 +146,29 @@ describe("ProfilesPage auto-refresh", () => {
 
     // No-op expected: the auto-refresh loop must skip inactive sessions.
     expect(configureCallCount).toBe(1);
+  });
+
+  it("never touches a profile that wasn't Played this session, even if its stored session_active flag is stale", async () => {
+    profilesListState = [profileState, staleActiveProfile];
+
+    render(
+      <ProfilesPage
+        ssoStatus={ssoStatus}
+        settings={settings}
+        onError={() => {}}
+      />,
+    );
+
+    await vi.waitFor(() =>
+      expect(screen.getByText(staleActiveProfile.name)).toBeInTheDocument(),
+    );
+
+    // Give the mount effects and one full refresh-interval tick a chance to run.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+
+    expect(getRoleCredentialsCallCount).toBe(0);
+    expect(configureCallCount).toBe(0);
   });
 });

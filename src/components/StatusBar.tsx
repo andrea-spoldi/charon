@@ -4,8 +4,7 @@ import type { SsoTokenInfo, AppSettings } from "../types";
 interface StatusBarProps {
   ssoStatus: SsoTokenInfo;
   settings: AppSettings;
-  defaultProfile?: string | null;
-  profileExpiration?: number | null;
+  hasActiveSessions?: boolean;
   onStopAllSessions?: () => void;
   error?: string | null;
 }
@@ -13,8 +12,7 @@ interface StatusBarProps {
 export function StatusBar({
   ssoStatus,
   settings,
-  defaultProfile,
-  profileExpiration,
+  hasActiveSessions,
   onStopAllSessions,
   error,
 }: StatusBarProps) {
@@ -33,26 +31,15 @@ export function StatusBar({
           <Globe size={12} />
           {settings.default_region}
         </span>
-        {ssoStatus.status === "active" &&
-          profileExpiration != null &&
-          defaultProfile && (
-            <>
-              <button
-                className="statusbar-stop-btn"
-                onClick={onStopAllSessions}
-                title="Stop all active CLI sessions"
-              >
-                <StopCircle size={12} />
-              </button>
-              <span
-                className="statusbar-item"
-                title={`Profile "${defaultProfile}" credential expiry`}
-              >
-                Profile Expires:{" "}
-                {new Date(profileExpiration).toLocaleTimeString()}
-              </span>
-            </>
-          )}
+        {ssoStatus.status === "active" && hasActiveSessions && (
+          <button
+            className="statusbar-stop-btn"
+            onClick={onStopAllSessions}
+            title="Stop all active CLI sessions"
+          >
+            <StopCircle size={12} />
+          </button>
+        )}
         <span
           className={`statusbar-dot ${ssoStatus.status === "active" ? "statusbar-dot-active" : "statusbar-dot-inactive"}`}
         />

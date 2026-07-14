@@ -7,27 +7,14 @@
 
   "current_session": {
     "id": "S-005",
-    "goal": "Auto-refresh profile credentials before SSO-session-bounded expiration (T-008 done; T-009/T-010 queued)",
-    "task_ref": "T-009",
+    "goal": "Auto-refresh profile credentials before SSO-session-bounded expiration — T-008/T-009/T-010 all done",
+    "task_ref": null,
     "started": "2026-07-14",
-    "status": "in-progress",
+    "status": "done",
     "blocker": null
   },
 
-  "backlog": [
-    {
-      "id": "T-009",
-      "title": "Frontend: auto-refresh a profile's CLI credentials shortly before expiry, only if its SSO session is still active",
-      "size": "M",
-      "notes": "Use expiresAt (epoch ms) now returned by configure_cli_credentials (T-008). Track per-profile expiry after Play is clicked; poll on an interval; before expiry, re-invoke configure_cli_credentials via resolveSessionToken() only if the profile's SSO session is not expired. No-op (do not refresh) if the session has expired."
-    },
-    {
-      "id": "T-010",
-      "title": "UI feedback for auto-refreshed profile credentials + test coverage",
-      "size": "S",
-      "notes": "Surface auto-refresh status per profile row (badge pattern from T-004). Vitest coverage for the T-009 refresh-scheduling logic using fake timers."
-    }
-  ],
+  "backlog": [],
 
   "housekeeping": [
     {
@@ -73,7 +60,21 @@
       "title": "Return credential expiration from configure_cli_credentials",
       "completed_date": "2026-07-14",
       "session_ref": "S-005",
-      "notes": "Changed configure_cli_credentials return type from String to ConfigureCliCredentialsResult { message, expires_at } (camelCase expiresAt), sourced from RoleCredentials.expiration (epoch ms). Updated ProfilesPage.tsx Play button call site and types.ts. Added Rust serialization test. Foundation for T-009 auto-refresh.",
+      "notes": "Changed configure_cli_credentials return type from String to ConfigureCliCredentialsResult { message, expires_at } (camelCase expiresAt), sourced from RoleCredentials.expiration (epoch ms). Updated ProfilesPage.tsx Play button call site and types.ts. Added Rust serialization test. Foundation for T-009 auto-refresh."
+    },
+    {
+      "id": "T-009",
+      "title": "Frontend: auto-refresh a profile's CLI credentials shortly before expiry, only if its SSO session is still active",
+      "completed_date": "2026-07-14",
+      "session_ref": "S-005",
+      "notes": "Added per-profile expirations state in ProfilesPage.tsx keyed by profile name, populated from configure_cli_credentials' expiresAt. Seeding effect recovers expiry for already-active profiles (e.g. after app restart) via a read-only get_role_credentials call. Interval effect (paced by settings.refresh_interval_secs) reissues credentials via the shared applyCredentials() helper once within REFRESH_BUFFER_MS (5 min) of expiry, but only if resolveSessionToken() reports the profile's SSO session status is still 'active' — otherwise it's a silent no-op. Also removed the old single default-profile-only expiration tracking (App.tsx effect + StatusBar 'Profile Expires' text), which only ever reflected the default profile regardless of which profiles were actually active; StatusBar's stop-all button now gates on hasActiveSessions instead."
+    },
+    {
+      "id": "T-010",
+      "title": "UI feedback for auto-refreshed profile credentials + test coverage",
+      "completed_date": "2026-07-14",
+      "session_ref": "S-005",
+      "notes": "Each profile row now shows its own credential-expiry badge (active/expired, reusing SessionsPage's sso-token-badge CSS classes from T-004) plus an expiry timestamp line, instead of one global status-bar reading. Added src/pages/ProfilesPage.test.tsx with fake-timer Vitest coverage: one test confirms auto-refresh fires while the SSO session is active, another confirms it's skipped once the session has expired.",
       "commit": "pending"
     },
     {

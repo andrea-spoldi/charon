@@ -47,45 +47,11 @@ function App() {
   const { toasts, addToast, dismissToast } = useToast();
   const { fontSize, setFontSize } = useFontSize();
   const hasFetched = useRef(false);
-  const [profileExpiration, setProfileExpiration] = useState<number | null>(
-    null,
-  );
 
   // Load settings once on mount
   useEffect(() => {
     invoke<AppSettings>("get_settings").then(setSettings).catch(console.error);
   }, []);
-
-  // Fetch default profile credential expiration when SSO is active
-  useEffect(() => {
-    if (
-      ssoStatus.status !== "active" ||
-      !ssoStatus.access_token ||
-      !ssoStatus.region
-    ) {
-      setProfileExpiration(null);
-      return;
-    }
-    const defaultProf = profiles.find((p) => p.name === defaultProfile);
-    if (!defaultProf?.sso_account_id || !defaultProf?.sso_role_name) {
-      setProfileExpiration(null);
-      return;
-    }
-    invoke<{ expiration: number }>("get_role_credentials", {
-      accessToken: ssoStatus.access_token,
-      accountId: defaultProf.sso_account_id,
-      roleName: defaultProf.sso_role_name,
-      region: ssoStatus.region,
-    })
-      .then((creds) => setProfileExpiration(creds.expiration))
-      .catch(() => setProfileExpiration(null));
-  }, [
-    ssoStatus.status,
-    ssoStatus.access_token,
-    ssoStatus.region,
-    defaultProfile,
-    profiles,
-  ]);
 
   // Surface account errors as toasts
   useEffect(() => {
@@ -210,12 +176,11 @@ function App() {
       <StatusBar
         ssoStatus={ssoStatus}
         settings={settings}
-        defaultProfile={defaultProfile}
-        profileExpiration={profileExpiration}
+        hasActiveSessions={profiles.some((p) => p.session_active)}
         onStopAllSessions={async () => {
           try {
             const msg = await invoke<string>("stop_all_sessions");
-            setProfileExpiration(null);
+            refreshProfiles();
             addToast(msg, "info");
           } catch (err) {
             addToast(`Failed to stop sessions: ${err}`, "error");

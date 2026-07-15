@@ -1,3 +1,16 @@
+## [0.15.0](https://github.com/andrea-spoldi/charon/compare/v0.14.1...v0.15.0) (2026-07-15)
+
+### 🚀 Features
+
+* auto-refresh per-profile CLI credentials before expiry ([e22181b](https://github.com/andrea-spoldi/charon/commit/e22181b8c0c315eb58fa9f6ec1e0d00295a7595f))
+* return credential expiration from configure_cli_credentials ([ae1d61d](https://github.com/andrea-spoldi/charon/commit/ae1d61d12cd33558619bebc5bf10ed3fd6991ee8))
+
+### 🐛 Bug Fixes
+
+* don't resurrect auto-refresh for profiles not Played this session ([b58cdea](https://github.com/andrea-spoldi/charon/commit/b58cdea363e1f269ba20575cb82e40ede100dbef))
+* revert to Play once a profile's credentials expire unrefreshed ([0314b2d](https://github.com/andrea-spoldi/charon/commit/0314b2d88b58dc1c9b040692971342ff5bbc7cd4))
+* show Play (not Stop) icon for profiles not tracked this session ([6fbf6b2](https://github.com/andrea-spoldi/charon/commit/6fbf6b273352a0172a4f66d27ee7cde2bbd34258))
+
 ## [0.14.1](https://github.com/andrea-spoldi/charon/compare/v0.14.0...v0.14.1) (2026-05-07)
 
 ### 🐛 Bug Fixes

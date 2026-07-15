@@ -84,6 +84,14 @@
       "notes": "Root cause: T-009's seeding effect scanned profiles.session_active (a flag persisted forever once a profile is Played, only cleared by an explicit Stop) to resurrect expiry-tracking on every ProfilesPage mount. Any profile ever Played and not explicitly Stopped — plausibly most/all saved profiles in daily use — got swept into get_role_credentials fetches and, subsequently, periodic configure_cli_credentials writes to ~/.aws/credentials. Fix: removed the seeding effect entirely; expirations (and therefore auto-refresh eligibility) is now populated only by an explicit Play click in the current running session. Tradeoff: after an app restart, a profile won't auto-refresh until Played again in that session, even if its Stop button still shows session_active from before. Added a regression test in ProfilesPage.test.tsx that fails on the old seeding-effect code and passes on the fix (verified both ways before committing). Follow-up in the same task: the profile-row Play/Stop icon was still driven by the stale persisted session_active flag directly, so a profile Played in a prior run (and not Stopped) kept showing the Stop (square) icon after restart even though it was no longer tracked/auto-refreshed. Switched the icon condition (and the now-redundant session_active checks on the credential badges and the auto-refresh interval) to key off expirations[profile.name] != null instead, so the icon accurately reflects in-session tracking state. Verified this specific regression the same way (test fails on session_active-based condition, passes on expirations-based one)."
     },
     {
+      "id": "T-012",
+      "title": "Revert an abandoned profile to Play once its credentials actually expire without being refreshed",
+      "completed_date": "2026-07-15",
+      "session_ref": "S-005",
+      "notes": "Edge case: if a profile's SSO session dies before its STS credentials do, the auto-refresh loop correctly no-ops (per spec), but expirations[name] stayed set until an explicit Stop — so the row kept showing Stop even after the credentials genuinely expired and stopped working, requiring an extra manual Stop-then-Play to recover. Added abandonExpiredProfile() in ProfilesPage.tsx: the auto-refresh interval now checks expiresAt <= now first: if a tracked profile's expiry has actually passed, it clears the expirations entry and best-effort calls stop_session to clean up the dead ~/.aws/credentials section, reverting the row to Play automatically. Added a regression test verified against the pre-fix code (fails without it, passes with it).",
+      "commit": "pending"
+    },
+    {
       "id": "T-001",
       "title": "Handle accounts from multiple AWS Identity Center portals in Sessions",
       "completed_date": "2026-05-04",

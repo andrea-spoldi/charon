@@ -32,6 +32,7 @@ let profilesListState: AwsProfile[];
 let sessionStatus: "active" | "expired";
 let configureCallCount: number;
 let getRoleCredentialsCallCount: number;
+let stopSessionCallCount: number;
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(async (cmd: string) => {
@@ -53,11 +54,18 @@ vi.mock("@tauri-apps/api/core", () => ({
       case "get_role_credentials":
         getRoleCredentialsCallCount += 1;
         return { expiration: Date.now() + 1000 };
+      case "stop_session":
+        stopSessionCallCount += 1;
+        profileState = { ...profileState, session_active: false };
+        profilesListState = [profileState];
+        return "stopped";
       case "configure_cli_credentials":
         configureCallCount += 1;
         profileState = { ...profileState, session_active: true };
         profilesListState = [profileState];
-        return { message: "ok", expiresAt: Date.now() + 1000 };
+        // Expire well after the 1s refresh tick, so the first tick lands
+        // inside the "about to expire" window rather than "already expired".
+        return { message: "ok", expiresAt: Date.now() + 3000 };
       default:
         return null;
     }
@@ -86,6 +94,7 @@ describe("ProfilesPage auto-refresh", () => {
     sessionStatus = "active";
     configureCallCount = 0;
     getRoleCredentialsCallCount = 0;
+    stopSessionCallCount = 0;
     vi.useFakeTimers();
   });
 
@@ -182,5 +191,43 @@ describe("ProfilesPage auto-refresh", () => {
     expect(
       within(staleCard).queryByTitle("Stop CLI session"),
     ).not.toBeInTheDocument();
+  });
+
+  it("reverts to Play once a tracked profile's credentials actually expire without being refreshed", async () => {
+    render(
+      <ProfilesPage
+        ssoStatus={ssoStatus}
+        settings={settings}
+        onError={() => {}}
+      />,
+    );
+
+    await vi.waitFor(() =>
+      expect(screen.getByTitle("Start CLI session")).toBeInTheDocument(),
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTitle("Start CLI session"));
+      await vi.waitFor(() => expect(configureCallCount).toBe(1));
+    });
+
+    await vi.waitFor(() =>
+      expect(screen.getByTitle("Stop CLI session")).toBeInTheDocument(),
+    );
+
+    // The session dies before the ~3s credentials do, so no refresh can happen.
+    sessionStatus = "expired";
+
+    // Advance past the actual 3s expiry.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3500);
+    });
+
+    expect(configureCallCount).toBe(1);
+    await vi.waitFor(() => expect(stopSessionCallCount).toBe(1));
+    await vi.waitFor(() =>
+      expect(screen.getByTitle("Start CLI session")).toBeInTheDocument(),
+    );
+    expect(screen.queryByTitle("Stop CLI session")).not.toBeInTheDocument();
   });
 });

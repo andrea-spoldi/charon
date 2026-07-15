@@ -204,6 +204,23 @@ export function ProfilesPage({
     }, 3000);
   };
 
+  // A tracked profile's credentials expired without being refreshed in
+  // time (its SSO session died before we could renew them). Stop treating
+  // it as active: clean up its dead ~/.aws/credentials entry so the UI
+  // reverts to "off" (Play) instead of a stale "Stop".
+  const abandonExpiredProfile = useCallback(async (profile: AwsProfile) => {
+    setExpirations((prev) => {
+      const next = { ...prev };
+      delete next[profile.name];
+      return next;
+    });
+    try {
+      await invoke("stop_session", { profileName: profile.name });
+    } catch {
+      // Best-effort cleanup; it's untracked in the UI either way.
+    }
+  }, []);
+
   // Background auto-refresh: shortly before a played profile's credentials
   // expire, reissue them — but only while its SSO session is still active.
   useEffect(() => {
@@ -214,6 +231,10 @@ export function ProfilesPage({
       for (const profile of profiles) {
         const expiresAt = expirations[profile.name];
         if (expiresAt == null) continue;
+        if (expiresAt <= nowMs) {
+          await abandonExpiredProfile(profile);
+          continue;
+        }
         if (expiresAt - nowMs > REFRESH_BUFFER_MS) continue;
         try {
           const token = await resolveSessionToken(profile);
@@ -234,6 +255,7 @@ export function ProfilesPage({
     expirations,
     resolveSessionToken,
     applyCredentials,
+    abandonExpiredProfile,
   ]);
 
   const handleCopyName = async (name: string) => {

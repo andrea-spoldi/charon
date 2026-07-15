@@ -41,3 +41,4 @@ tsconfig.tsbuildinfo
 
 # AI tooling
 .cursor/
+.tokensave

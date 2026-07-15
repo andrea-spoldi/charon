@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Trash2,
@@ -9,11 +9,21 @@ import {
   CircleCheck,
   Circle,
   Copy,
+  ShieldCheck,
+  ShieldOff,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import { useProfiles } from "../hooks/useProfiles";
 import { ProfileForm } from "./ProfileForm";
-import type { AwsProfile, SsoTokenInfo, AppSettings } from "../types";
+import type {
+  AwsProfile,
+  SsoTokenInfo,
+  AppSettings,
+  ConfigureCliCredentialsResult,
+} from "../types";
+
+// Refresh a profile's credentials this long before they actually expire.
+const REFRESH_BUFFER_MS = 5 * 60 * 1000;
 
 interface ProfilesPageProps {
   ssoStatus: SsoTokenInfo;
@@ -42,6 +52,10 @@ export function ProfilesPage({
   const [actionError, setActionError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [copiedProfile, setCopiedProfile] = useState<string | null>(null);
+
+  // Per-profile credential expiration (epoch ms), for active (played) profiles only.
+  const [expirations, setExpirations] = useState<Record<string, number>>({});
+  const [now, setNow] = useState(() => Date.now());
 
   const handleSave = async (profile: AwsProfile) => {
     await saveProfile(profile);
@@ -82,20 +96,44 @@ export function ProfilesPage({
     }
   };
 
-  const resolveSessionToken = async (
-    profile: AwsProfile,
-  ): Promise<SsoTokenInfo> => {
-    if (profile.sso_session) {
-      return await invoke<SsoTokenInfo>("get_session_sso_token", {
-        sessionName: profile.sso_session,
-      });
-    }
-    // Profiles without an explicit session fall back to the global active token
-    if (!ssoStatus.access_token || !ssoStatus.region) {
-      throw new Error("No active SSO session");
-    }
-    return ssoStatus;
-  };
+  const resolveSessionToken = useCallback(
+    async (profile: AwsProfile): Promise<SsoTokenInfo> => {
+      if (profile.sso_session) {
+        return await invoke<SsoTokenInfo>("get_session_sso_token", {
+          sessionName: profile.sso_session,
+        });
+      }
+      // Profiles without an explicit session fall back to the global active token
+      if (!ssoStatus.access_token || !ssoStatus.region) {
+        throw new Error("No active SSO session");
+      }
+      return ssoStatus;
+    },
+    [ssoStatus],
+  );
+
+  // Fetch fresh role credentials for a profile and record their expiry.
+  // Shared by the Play button and the background auto-refresh loop.
+  const applyCredentials = useCallback(
+    async (profile: AwsProfile): Promise<ConfigureCliCredentialsResult> => {
+      const cliRegion = profile.region || settings.default_region;
+      const token = await resolveSessionToken(profile);
+      const result = await invoke<ConfigureCliCredentialsResult>(
+        "configure_cli_credentials",
+        {
+          accessToken: token.access_token,
+          accountId: profile.sso_account_id,
+          roleName: profile.sso_role_name,
+          ssoRegion: token.region,
+          cliRegion,
+          profileName: profile.name,
+        },
+      );
+      setExpirations((prev) => ({ ...prev, [profile.name]: result.expiresAt }));
+      return result;
+    },
+    [resolveSessionToken, settings.default_region],
+  );
 
   const handleOpenConsole = async (profile: AwsProfile) => {
     if (!profile.sso_account_id || !profile.sso_role_name) return;
@@ -126,21 +164,12 @@ export function ProfilesPage({
   };
 
   const handleStartSession = async (profile: AwsProfile) => {
-    const cliRegion = profile.region || settings.default_region;
     const key = `${profile.name}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
-      const token = await resolveSessionToken(profile);
-      await invoke("configure_cli_credentials", {
-        accessToken: token.access_token,
-        accountId: profile.sso_account_id,
-        roleName: profile.sso_role_name,
-        ssoRegion: token.region,
-        cliRegion,
-        profileName: profile.name,
-      });
+      const result = await applyCredentials(profile);
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
-      onError?.(`Session started for ${profile.name}`, "success");
+      onError?.(result.message, "success");
       refresh();
     } catch (err) {
       console.error("Failed to start session:", err);
@@ -157,6 +186,11 @@ export function ProfilesPage({
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
       await invoke("stop_session", { profileName: profile.name });
+      setExpirations((prev) => {
+        const next = { ...prev };
+        delete next[profile.name];
+        return next;
+      });
       setActionStatus((prev) => ({ ...prev, [key]: "stopped" }));
       onError?.(`Session stopped for ${profile.name}`, "info");
       refresh();
@@ -169,6 +203,60 @@ export function ProfilesPage({
       setActionStatus((prev) => ({ ...prev, [key]: "" }));
     }, 3000);
   };
+
+  // A tracked profile's credentials expired without being refreshed in
+  // time (its SSO session died before we could renew them). Stop treating
+  // it as active: clean up its dead ~/.aws/credentials entry so the UI
+  // reverts to "off" (Play) instead of a stale "Stop".
+  const abandonExpiredProfile = useCallback(async (profile: AwsProfile) => {
+    setExpirations((prev) => {
+      const next = { ...prev };
+      delete next[profile.name];
+      return next;
+    });
+    try {
+      await invoke("stop_session", { profileName: profile.name });
+    } catch {
+      // Best-effort cleanup; it's untracked in the UI either way.
+    }
+  }, []);
+
+  // Background auto-refresh: shortly before a played profile's credentials
+  // expire, reissue them — but only while its SSO session is still active.
+  useEffect(() => {
+    const intervalMs = (settings.refresh_interval_secs || 30) * 1000;
+    const timer = setInterval(async () => {
+      setNow(Date.now());
+      const nowMs = Date.now();
+      for (const profile of profiles) {
+        const expiresAt = expirations[profile.name];
+        if (expiresAt == null) continue;
+        if (expiresAt <= nowMs) {
+          await abandonExpiredProfile(profile);
+          continue;
+        }
+        if (expiresAt - nowMs > REFRESH_BUFFER_MS) continue;
+        try {
+          const token = await resolveSessionToken(profile);
+          if (token.status !== "active") continue;
+          await applyCredentials(profile);
+        } catch (err) {
+          console.error(
+            `Auto-refresh failed for profile [${profile.name}]:`,
+            err,
+          );
+        }
+      }
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [
+    settings.refresh_interval_secs,
+    profiles,
+    expirations,
+    resolveSessionToken,
+    applyCredentials,
+    abandonExpiredProfile,
+  ]);
 
   const handleCopyName = async (name: string) => {
     try {
@@ -227,6 +315,9 @@ export function ProfilesPage({
               const cliKey = `${profile.name}-cli`;
               const connectable = canConnect(profile);
               const isDefault = defaultProfile === profile.name;
+              const expiresAt = expirations[profile.name];
+              const credentialsExpired =
+                expiresAt != null ? expiresAt <= now : false;
               return (
                 <div key={profile.name} className="profile-card">
                   {isDefault && (
@@ -235,19 +326,43 @@ export function ProfilesPage({
                     </span>
                   )}
                   <div className="profile-info">
-                    <span className="profile-name">
-                      {profile.name}
-                      <button
-                        className="icon-btn icon-btn-inline"
-                        title="Copy profile name"
-                        onClick={() => handleCopyName(profile.name)}
-                      >
-                        <Copy size={12} />
-                        {copiedProfile === profile.name && (
-                          <span className="copied-tooltip">Copied!</span>
-                        )}
-                      </button>
-                    </span>
+                    <div className="profile-name-row">
+                      <span className="profile-name">
+                        {profile.name}
+                        <button
+                          className="icon-btn icon-btn-inline"
+                          title="Copy profile name"
+                          onClick={() => handleCopyName(profile.name)}
+                        >
+                          <Copy size={12} />
+                          {copiedProfile === profile.name && (
+                            <span className="copied-tooltip">Copied!</span>
+                          )}
+                        </button>
+                      </span>
+                      {expiresAt != null && (
+                        <span
+                          className={`sso-token-badge sso-token-badge--${credentialsExpired ? "expired" : "active"}`}
+                        >
+                          {credentialsExpired ? (
+                            <ShieldOff size={13} />
+                          ) : (
+                            <ShieldCheck size={13} />
+                          )}
+                          <span>
+                            {credentialsExpired
+                              ? "Credentials expired"
+                              : "Auto-refreshing"}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                    {profile.session_active && expiresAt != null && (
+                      <span className="text-muted sso-token-expiry">
+                        {credentialsExpired ? "Expired" : "Credentials expire"}:{" "}
+                        {new Date(expiresAt).toLocaleTimeString()}
+                      </span>
+                    )}
                     {profile.sso_session && (
                       <span className="text-muted">
                         Session: {profile.sso_session}
@@ -298,7 +413,7 @@ export function ProfilesPage({
                     >
                       <ExternalLink size={14} />
                     </button>
-                    {profile.session_active ? (
+                    {expiresAt != null ? (
                       <button
                         className={`icon-btn icon-btn-active ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""}`}
                         title="Stop CLI session"

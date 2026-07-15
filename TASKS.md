@@ -7,14 +7,21 @@
 
   "current_session": {
     "id": "S-005",
-    "goal": null,
+    "goal": "Auto-refresh profile credentials before SSO-session-bounded expiration — T-008/T-009/T-010 all done",
     "task_ref": null,
-    "started": "2026-06-11",
-    "status": "planning",
+    "started": "2026-07-14",
+    "status": "done",
     "blocker": null
   },
 
   "backlog": [],
+
+  "housekeeping": [
+    {
+      "date": "2026-07-14",
+      "notes": "Removed stale git worktree .claude/worktrees/happy-beaver-fb2f80 (branch claude/happy-beaver-fb2f80, already merged into main, dated May 4). Committed Cargo.lock version sync (0.13.0->0.14.1 drift from the 0.14.1 release) and regenerated Tauri capability schemas (acl-manifests.json, desktop-schema.json, macOS-schema.json). See commit 22c42a9."
+    }
+  ],
 
   "decisions": [
     {
@@ -48,6 +55,42 @@
   ],
 
   "completed": [
+    {
+      "id": "T-008",
+      "title": "Return credential expiration from configure_cli_credentials",
+      "completed_date": "2026-07-14",
+      "session_ref": "S-005",
+      "notes": "Changed configure_cli_credentials return type from String to ConfigureCliCredentialsResult { message, expires_at } (camelCase expiresAt), sourced from RoleCredentials.expiration (epoch ms). Updated ProfilesPage.tsx Play button call site and types.ts. Added Rust serialization test. Foundation for T-009 auto-refresh."
+    },
+    {
+      "id": "T-009",
+      "title": "Frontend: auto-refresh a profile's CLI credentials shortly before expiry, only if its SSO session is still active",
+      "completed_date": "2026-07-14",
+      "session_ref": "S-005",
+      "notes": "Added per-profile expirations state in ProfilesPage.tsx keyed by profile name, populated only from an explicit Play click via configure_cli_credentials' expiresAt (see T-011 fix — an initial 'seed from persisted session_active' effect was removed for over-reaching). Interval effect (paced by settings.refresh_interval_secs) reissues credentials via the shared applyCredentials() helper once within REFRESH_BUFFER_MS (5 min) of expiry, but only if resolveSessionToken() reports the profile's SSO session status is still 'active' — otherwise it's a silent no-op. Also removed the old single default-profile-only expiration tracking (App.tsx effect + StatusBar 'Profile Expires' text), which only ever reflected the default profile regardless of which profiles were actually active; StatusBar's stop-all button now gates on hasActiveSessions instead."
+    },
+    {
+      "id": "T-010",
+      "title": "UI feedback for auto-refreshed profile credentials + test coverage",
+      "completed_date": "2026-07-14",
+      "session_ref": "S-005",
+      "notes": "Each profile row now shows its own credential-expiry badge (active/expired, reusing SessionsPage's sso-token-badge CSS classes from T-004) plus an expiry timestamp line, instead of one global status-bar reading. Added src/pages/ProfilesPage.test.tsx with fake-timer Vitest coverage: one test confirms auto-refresh fires while the SSO session is active, another confirms it's skipped once the session has expired."
+    },
+    {
+      "id": "T-011",
+      "title": "Fix bug: visiting Profiles auto-fetched/refreshed credentials for ALL saved profiles, not just ones Played this session",
+      "completed_date": "2026-07-14",
+      "session_ref": "S-005",
+      "notes": "Root cause: T-009's seeding effect scanned profiles.session_active (a flag persisted forever once a profile is Played, only cleared by an explicit Stop) to resurrect expiry-tracking on every ProfilesPage mount. Any profile ever Played and not explicitly Stopped — plausibly most/all saved profiles in daily use — got swept into get_role_credentials fetches and, subsequently, periodic configure_cli_credentials writes to ~/.aws/credentials. Fix: removed the seeding effect entirely; expirations (and therefore auto-refresh eligibility) is now populated only by an explicit Play click in the current running session. Tradeoff: after an app restart, a profile won't auto-refresh until Played again in that session, even if its Stop button still shows session_active from before. Added a regression test in ProfilesPage.test.tsx that fails on the old seeding-effect code and passes on the fix (verified both ways before committing). Follow-up in the same task: the profile-row Play/Stop icon was still driven by the stale persisted session_active flag directly, so a profile Played in a prior run (and not Stopped) kept showing the Stop (square) icon after restart even though it was no longer tracked/auto-refreshed. Switched the icon condition (and the now-redundant session_active checks on the credential badges and the auto-refresh interval) to key off expirations[profile.name] != null instead, so the icon accurately reflects in-session tracking state. Verified this specific regression the same way (test fails on session_active-based condition, passes on expirations-based one)."
+    },
+    {
+      "id": "T-012",
+      "title": "Revert an abandoned profile to Play once its credentials actually expire without being refreshed",
+      "completed_date": "2026-07-15",
+      "session_ref": "S-005",
+      "notes": "Edge case: if a profile's SSO session dies before its STS credentials do, the auto-refresh loop correctly no-ops (per spec), but expirations[name] stayed set until an explicit Stop — so the row kept showing Stop even after the credentials genuinely expired and stopped working, requiring an extra manual Stop-then-Play to recover. Added abandonExpiredProfile() in ProfilesPage.tsx: the auto-refresh interval now checks expiresAt <= now first: if a tracked profile's expiry has actually passed, it clears the expirations entry and best-effort calls stop_session to clean up the dead ~/.aws/credentials section, reverting the row to Play automatically. Added a regression test verified against the pre-fix code (fails without it, passes with it).",
+      "commit": "pending"
+    },
     {
       "id": "T-001",
       "title": "Handle accounts from multiple AWS Identity Center portals in Sessions",

@@ -6,19 +6,23 @@ export function useProfiles() {
   const [profiles, setProfiles] = useState<AwsProfile[]>([]);
   const [sessions, setSessions] = useState<SsoSession[]>([]);
   const [defaultProfile, setDefaultProfile] = useState<string | null>(null);
+  const [credentialProfiles, setCredentialProfiles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [profileList, sessionList, defaultName] = await Promise.all([
-        invoke<AwsProfile[]>("list_profiles"),
-        invoke<SsoSession[]>("list_sso_sessions"),
-        invoke<string | null>("get_default_profile"),
-      ]);
+      const [profileList, sessionList, defaultName, credentialList] =
+        await Promise.all([
+          invoke<AwsProfile[]>("list_profiles"),
+          invoke<SsoSession[]>("list_sso_sessions"),
+          invoke<string | null>("get_default_profile"),
+          invoke<string[]>("list_credential_profiles"),
+        ]);
       setProfiles(profileList);
       setSessions(sessionList);
       setDefaultProfile(defaultName);
+      setCredentialProfiles(credentialList);
     } catch (err) {
       console.error("Failed to load profiles:", err);
     } finally {
@@ -51,14 +55,33 @@ export function useProfiles() {
     setDefaultProfile(name);
   }, []);
 
+  const importCredentialProfiles = useCallback(
+    async (names: string[]) => {
+      await invoke("import_credential_profiles", { names });
+      await refresh();
+    },
+    [refresh],
+  );
+
+  const renameProfile = useCallback(
+    async (oldName: string, newName: string) => {
+      await invoke("rename_profile", { oldName, newName });
+      await refresh();
+    },
+    [refresh],
+  );
+
   return {
     profiles,
     sessions,
     defaultProfile,
+    credentialProfiles,
     loading,
     refresh,
     saveProfile,
     deleteProfile,
     setDefault,
+    importCredentialProfiles,
+    renameProfile,
   };
 }

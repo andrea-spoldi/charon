@@ -12,6 +12,7 @@ const profile: AwsProfile = {
   region: null,
   output: null,
   session_active: false,
+  manual: false,
 };
 
 // A second profile whose session_active flag is stale/persisted from a
@@ -25,6 +26,7 @@ const staleActiveProfile: AwsProfile = {
   region: null,
   output: null,
   session_active: true,
+  manual: false,
 };
 
 let profileState: AwsProfile;
@@ -43,6 +45,8 @@ vi.mock("@tauri-apps/api/core", () => ({
         return [];
       case "get_default_profile":
         return null;
+      case "list_credential_profiles":
+        return [];
       case "get_session_sso_token":
         return {
           status: sessionStatus,

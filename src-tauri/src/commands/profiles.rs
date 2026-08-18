@@ -65,6 +65,14 @@ pub fn delete_profile(name: &str) -> Result<String, String> {
     Ok(format!("Profile '{name}' deleted"))
 }
 
+/// Rename a profile in Charon's store (and its ~/.aws/credentials section)
+#[tauri::command]
+pub fn rename_profile(old_name: &str, new_name: &str) -> Result<String, String> {
+    info!("Renaming profile '{old_name}' to '{new_name}'");
+    config::rename_profile(old_name, new_name)?;
+    Ok(format!("Profile '{old_name}' renamed to '{new_name}'"))
+}
+
 /// Set a profile as the default
 #[tauri::command]
 pub fn set_default_profile(name: &str) -> Result<String, String> {
@@ -96,6 +104,23 @@ pub fn set_default_profile(name: &str) -> Result<String, String> {
 pub fn get_default_profile() -> Option<String> {
     let store = load_profile_store();
     store.default_profile
+}
+
+/// List profiles manually added to ~/.aws/credentials not yet managed by Charon
+#[tauri::command]
+pub fn list_credential_profiles() -> Vec<String> {
+    info!("Listing unmanaged credential profiles");
+    config::list_unmanaged_credential_profiles()
+}
+
+/// Import manually added ~/.aws/credentials profiles into Charon's store
+#[tauri::command]
+pub fn import_credential_profiles(names: Vec<String>) -> Result<String, String> {
+    info!("Importing credential profiles: {names:?}");
+    let imported = config::import_credential_profiles(&names)?;
+    Ok(format!(
+        "Imported {imported} profile(s) from ~/.aws/credentials"
+    ))
 }
 
 /// Import profiles from ~/.aws/config and clean up SSO-backed sections

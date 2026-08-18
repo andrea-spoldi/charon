@@ -33,6 +33,7 @@ export function ProfileForm({
       region: region || null,
       output: initial?.output ?? null,
       session_active: initial?.session_active ?? false,
+      manual: initial?.manual ?? false,
     });
   };
 

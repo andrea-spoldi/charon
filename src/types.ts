@@ -32,6 +32,8 @@ export interface AwsProfile {
   region: string | null;
   output: string | null;
   session_active: boolean;
+  // Imported from manually added static keys in ~/.aws/credentials
+  manual: boolean;
 }
 
 // Account from SSO list-accounts

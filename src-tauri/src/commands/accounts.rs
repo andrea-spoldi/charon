@@ -441,10 +441,7 @@ pub fn list_all_portal_accounts() -> Result<Vec<SsoAccountWithSession>, String> 
         let token_info = match get_session_token(&session.name) {
             Some(t) if t.status == SsoSessionStatus::Active => t,
             _ => {
-                info!(
-                    "Skipping session '{}' — no active token",
-                    session.name
-                );
+                info!("Skipping session '{}' — no active token", session.name);
                 continue;
             }
         };

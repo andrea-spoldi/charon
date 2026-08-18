@@ -459,6 +459,23 @@
   margin-left: 0;
 }
 
+.badge-manual {
+  color: var(--color-muted);
+  border-color: var(--color-border-light);
+}
+
+.rename-input {
+  padding: 2px 6px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius);
+  color: var(--color-text-bright);
+  font-size: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  outline: none;
+}
+
 .icon-btn-inline {
   display: inline-flex;
   margin-left: 4px;
@@ -658,6 +675,61 @@
 .profile-actions {
   display: flex;
   gap: 4px;
+}
+
+.profile-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.profile-select {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+
+.bulk-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bulk-toolbar .checkbox-label {
+  margin-left: 2px;
+  user-select: none;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.bulk-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.bulk-panel-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.device-code-inline {
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 .profile-name-row {

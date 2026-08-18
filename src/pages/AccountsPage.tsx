@@ -313,9 +313,7 @@ export function AccountsPage({
                         <button
                           className={`icon-btn ${actionStatus[bookmarkKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[bookmarkKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[bookmarkKey] === "error" ? "icon-btn-error" : ""}`}
                           title="Save as profile"
-                          onClick={() =>
-                            handleBookmark(account, role.roleName)
-                          }
+                          onClick={() => handleBookmark(account, role.roleName)}
                           disabled={actionStatus[bookmarkKey] === "loading"}
                         >
                           <Bookmark size={14} />

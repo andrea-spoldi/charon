@@ -100,7 +100,13 @@ export function SessionsPage({
             s.name,
             r.status === "fulfilled"
               ? r.value
-              : ({ status: "none", expires_at: null, access_token: null, start_url: null, region: null } as SsoTokenInfo),
+              : ({
+                  status: "none",
+                  expires_at: null,
+                  access_token: null,
+                  start_url: null,
+                  region: null,
+                } as SsoTokenInfo),
           ];
         }),
       ),
@@ -490,83 +496,89 @@ export function SessionsPage({
           {sessions.map((session) => {
             const token = sessionTokens[session.name];
             return (
-            <div key={session.name} className="profile-card">
-              <div className="profile-info">
-                <div className="profile-name-row">
-                  <span className="profile-name">{session.name}</span>
-                  {token && (
-                    <span className={`sso-token-badge sso-token-badge--${token.status}`}>
-                      {token.status === "active" ? (
-                        <ShieldCheck size={13} />
-                      ) : token.status === "expired" ? (
-                        <ShieldOff size={13} />
-                      ) : (
-                        <ShieldAlert size={13} />
-                      )}
-                      <span>
-                        {token.status === "active"
-                          ? "Active"
-                          : token.status === "expired"
-                            ? "Expired"
-                            : "No token"}
+              <div key={session.name} className="profile-card">
+                <div className="profile-info">
+                  <div className="profile-name-row">
+                    <span className="profile-name">{session.name}</span>
+                    {token && (
+                      <span
+                        className={`sso-token-badge sso-token-badge--${token.status}`}
+                      >
+                        {token.status === "active" ? (
+                          <ShieldCheck size={13} />
+                        ) : token.status === "expired" ? (
+                          <ShieldOff size={13} />
+                        ) : (
+                          <ShieldAlert size={13} />
+                        )}
+                        <span>
+                          {token.status === "active"
+                            ? "Active"
+                            : token.status === "expired"
+                              ? "Expired"
+                              : "No token"}
+                        </span>
                       </span>
+                    )}
+                  </div>
+                  <span className="text-muted">{session.sso_start_url}</span>
+                  <span className="text-muted">
+                    Region: {session.sso_region}
+                  </span>
+                  {token?.expires_at && (
+                    <span className="text-muted sso-token-expiry">
+                      {token.status === "active" ? "Expires" : "Expired"}:{" "}
+                      {new Date(token.expires_at).toLocaleString()}
+                    </span>
+                  )}
+                  {session.sso_registration_scopes && (
+                    <span className="text-muted">
+                      Scopes: {session.sso_registration_scopes}
                     </span>
                   )}
                 </div>
-                <span className="text-muted">{session.sso_start_url}</span>
-                <span className="text-muted">Region: {session.sso_region}</span>
-                {token?.expires_at && (
-                  <span className="text-muted sso-token-expiry">
-                    {token.status === "active" ? "Expires" : "Expired"}:{" "}
-                    {new Date(token.expires_at).toLocaleString()}
-                  </span>
-                )}
-                {session.sso_registration_scopes && (
-                  <span className="text-muted">
-                    Scopes: {session.sso_registration_scopes}
-                  </span>
-                )}
+                <div className="profile-actions">
+                  <button
+                    className="icon-btn"
+                    title={token?.status === "active" ? "Logout" : "Login"}
+                    onClick={() =>
+                      token?.status === "active"
+                        ? handleLogout(session.name)
+                        : handleLogin(session.name)
+                    }
+                    disabled={
+                      loggingIn === session.name || loggingOut === session.name
+                    }
+                  >
+                    {token?.status === "active" ? (
+                      <LogOut size={14} />
+                    ) : (
+                      <LogIn size={14} />
+                    )}
+                  </button>
+                  <button
+                    className="icon-btn"
+                    title="Edit"
+                    onClick={() => handleEdit(session)}
+                  >
+                    <Edit3 size={14} />
+                  </button>
+                  <button
+                    className={`icon-btn icon-btn-danger ${confirmDelete === session.name ? "icon-btn-confirm" : ""}`}
+                    title={
+                      confirmDelete === session.name
+                        ? "Click again to confirm"
+                        : "Delete"
+                    }
+                    onClick={() => handleDelete(session.name)}
+                  >
+                    <Trash2 size={14} />
+                    {confirmDelete === session.name && (
+                      <span className="copied-tooltip">Confirm?</span>
+                    )}
+                  </button>
+                </div>
               </div>
-              <div className="profile-actions">
-                <button
-                  className="icon-btn"
-                  title={token?.status === "active" ? "Logout" : "Login"}
-                  onClick={() =>
-                    token?.status === "active"
-                      ? handleLogout(session.name)
-                      : handleLogin(session.name)
-                  }
-                  disabled={loggingIn === session.name || loggingOut === session.name}
-                >
-                  {token?.status === "active" ? (
-                    <LogOut size={14} />
-                  ) : (
-                    <LogIn size={14} />
-                  )}
-                </button>
-                <button
-                  className="icon-btn"
-                  title="Edit"
-                  onClick={() => handleEdit(session)}
-                >
-                  <Edit3 size={14} />
-                </button>
-                <button
-                  className={`icon-btn icon-btn-danger ${confirmDelete === session.name ? "icon-btn-confirm" : ""}`}
-                  title={
-                    confirmDelete === session.name
-                      ? "Click again to confirm"
-                      : "Delete"
-                  }
-                  onClick={() => handleDelete(session.name)}
-                >
-                  <Trash2 size={14} />
-                  {confirmDelete === session.name && (
-                    <span className="copied-tooltip">Confirm?</span>
-                  )}
-                </button>
-              </div>
-            </div>
             );
           })}
         </div>

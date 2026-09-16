@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/styles/global.css"
+        ],
+        "createdAt": "2026-09-15T14:09:34.112Z",
+        "reason": "Tunnel-card status accent border (Success/Warning/Danger) is a functional status signal, not decorative — verified in the original /impeccable audit pass and documented as an intentional signature pattern in DESIGN.md (Components > Cards/Containers, and the Do's list), consistent with editor-style diagnostic/gutter markers."
+      }
+    ]
+  }
+}

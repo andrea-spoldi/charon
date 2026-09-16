@@ -171,7 +171,7 @@ export function ShellPage({
     return (
       <div className="page shell-page">
         <div className="page-header">
-          <h2>Shell</h2>
+          <h1>Shell</h1>
           <div className="page-header-actions">
             <span className="text-muted">
               {session.instanceName || session.instanceId} · {session.region}
@@ -202,7 +202,7 @@ export function ShellPage({
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Shell</h2>
+        <h1>Shell</h1>
       </div>
 
       {!ssoActive && (
@@ -241,6 +241,7 @@ export function ShellPage({
               <button
                 className="icon-btn icon-btn-inline"
                 title="Refresh profiles"
+                aria-label="Refresh profiles"
                 onClick={onRefreshProfiles}
               >
                 <RefreshCw size={12} />

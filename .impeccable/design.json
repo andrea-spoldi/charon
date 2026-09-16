@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-15T00:00:00Z",
+  "title": "Design System: Charon",
+  "extensions": {
+    "colorMeta": {
+      "void": {
+        "role": "neutral",
+        "displayName": "Void",
+        "canonical": "#1e1e1e",
+        "tonalRamp": ["#1e1e1e", "#252526", "#2d2d2d", "#333333", "#3c3c3c", "#4a4a4a", "#808080", "#cccccc", "#e8e8e8"]
+      },
+      "editor-blue": {
+        "role": "primary",
+        "displayName": "Editor Blue",
+        "canonical": "#007acc",
+        "tonalRamp": ["#001a26", "#003049", "#00466d", "#005c90", "#0072b4", "#1a8ad4", "#5cb0e6", "#b3ddf5"]
+      },
+      "editor-blue-onprose": {
+        "role": "primary-text",
+        "displayName": "Editor Blue (on prose)",
+        "canonical": "#3794ff",
+        "tonalRamp": ["#001f33", "#00385c", "#005286", "#006cb0", "#1f86d6", "#3794ff", "#6fb3ff", "#b8dcff"]
+      },
+      "success": {
+        "role": "status",
+        "displayName": "Success Teal",
+        "canonical": "#4ec9b0",
+        "tonalRamp": ["#062b23", "#0e4c3f", "#17705b", "#219577", "#2eb593", "#4ec9b0", "#83dcc9", "#c3ede3"]
+      },
+      "warning": {
+        "role": "status",
+        "displayName": "Warning Amber",
+        "canonical": "#dcdcaa",
+        "tonalRamp": ["#241f0f", "#423a1c", "#625530", "#857249", "#a89263", "#c3b57e", "#dcdcaa", "#efefd4"]
+      },
+      "danger": {
+        "role": "status",
+        "displayName": "Danger Red",
+        "canonical": "#f14c4c",
+        "tonalRamp": ["#2e0a0a", "#4f1212", "#7a1c1c", "#a52626", "#cf3535", "#f14c4c", "#f67e7e", "#fbb8b8"]
+      },
+      "danger-onprose": {
+        "role": "status-text",
+        "displayName": "Danger Red (on prose)",
+        "canonical": "#f36262",
+        "tonalRamp": ["#330a0a", "#5c1414", "#861f1f", "#b02929", "#d63d3d", "#f36262", "#f79191", "#fbc2c2"]
+      },
+      "text-muted-onprose": {
+        "role": "neutral-text",
+        "displayName": "Muted Text (on prose)",
+        "canonical": "#949494",
+        "tonalRamp": ["#242424", "#3a3a3a", "#525252", "#6b6b6b", "#7d7d7d", "#949494", "#c2c2c2", "#e0e0e0"]
+      },
+      "on-accent": {
+        "role": "text-on-fill",
+        "displayName": "On Accent",
+        "canonical": "#ffffff",
+        "tonalRamp": ["#1e1e1e", "#3c3c3c", "#5a5a5a", "#787878", "#969696", "#b4b4b4", "#d2d2d2", "#ffffff"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "The SSO device-authorization code only. Nothing else uses this size." },
+      "headline": { "displayName": "Headline", "purpose": "Page titles and panel headers." },
+      "title": { "displayName": "Title", "purpose": "Top-bar wordmark only." },
+      "body": { "displayName": "Body", "purpose": "Default running text, list rows, form values." },
+      "label": { "displayName": "Label", "purpose": "Uppercase section headings and category markers; also the SSO token badge/expiry text at its plain weight." },
+      "mono": { "displayName": "Mono", "purpose": "Literal system data a user reads exactly or copies: account IDs, role names, device codes." },
+      "caption": { "displayName": "Caption", "purpose": "The smallest role: the default-profile badge and the copy-confirmation tooltip." },
+      "density-compact": { "displayName": "Density Compact", "purpose": "The Font Size Toggle's own 'S' button label — fixed px, does not scale with the active density." },
+      "density-default": { "displayName": "Density Default", "purpose": "The Font Size Toggle's own 'M' button label — numerically equal to Body but declared as its own fixed step since it belongs to this trio, not the scaling content hierarchy." },
+      "density-comfortable": { "displayName": "Density Comfortable", "purpose": "The Font Size Toggle's own 'L' button label — fixed px, does not scale with the active density." }
+    },
+    "shadows": [
+      { "name": "toast-overlay", "value": "0 4px 12px rgba(0, 0, 0, 0.3)", "purpose": "The single floating overlay in the system. Toast notifications only." }
+    ],
+    "motion": [
+      { "name": "ease-standard", "value": "0.15s", "purpose": "Default duration for color/background/border transitions on hover and focus." },
+      { "name": "ease-toast-in", "value": "0.2s ease-out", "purpose": "Toast slide-and-fade entrance." },
+      { "name": "pulse-danger", "value": "0.6s ease-in-out infinite alternate", "purpose": "First-click state of the destructive two-click confirm pattern; pulses the icon button's background to demand a second, deliberate click." },
+      { "name": "pulse-connecting", "value": "1.5s ease-in-out infinite", "purpose": "Opacity pulse on a tunnel's status dot while it is connecting." },
+      { "name": "spin", "value": "1s linear infinite", "purpose": "Loading spinner rotation." }
+    ],
+    "terminalPalette": {
+      "purpose": "The Shell page's embedded xterm.js terminal is deliberately excluded from the app's own Editor Blue / status palette because it must faithfully render arbitrary ANSI color codes from whatever CLI runs inside it. It uses the named 'Tokyo Night' 16-color palette instead, set directly in xterm's JS theme object (Terminal.tsx) since it cannot consume CSS custom properties.",
+      "fontFamily": "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+      "fontSize": "13px",
+      "background": "#1a1b26",
+      "foreground": "#c0caf5",
+      "cursor": "#c0caf5",
+      "selectionBackground": "#33467c",
+      "ansi": {
+        "black": "#15161e",
+        "red": "#f7768e",
+        "green": "#9ece6a",
+        "yellow": "#e0af68",
+        "blue": "#7aa2f7",
+        "magenta": "#bb9af7",
+        "cyan": "#7dcfff",
+        "white": "#a9b1d6",
+        "brightBlack": "#414868",
+        "brightRed": "#f7768e",
+        "brightGreen": "#9ece6a",
+        "brightYellow": "#e0af68",
+        "brightBlue": "#7aa2f7",
+        "brightMagenta": "#bb9af7",
+        "brightCyan": "#7dcfff",
+        "brightWhite": "#c0caf5"
+      }
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one Editor-Blue-filled action per view.",
+      "html": "<button class=\"ds-btn-primary\">Launch Session</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--color-accent, #007acc); border-radius: var(--radius, 4px); background: var(--color-accent, #007acc); color: var(--color-on-accent, #ffffff); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; font-size: 0.923rem; cursor: pointer; transition: background-color 0.15s, border-color 0.15s; } .ds-btn-primary:hover { background: var(--color-accent-hover, #1a8ad4); border-color: var(--color-accent-hover, #1a8ad4); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-accent-hover, #1a8ad4); outline-offset: 2px; } .ds-btn-primary:active { background: var(--color-accent-active, #0065a9); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "The default, neutral-emphasis action.",
+      "html": "<button class=\"ds-btn-outline\">Cancel</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border: 1px solid var(--color-border-light, #4a4a4a); border-radius: var(--radius, 4px); background: transparent; color: var(--color-text, #cccccc); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; font-size: 0.923rem; cursor: pointer; transition: background-color 0.15s, border-color 0.15s; } .ds-btn-outline:hover { background: var(--color-bg-hover, #333333); } .ds-btn-outline:focus-visible { outline: 2px solid var(--color-accent, #007acc); outline-offset: 2px; }"
+    },
+    {
+      "name": "Destructive Confirm Icon Button",
+      "kind": "custom",
+      "refersTo": "icon-btn",
+      "description": "First click arms a pulsing danger state instead of a window.confirm() dialog (unsupported in Tauri's webview); a second click on the pulsing icon performs the delete.",
+      "html": "<button class=\"ds-icon-btn ds-icon-btn-confirm\" aria-label=\"Confirm delete\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 6h18\"/><path d=\"M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/><path d=\"M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6\"/><path d=\"M10 11v6\"/><path d=\"M14 11v6\"/></svg></button>",
+      "css": ".ds-icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border: none; border-radius: var(--radius, 4px); background: transparent; color: var(--color-muted, #808080); cursor: pointer; transition: background-color 0.15s, color 0.15s; } .ds-icon-btn-confirm { background: rgba(241, 76, 76, 0.25); color: var(--color-danger, #f14c4c); animation: ds-pulse-danger 0.6s ease-in-out infinite alternate; } @keyframes ds-pulse-danger { from { background: rgba(241, 76, 76, 0.15); } to { background: rgba(241, 76, 76, 0.35); } }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard form field: Raised background, border shifts to Editor Blue on focus.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"Profile name\" />",
+      "css": ".ds-input { width: 100%; padding: 8px 10px; background: var(--color-bg-tertiary, #2d2d2d); border: 1px solid var(--color-border-light, #4a4a4a); border-radius: var(--radius, 4px); color: var(--color-text-bright, #e8e8e8); font-family: inherit; font-size: 1rem; transition: border-color 0.15s; } .ds-input::placeholder { color: var(--color-muted-text, #949494); } .ds-input:focus { border-color: var(--color-accent, #007acc); outline: none; }"
+    },
+    {
+      "name": "Bordered Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The generic Panel-toned, 1px-bordered container used for accounts, profiles, tunnels, and saved configs.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-card-title\">production-admin</div><div class=\"ds-card-meta\">123456789012</div></div>",
+      "css": ".ds-card { background: var(--color-bg-secondary, #252526); border: 1px solid var(--color-border, #3c3c3c); border-radius: var(--radius-lg, 6px); padding: 10px 14px; } .ds-card-title { font-weight: 500; color: var(--color-text-bright, #e8e8e8); font-size: 1rem; } .ds-card-meta { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.923rem; color: var(--color-muted-text, #949494); margin-top: 2px; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-status",
+      "description": "Pill-shaped status indicator; color alone never carries meaning, the label always accompanies it.",
+      "html": "<span class=\"ds-badge ds-badge-active\">Active</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.846rem; font-weight: 500; padding: 2px 7px; border-radius: 10px; border: 1px solid; } .ds-badge-active { color: var(--color-success, #4ec9b0); border-color: color-mix(in srgb, var(--color-success, #4ec9b0) 40%, transparent); background: color-mix(in srgb, var(--color-success, #4ec9b0) 12%, transparent); }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "sidebar-item-active",
+      "description": "Active state carries a 2px Editor Blue left border, the system's recurring 'you are here' signature.",
+      "html": "<button class=\"ds-sidebar-item ds-active\">Accounts</button>",
+      "css": ".ds-sidebar-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 16px; border: none; background: transparent; color: var(--color-muted-text, #949494); font-size: 1rem; cursor: pointer; text-align: left; transition: background-color 0.15s, color 0.15s; } .ds-sidebar-item:hover { background: var(--color-bg-hover, #333333); color: var(--color-text, #cccccc); } .ds-sidebar-item.ds-active { background: var(--color-bg-active, #3c3c3c); color: var(--color-text-bright, #e8e8e8); border-left: 2px solid var(--color-accent, #007acc); padding-left: 14px; }"
+    },
+    {
+      "name": "Device Code Display",
+      "kind": "custom",
+      "refersTo": "device-code",
+      "description": "The system's one Display-scale moment: the SSO device-authorization code, in mono, wide letter-spacing, inside a Raised bordered container.",
+      "html": "<div class=\"ds-device-code-container\"><span class=\"ds-device-code\">WXYZ-ABCD</span></div>",
+      "css": ".ds-device-code-container { display: inline-flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--color-bg-tertiary, #2d2d2d); border: 1px solid var(--color-border-light, #4a4a4a); border-radius: var(--radius-lg, 6px); } .ds-device-code { font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; font-size: 2.154rem; font-weight: 700; letter-spacing: 3px; color: var(--color-text-bright, #e8e8e8); user-select: all; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Operator's Console",
+    "overview": "Charon's own stylesheet names its lineage in a comment: an OpenLens-inspired dark theme. That inheritance runs deeper than the label — the exact hex values for background, accent, and status colors are VS Code Dark+'s own palette. This is not accidental resemblance; it's a deliberate signal to the people who'll use it that this is a tool built by and for engineers who live in an editor and a terminal all day, not a consumer app borrowing dark mode as decoration.\n\nThe console is dense by design: a fixed three-region shell (48px top bar, 200px sidebar, 24px status bar) frames a scrollable content area, and nothing in it is built to be spacious. Rows, cards, and badges pack tightly so a screen can hold many accounts, roles, profiles, or tunnels at once. Depth is never faked with shadows — it's built from a strict ladder of background tones, the same technique an editor uses to distinguish gutter from pane from panel. Color is almost entirely absent except where it does real work: one blue for the single primary action per view, and a fixed small set of status colors (teal/amber/red) that mean the same thing everywhere they appear.",
+    "keyCharacteristics": [
+      "Fixed dark theme, VS Code Dark+ derived — no light mode exists.",
+      "Base type size is 13px, smaller than typical web defaults, in service of density.",
+      "Depth via background-tone layering, not shadows.",
+      "One accent color, used sparingly, for the one primary action or piece of live state per context.",
+      "Monospace reserved strictly for literal AWS/system data (account IDs, role names, device codes) that users read exactly or copy."
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Editor Blue appears on at most one control per view as a filled background — everything else that needs emphasis uses Bright Text or a status color instead. A screen with two blue-filled buttons is a mistake, not a stronger call to action.", "section": "colors" },
+      { "name": "The Status Trio Rule", "body": "Success/Warning/Danger are the only three semantic colors in the system, and their meaning never changes: teal is always \"good/active\", amber is always \"in progress/caution\", red is always \"bad/error/destructive.\" Never introduce a fourth semantic hue.", "section": "colors" },
+      { "name": "The Compact Rule", "body": "The base size is 13px, not the web-typical 16px. Never introduce a component at 16px+ body copy — it will read as foreign against everything around it. The only exception is the Display role.", "section": "typography" },
+      { "name": "The Data-Is-Mono Rule", "body": "Anything a user would copy-paste verbatim (account ID, role name, device code, ARN-like strings) renders in the mono stack. Everything else — including buttons, labels, and status text — stays sans.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest, distinguished only by background tone and a 1px border. A shadow appears only on the one true floating overlay (toasts); introducing shadows on cards, buttons, or hover states breaks the console's visual logic.", "section": "elevation" },
+      { "name": "The Icon/Prose Split Rule", "body": "Muted Text, Editor Blue, and Danger Red each carry a dedicated \"on prose\" variant, and the split is load-bearing, not cosmetic: WCAG AA needs only 3:1 for a graphical object (an icon glyph, a status dot) but 4.5:1 for running text, and the base tokens were tuned for the former. Any new text node reaches for the -onprose token; icons, dots, fills, and borders keep the base token. Never use an -onprose variant as a background, border, or icon color, and never render prose in a base token that has an -onprose sibling.", "section": "colors" },
+      { "name": "The Fixed-Control Rule", "body": "A control whose job is to set the type scale (the Font Size Toggle) must not itself be styled from that scale — its three preset sizes (10px / 13px / 16px) stay literal px so all three stay visually distinct and stable in every density mode. This is the one intentional exception to \"everything scales in rem\"; it does not extend to any other component.", "section": "typography" }
+    ],
+    "dos": [
+      "Do convey depth with the Void → Panel → Raised → Hover Surface → Active Surface tone ladder, never with a drop shadow (the toast is the sole exception).",
+      "Do pair every status dot or colored border with a text label; color alone is never the only signal.",
+      "Do render literal AWS/system data (account IDs, role names, device codes) in the mono stack; keep everything else in the system sans stack.",
+      "Do use the two-click pulsing .icon-btn-confirm pattern for any destructive action that needs confirmation.",
+      "Do keep exactly one Editor-Blue-filled control per view for the primary action.",
+      "Do use the -onprose variant (Muted Text on prose / Editor Blue on prose / Danger Red on prose) for any actual text node; reserve the base token for icons, dots, fills, and borders.",
+      "Do size ordinary content in rem so it scales with the Font Size Toggle; the toggle's own three preset buttons are the sole, deliberate exception."
+    ],
+    "donts": [
+      "Don't call window.confirm(), alert(), or prompt() — Tauri 2's webview does not support them.",
+      "Don't add box-shadows to cards, buttons, or hover states — this is a flat, bordered system.",
+      "Don't introduce a body text size above 13px (1rem) outside the Display role, or drop below the system's small-label sizes — the scale is deliberately narrow and dense.",
+      "Don't add responsive breakpoints or fluid layouts — the shell assumes one fixed desktop window (200px sidebar / 48px top bar / 24px status bar) and has never needed to adapt.",
+      "Don't introduce a fourth semantic status color beyond Success Teal / Warning Amber / Danger Red.",
+      "Don't render running text in base Muted Text, base Editor Blue, or base Danger Red — none of the three clears 4.5:1 for normal text against Void or Panel; use their -onprose variant instead.",
+      "Don't pull the app's Editor Blue / status palette into the terminal's xterm theme, or the terminal's Tokyo Night colors into the app chrome — they're deliberately separate systems for a deliberate technical reason."
+    ]
+  }
+}

@@ -277,7 +277,7 @@ export function ProfilesPage({
     return (
       <div className="page">
         <div className="page-header">
-          <h2>{editing ? "Edit Profile" : "New Profile"}</h2>
+          <h1>{editing ? "Edit Profile" : "New Profile"}</h1>
         </div>
         <ProfileForm
           initial={editing}
@@ -296,7 +296,7 @@ export function ProfilesPage({
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Profiles</h2>
+        <h1>Profiles</h1>
         <button className="btn btn-primary" onClick={handleAdd}>
           <Plus size={16} />
           <span>Add Profile</span>
@@ -332,6 +332,7 @@ export function ProfilesPage({
                         <button
                           className="icon-btn icon-btn-inline"
                           title="Copy profile name"
+                          aria-label="Copy profile name"
                           onClick={() => handleCopyName(profile.name)}
                         >
                           <Copy size={12} />
@@ -392,6 +393,11 @@ export function ProfilesPage({
                           ? "Current default profile"
                           : "Set as default profile"
                       }
+                      aria-label={
+                        isDefault
+                          ? "Current default profile"
+                          : "Set as default profile"
+                      }
                       onClick={() => handleSetDefault(profile.name)}
                       disabled={isDefault}
                     >
@@ -406,6 +412,9 @@ export function ProfilesPage({
                       title={
                         connectable ? "Open AWS Console" : "Login to SSO first"
                       }
+                      aria-label={
+                        connectable ? "Open AWS Console" : "Login to SSO first"
+                      }
                       onClick={() => handleOpenConsole(profile)}
                       disabled={
                         !connectable || actionStatus[consoleKey] === "loading"
@@ -417,6 +426,7 @@ export function ProfilesPage({
                       <button
                         className={`icon-btn icon-btn-active ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""}`}
                         title="Stop CLI session"
+                        aria-label="Stop CLI session"
                         onClick={() => handleStopSession(profile)}
                         disabled={actionStatus[cliKey] === "loading"}
                       >
@@ -426,6 +436,11 @@ export function ProfilesPage({
                       <button
                         className={`icon-btn ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[cliKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[cliKey] === "error" ? "icon-btn-error" : ""}`}
                         title={
+                          connectable
+                            ? "Start CLI session"
+                            : "Login to SSO first"
+                        }
+                        aria-label={
                           connectable
                             ? "Start CLI session"
                             : "Login to SSO first"
@@ -441,6 +456,7 @@ export function ProfilesPage({
                     <button
                       className="icon-btn"
                       title="Edit"
+                      aria-label="Edit"
                       onClick={() => handleEdit(profile)}
                     >
                       <Edit3 size={14} />
@@ -450,6 +466,11 @@ export function ProfilesPage({
                       title={
                         confirmDelete === profile.name
                           ? "Click again to confirm"
+                          : "Delete"
+                      }
+                      aria-label={
+                        confirmDelete === profile.name
+                          ? "Click again to confirm deleting this profile"
                           : "Delete"
                       }
                       onClick={() => handleDelete(profile.name)}

@@ -36,6 +36,7 @@ export function StatusBar({
             className="statusbar-stop-btn"
             onClick={onStopAllSessions}
             title="Stop all active CLI sessions"
+            aria-label="Stop all active CLI sessions"
           >
             <StopCircle size={12} />
           </button>

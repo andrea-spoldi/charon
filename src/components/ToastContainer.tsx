@@ -13,20 +13,23 @@ const icons = {
 };
 
 export function ToastContainer({ toasts, onDismiss }: ToastContainerProps) {
-  if (toasts.length === 0) return null;
-
   return (
-    <div className="toast-container">
+    <div className="toast-container" role="status" aria-live="polite">
       {toasts.map((toast) => {
         const Icon = icons[toast.type];
         return (
-          <div key={toast.id} className={`toast toast-${toast.type}`}>
+          <div
+            key={toast.id}
+            className={`toast toast-${toast.type}`}
+            role={toast.type === "error" ? "alert" : undefined}
+          >
             <Icon size={14} className="toast-icon" />
             <span className="toast-message">{toast.message}</span>
             <button
               className="toast-dismiss"
               onClick={() => onDismiss(toast.id)}
               title="Dismiss"
+              aria-label="Dismiss notification"
             >
               <X size={12} />
             </button>

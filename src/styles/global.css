@@ -11,19 +11,35 @@
   --color-text: #cccccc;
   --color-text-bright: #e8e8e8;
   --color-muted: #808080;
+  /* Text-safe variant of --color-muted: WCAG AA (4.5:1) requires more
+     lightness for prose than for an icon glyph (3:1). Icons and dot
+     fills keep --color-muted; anything a human reads uses this one. */
+  --color-muted-text: #949494;
 
   --color-accent: #007acc;
   --color-accent-hover: #1a8ad4;
   --color-accent-active: #0065a9;
+  /* Text-safe variant of --color-accent for links/labels — VS Code
+     Dark+'s own textLink.foreground, so it stays in the same source
+     palette rather than an invented tint. Fills/borders keep --color-accent. */
+  --color-accent-text: #3794ff;
 
   --color-success: #4ec9b0;
   --color-warning: #dcdcaa;
   --color-danger: #f14c4c;
+  /* Text-safe variant of --color-danger for prose (error messages,
+     inline status text). Icons and fills keep --color-danger. */
+  --color-danger-text: #f36262;
+
+  /* The only color placed on top of a filled Editor Blue or Danger
+     Red surface. Never used as a standalone text color. */
+  --color-on-accent: #ffffff;
 
   --sidebar-width: 200px;
   --topbar-height: 48px;
   --statusbar-height: 24px;
 
+  --radius-xs: 2px;
   --radius: 4px;
   --radius-lg: 6px;
 
@@ -68,7 +84,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: url("../assets/background.png") center center / 75% no-repeat;
+  background: url("../assets/background.jpg") center center / 75% no-repeat;
   opacity: 0.06;
   pointer-events: none;
   z-index: 0;
@@ -115,9 +131,9 @@
   width: 22px;
   height: 22px;
   border: none;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   background: transparent;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
   font-weight: 600;
   cursor: pointer;
   transition:
@@ -132,11 +148,11 @@
 
 .font-size-active {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .font-size-active:hover {
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .font-size-small {
@@ -178,7 +194,7 @@
 
 .topbar-subtitle {
   font-size: 0.846rem;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
 }
 
 .topbar-right {
@@ -211,7 +227,7 @@
 .topbar-btn-primary {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .topbar-btn-primary:hover {
@@ -239,7 +255,7 @@
 }
 
 .status-label {
-  color: var(--color-muted);
+  color: var(--color-muted-text);
 }
 
 /* ===== Sidebar ===== */
@@ -262,7 +278,7 @@
   padding: 8px 16px;
   border: none;
   background: transparent;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
   font-size: 1rem;
   cursor: pointer;
   text-align: left;
@@ -296,6 +312,7 @@
   margin-bottom: 20px;
 }
 
+.page-header h1,
 .page-header h2 {
   font-size: 1.385rem;
   font-weight: 600;
@@ -340,7 +357,7 @@
 .btn-primary {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .btn-primary:hover {
@@ -369,7 +386,7 @@
 .btn-danger {
   background: var(--color-danger);
   border-color: var(--color-danger);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 
 .btn-danger:hover {
@@ -448,7 +465,7 @@
   font-weight: 500;
   color: var(--color-success);
   border: 1px solid var(--color-success);
-  border-radius: 3px;
+  border-radius: var(--radius);
   vertical-align: middle;
 }
 
@@ -506,7 +523,7 @@
 }
 
 .search-input::placeholder {
-  color: var(--color-muted);
+  color: var(--color-muted-text);
 }
 
 .search-input:focus {
@@ -578,7 +595,7 @@
 .account-id {
   font-family: "SF Mono", "Fira Code", monospace;
   font-size: 0.923rem;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
 }
 
 .account-email {
@@ -623,7 +640,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
   margin-bottom: 8px;
 }
 
@@ -670,7 +687,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 0.846rem;
   font-weight: 500;
   padding: 2px 7px;
   border-radius: 10px;
@@ -684,19 +701,19 @@
 }
 
 .sso-token-badge--expired {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   border-color: color-mix(in srgb, var(--color-danger) 40%, transparent);
   background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 }
 
 .sso-token-badge--none {
-  color: var(--color-text-muted);
+  color: var(--color-muted-text);
   border-color: var(--color-border);
   background: transparent;
 }
 
 .sso-token-expiry {
-  font-size: 11px;
+  font-size: 0.846rem;
 }
 
 /* ===== Forms ===== */
@@ -775,7 +792,7 @@
 
 .form-hint {
   font-size: 0.846rem;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
 }
 
 .form-value {
@@ -815,14 +832,14 @@
 
 /* ===== Utility ===== */
 .text-muted {
-  color: var(--color-muted);
+  color: var(--color-muted-text);
   font-size: 0.923rem;
 }
 
 .empty-state {
   text-align: center;
   padding: 48px 24px;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
 }
 
 .empty-state p {
@@ -832,7 +849,7 @@
 .loading {
   padding: 24px;
   text-align: center;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
 }
 
 .error-msg {
@@ -840,7 +857,7 @@
   background: rgba(241, 76, 76, 0.1);
   border: 1px solid rgba(241, 76, 76, 0.3);
   border-radius: var(--radius);
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: 1rem;
   margin-bottom: 16px;
 }
@@ -848,7 +865,7 @@
 /* ===== Top Bar Session Badge ===== */
 .topbar-session {
   font-size: 0.846rem;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   background: rgba(0, 122, 204, 0.12);
   padding: 2px 8px;
   border-radius: var(--radius);
@@ -904,17 +921,17 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
 }
 
-.device-auth-header h3 {
+.device-auth-header h1 {
   font-size: 1.385rem;
   font-weight: 600;
   color: var(--color-text-bright);
 }
 
 .device-auth-instruction {
-  color: var(--color-muted);
+  color: var(--color-muted-text);
   font-size: 1rem;
   line-height: 1.6;
 }
@@ -951,7 +968,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   font-size: 0.923rem;
   text-decoration: none;
   transition: color 0.15s;
@@ -966,7 +983,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
   font-size: 1rem;
 }
 
@@ -985,7 +1002,7 @@
   background: var(--color-bg-secondary);
   border-top: 1px solid var(--color-border);
   font-size: 0.846rem;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
 }
 
 .statusbar-left {
@@ -1010,7 +1027,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 .statusbar-dot {
@@ -1050,7 +1067,7 @@
 
 .form-error {
   font-size: 0.846rem;
-  color: var(--color-danger);
+  color: var(--color-danger-text);
 }
 
 /* ===== Toast Notifications ===== */
@@ -1118,7 +1135,7 @@
   cursor: pointer;
   padding: 2px;
   flex-shrink: 0;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
 }
 
 .toast-dismiss:hover {
@@ -1143,7 +1160,7 @@
   margin-bottom: 16px;
 }
 
-.tunnels-section h3 {
+.tunnels-section h2 {
   font-size: 0.85em;
   font-weight: 600;
   color: var(--color-text-bright);
@@ -1228,7 +1245,7 @@
 
 .tunnel-card-status {
   font-size: 0.85em;
-  color: var(--color-muted);
+  color: var(--color-muted-text);
   text-transform: capitalize;
 }
 
@@ -1255,7 +1272,7 @@
 }
 
 .tunnel-error {
-  color: var(--color-danger);
+  color: var(--color-danger-text);
   font-size: 0.85em;
 }
 
@@ -1326,7 +1343,7 @@
 }
 
 .warning-banner a {
-  color: var(--color-accent);
+  color: var(--color-accent-text);
   text-decoration: underline;
 }
 
@@ -1348,7 +1365,7 @@
   flex-shrink: 0;
 }
 
-.shell-page .page-header h2 {
+.shell-page .page-header h1 {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1374,4 +1391,23 @@
 
 .terminal-container .xterm-viewport {
   border-radius: 6px;
+}
+
+/* ===== Reduced Motion ===== */
+/* Continuous/looping animations get a static substitute that preserves
+   the state they signal (armed/connecting/loading) without the motion. */
+@media (prefers-reduced-motion: reduce) {
+  .icon-btn-confirm {
+    animation: none;
+    background: rgba(241, 76, 76, 0.3);
+  }
+
+  .tunnel-status-dot.tunnel-status-connecting {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  .spin {
+    animation: pulse 2s ease-in-out infinite;
+  }
 }

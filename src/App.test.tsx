@@ -47,11 +47,12 @@ describe("App", () => {
     });
   });
 
-  it("renders the accounts page by default", async () => {
+  it("renders the sessions page by default", async () => {
     render(<App />);
     await waitFor(() => {
-      const matches = screen.getAllByText("Accounts");
-      expect(matches.length).toBeGreaterThanOrEqual(2); // sidebar + page heading
+      expect(
+        screen.getByRole("heading", { name: "SSO Sessions" }),
+      ).toBeInTheDocument();
     });
   });
 

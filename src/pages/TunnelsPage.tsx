@@ -124,7 +124,7 @@ export function TunnelsPage({
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Tunnels</h2>
+        <h1>Tunnels</h1>
         <div className="page-header-actions">
           {activeTunnels.length > 0 && (
             <span className="text-muted">
@@ -197,7 +197,7 @@ export function TunnelsPage({
       {/* Active Tunnels */}
       {activeTunnels.length > 0 && (
         <section className="tunnels-section">
-          <h3>Active Tunnels</h3>
+          <h2>Active Tunnels</h2>
           <div className="tunnel-cards">
             {activeTunnels.map((tunnel) => (
               <ActiveTunnelCard
@@ -213,7 +213,7 @@ export function TunnelsPage({
       {/* Saved Tunnel Configs */}
       {configs.length > 0 ? (
         <section className="tunnels-section">
-          <h3>Saved Tunnels</h3>
+          <h2>Saved Tunnels</h2>
           <div className="config-list">
             {configs.map((config) => (
               <div key={config.id} className="config-card">
@@ -238,6 +238,7 @@ export function TunnelsPage({
                     className="icon-btn"
                     onClick={() => handleEdit(config)}
                     title="Edit"
+                    aria-label="Edit"
                   >
                     <Edit3 size={14} />
                   </button>
@@ -247,6 +248,11 @@ export function TunnelsPage({
                     title={
                       deleteConfirm === config.id
                         ? "Click again to confirm"
+                        : "Delete"
+                    }
+                    aria-label={
+                      deleteConfirm === config.id
+                        ? "Click again to confirm deleting this tunnel"
                         : "Delete"
                     }
                   >

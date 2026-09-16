@@ -19,7 +19,7 @@ import type { Page, AppSettings } from "./types";
 import { invoke } from "@tauri-apps/api/core";
 
 function App() {
-  const [activePage, setActivePage] = useState<Page>("accounts");
+  const [activePage, setActivePage] = useState<Page>("sessions");
   const [settings, setSettings] = useState<AppSettings>({
     default_region: "us-east-1",
     aws_cli_path: "aws",

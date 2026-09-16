@@ -59,6 +59,7 @@ export function ActiveTunnelCard({ tunnel, onStop }: ActiveTunnelCardProps) {
             <button
               className="icon-btn"
               title="Copy local address"
+              aria-label="Copy local address"
               onClick={handleCopyPort}
             >
               <Copy size={12} />

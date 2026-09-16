@@ -144,6 +144,7 @@ export function TunnelForm({
           <button
             className="icon-btn icon-btn-inline"
             title="Refresh profiles"
+            aria-label="Refresh profiles"
             onClick={onRefreshProfiles}
           >
             <RefreshCw size={12} />

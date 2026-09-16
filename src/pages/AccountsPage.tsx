@@ -178,7 +178,7 @@ export function AccountsPage({
     return (
       <div className="page">
         <div className="page-header">
-          <h2>Accounts</h2>
+          <h1>Accounts</h1>
         </div>
         <div className="empty-state">
           <p>Login to SSO to view your accounts and roles.</p>
@@ -193,7 +193,7 @@ export function AccountsPage({
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Accounts</h2>
+        <h1>Accounts</h1>
         <div className="page-header-actions">
           <span className="text-muted">
             {search
@@ -204,6 +204,7 @@ export function AccountsPage({
           <button
             className="icon-btn"
             title="Refresh accounts"
+            aria-label="Refresh accounts"
             onClick={onRefresh}
             disabled={loading}
           >
@@ -228,6 +229,7 @@ export function AccountsPage({
               className="search-clear"
               onClick={clearSearch}
               title="Clear search"
+              aria-label="Clear search"
             >
               <X size={14} />
             </button>
@@ -275,6 +277,7 @@ export function AccountsPage({
                         <button
                           className="icon-btn"
                           title="Copy account ID"
+                          aria-label="Copy account ID"
                           onClick={() =>
                             handleCopy(
                               account.accountId,
@@ -290,6 +293,7 @@ export function AccountsPage({
                         <button
                           className={`icon-btn ${actionStatus[consoleKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[consoleKey] === "error" ? "icon-btn-error" : ""}`}
                           title="Open AWS Console"
+                          aria-label="Open AWS Console"
                           onClick={() =>
                             handleOpenConsole(account, role.roleName)
                           }
@@ -300,6 +304,7 @@ export function AccountsPage({
                         <button
                           className={`icon-btn ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[cliKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[cliKey] === "error" ? "icon-btn-error" : ""}`}
                           title={`Configure CLI credentials (~/.aws/credentials)`}
+                          aria-label="Configure CLI credentials (~/.aws/credentials)"
                           onClick={() =>
                             handleConfigureCli(account, role.roleName)
                           }
@@ -313,9 +318,8 @@ export function AccountsPage({
                         <button
                           className={`icon-btn ${actionStatus[bookmarkKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[bookmarkKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[bookmarkKey] === "error" ? "icon-btn-error" : ""}`}
                           title="Save as profile"
-                          onClick={() =>
-                            handleBookmark(account, role.roleName)
-                          }
+                          aria-label="Save as profile"
+                          onClick={() => handleBookmark(account, role.roleName)}
                           disabled={actionStatus[bookmarkKey] === "loading"}
                         >
                           <Bookmark size={14} />

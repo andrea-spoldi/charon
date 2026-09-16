@@ -14,11 +14,11 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS: { page: Page; label: string; icon: typeof Server }[] = [
+  { page: "sessions", label: "Sessions", icon: KeyRound },
+  { page: "profiles", label: "Profiles", icon: UserCog },
   { page: "accounts", label: "Accounts", icon: Server },
   { page: "tunnels", label: "Tunnels", icon: Cable },
   { page: "shell", label: "Shell", icon: TerminalSquare },
-  { page: "sessions", label: "Sessions", icon: KeyRound },
-  { page: "profiles", label: "Profiles", icon: UserCog },
   { page: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -31,6 +31,7 @@ export function Sidebar({ activePage, onNavigate }: SidebarProps) {
             <button
               className={`sidebar-item ${activePage === page ? "active" : ""}`}
               onClick={() => onNavigate(page)}
+              aria-current={activePage === page ? "page" : undefined}
             >
               <Icon size={18} />
               <span>{label}</span>

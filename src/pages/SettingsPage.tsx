@@ -34,7 +34,7 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
   return (
     <div className="page">
       <div className="page-header">
-        <h2>Settings</h2>
+        <h1>Settings</h1>
       </div>
 
       <div className="settings-form">

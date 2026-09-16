@@ -1,3 +1,9 @@
+## [0.16.0](https://github.com/andrea-spoldi/charon/compare/v0.15.0...v0.16.0) (2026-09-16)
+
+### 🚀 Features
+
+* **ui:** document design system and harden accessibility, contrast, and nav ([1c368a1](https://github.com/andrea-spoldi/charon/commit/1c368a198b1c46b0dc0401b592a20f03ffb11a26)), closes [#fff](https://github.com/andrea-spoldi/charon/issues/fff)
+
 ## [0.15.0](https://github.com/andrea-spoldi/charon/compare/v0.14.1...v0.15.0) (2026-07-15)
 
 ### 🚀 Features

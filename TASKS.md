@@ -3,27 +3,93 @@
 ```json
 {
   "project": "charon",
-  "updated": "2026-06-11",
+  "updated": "2026-09-22",
 
   "current_session": {
-    "id": "S-005",
-    "goal": "Auto-refresh profile credentials before SSO-session-bounded expiration — T-008/T-009/T-010 all done",
+    "id": "S-006",
+    "goal": "T-014 and T-016 done (isolated-console backend command + frontend action). Remaining: T-015 (likely redundant, needs confirm/cancel), T-017 (settings), T-018 (more tests), T-019 (stretch cleanup).",
     "task_ref": null,
-    "started": "2026-07-14",
-    "status": "done",
+    "started": "2026-09-22",
+    "status": "in-progress",
     "blocker": null
   },
 
-  "backlog": [],
+  "backlog": [
+    {
+      "id": "T-014",
+      "title": "Backend: launch AWS console federation URL in an isolated browser profile",
+      "description": "New Tauri command (or flag on open_aws_console) that, instead of open::that() + the forced OAuth-logout wrapper, launches the federation login URL in a dedicated OS browser profile/user-data-dir per account (macOS-first: Chrome --user-data-dir/--profile-directory or an equivalent per-browser mechanism), so its cookies don't collide with other open console sessions. Keep the existing single-session Play behavior as the default; this is a new, opt-in path.",
+      "size": "M",
+      "priority": 1,
+      "status": "done",
+      "tags": ["backend", "rust", "browser", "multi-session-console"]
+    },
+    {
+      "id": "T-015",
+      "title": "Backend: persist account-to-browser-profile mapping",
+      "description": "Extend account/profile config storage to record which isolated browser profile dir an account is assigned to, auto-assigning one on first isolated open (T-014) and reusing it on subsequent opens so the same account always lands in the same profile. NOTE: T-014 shipped with browser_profile_dir() deriving the directory deterministically from account_id, with no mapping table — this may already satisfy the requirement. Confirm with user whether a real mapping is still needed (e.g. for per-role rather than per-account isolation) before starting, or cancel this task.",
+      "size": "S",
+      "priority": 2,
+      "status": "pending",
+      "tags": ["backend", "rust", "config", "multi-session-console"]
+    },
+    {
+      "id": "T-016",
+      "title": "Frontend: 'Open in new session' action for accounts/profiles",
+      "description": "Add an action on AccountsPage/ProfilesPage that calls the isolated-open command (T-014) instead of the current Play flow that replaces the browser's single console session. Show which accounts currently have an isolated session open (reuse the sso-token-badge pattern from T-004).",
+      "size": "M",
+      "priority": 3,
+      "status": "done",
+      "tags": ["frontend", "react", "multi-session-console"]
+    },
+    {
+      "id": "T-017",
+      "title": "Settings: default browser/isolation strategy",
+      "description": "Settings UI to pick the isolation strategy (default single-session browser vs. per-account isolated Chrome profiles) and fall back gracefully with a clear message when the required browser (e.g. Chrome) isn't installed.",
+      "size": "S",
+      "priority": 4,
+      "status": "pending",
+      "tags": ["frontend", "settings", "multi-session-console"]
+    },
+    {
+      "id": "T-018",
+      "title": "Tests for isolated console-session launch",
+      "description": "Rust unit tests for the new command's URL/profile-argument construction (mirror existing get_role_credentials/open_aws_console test style), and a Vitest test for the new frontend 'open in new session' action.",
+      "size": "S",
+      "priority": 5,
+      "status": "pending",
+      "tags": ["testing", "multi-session-console"]
+    },
+    {
+      "id": "T-019",
+      "title": "Reap stale isolated browser profile data dirs",
+      "description": "Stretch/cleanup task: track created per-account browser profile directories and prune ones no longer referenced by any account, to avoid unbounded disk growth from ephemeral profiles over time.",
+      "size": "S",
+      "priority": 6,
+      "status": "pending",
+      "tags": ["backend", "cleanup", "multi-session-console"]
+    }
+  ],
 
   "housekeeping": [
     {
       "date": "2026-07-14",
       "notes": "Removed stale git worktree .claude/worktrees/happy-beaver-fb2f80 (branch claude/happy-beaver-fb2f80, already merged into main, dated May 4). Committed Cargo.lock version sync (0.13.0->0.14.1 drift from the 0.14.1 release) and regenerated Tauri capability schemas (acl-manifests.json, desktop-schema.json, macOS-schema.json). See commit 22c42a9."
+    },
+    {
+      "date": "2026-09-22",
+      "notes": "Backfilled TASKS.md at session start (S-006): the S-005 record was left at status 'done' since 2026-07-15 despite two releases (v0.15.0, v0.16.0) and a substantial design-system/accessibility commit (1c368a1) landing on main afterward with no task entry. Added T-013 to close that gap. Also flagged untracked .claude/agents/ and .claude/skills/impeccable/ in the working tree — left as-is pending user decision, not part of this backfill."
     }
   ],
 
   "decisions": [
+    {
+      "id": "D-005",
+      "date": "2026-09-22",
+      "decision": "Multi-account concurrent AWS console sessions (T-014..T-019) will use per-account isolated OS browser profiles (separate user-data-dir), not multiple tabs/windows in one browser profile.",
+      "rationale": "open_aws_console (src-tauri/src/commands/accounts.rs:184) already federates console sign-in but deliberately wraps every login in an OAuth logout redirect first, because AWS's signin.aws.amazon.com federation endpoint is single-session per browser origin — a second account's login silently replaces the first's cookie otherwise. Isolated browser profiles give each account its own cookie jar, the same approach tools like granted/Leapp use.",
+      "supersedes": null
+    },
     {
       "id": "D-001",
       "date": "2026-05-04",
@@ -55,6 +121,27 @@
   ],
 
   "completed": [
+    {
+      "id": "T-016",
+      "title": "Frontend: 'Open in new session' action for accounts/profiles",
+      "completed_date": "2026-09-22",
+      "session_ref": "S-006",
+      "notes": "Added handleOpenIsolatedConsole in AccountsPage.tsx (TDD-first: RED test in new AccountsPage.test.tsx asserting invoke('open_aws_console_isolated', {...}) is called on click, verified failing before implementing) and a new role-actions button (Layers icon, title 'Open in isolated session (keeps other accounts signed in)') next to the existing 'Open AWS Console' button, reusing the same actionStatus loading/error key pattern as handleOpenConsole/handleConfigureCli. Scoped to AccountsPage only, not ProfilesPage — profiles are for CLI credentials, not console sessions, so there was no equivalent action to extend there. DESCOPED from the original description: did not add a persistent 'this account has an isolated session open' badge (the sso-token-badge pattern from T-004). Reason: unlike CLI credentials, the app has no way to know whether a spawned isolated Chrome window/profile is still open or its console session still valid once open_aws_console_isolated returns (it's fire-and-forget, same as the existing open_aws_console) — a badge would have to fake or guess that state. Flagged for user: worth a real answer only if there's a reliable signal to hang it on (e.g. polling profile-dir lock files, or just accept fire-and-forget like the existing console button). All tests pass (9/9 vitest, 35/35 cargo), tsc/eslint/prettier clean."
+    },
+    {
+      "id": "T-014",
+      "title": "Backend: launch AWS console federation URL in an isolated browser profile",
+      "completed_date": "2026-09-22",
+      "session_ref": "S-006",
+      "notes": "Added open_aws_console_isolated Tauri command (src-tauri/src/commands/accounts.rs), registered in lib.rs generate_handler!. Built TDD-first (RED-GREEN per function, verified in cargo test output each cycle): browser_profile_dir() derives ~/Library/Application Support/charon/browser-profiles/<account_id> deterministically from account_id — no separate mapping table needed, which may make T-015 redundant (flagged for confirmation before starting T-015). candidate_chrome_paths()/find_chrome_executable_with() locate a Chrome install (macOS-only for now; command errors clearly if Chrome isn't found, since --user-data-dir isolation isn't supported by Safari). build_isolated_launch_command() builds `chrome --user-data-dir=<profile_dir> --no-first-run --new-window <url>`, spawned (not waited on) so the browser stays open independent of the app. Refactored open_aws_console's inline signin-token-fetch and login-URL-building into shared get_signin_token()/build_login_url() (extracted const SIGN_IN_BASE), reused by the new isolated command; the isolated command skips the OAuth logout-redirect wrapper that open_aws_console uses (that wrapper is what makes the existing flow single-session — see D-005). Added 6 new unit tests, all passing; full suite (35 tests) + clippy clean. No frontend wiring yet — that's T-016."
+    },
+    {
+      "id": "T-013",
+      "title": "Document design system (PRODUCT.md, DESIGN.md) and harden accessibility, contrast, and nav",
+      "completed_date": "2026-09-16",
+      "session_ref": null,
+      "notes": "Commit 1c368a1, released as v0.15.0/v0.16.0 (not logged at the time — backfilled 2026-09-22). Added PRODUCT.md + DESIGN.md + .impeccable/design.json sidecar documenting the 'Operator's Console' VS Code Dark+-derived visual system. Fixed WCAG AA contrast failures (-onprose text-safe variants for Muted Text/Editor Blue/Danger Red; fixed undefined --color-text-muted breaking the SSO token badge color). Added aria-live toast region, aria-labels on icon-only buttons, per-page <h1>, aria-current on active nav, prefers-reduced-motion fallbacks. Recompressed background asset 3.1MB PNG -> 346KB JPEG. Pinned tauri.conf.json minWidth/minHeight (900x600). Normalized stray font-size/radius/color one-offs into CSS variables. Reordered sidebar nav to match real usage (Sessions, Profiles, Accounts, Tunnels, Shell, Settings) and defaulted app to Sessions on launch. Fixed a vitest localStorage mock bug (Node's native stub was shadowing jsdom's, silently failing all App.test.tsx assertions)."
+    },
     {
       "id": "T-008",
       "title": "Return credential expiration from configure_cli_credentials",

@@ -9,6 +9,7 @@ import {
   Terminal,
   Bookmark,
   RefreshCw,
+  Layers,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import type {
@@ -111,6 +112,33 @@ export function AccountsPage({
     } catch (err) {
       console.error("Failed to open console:", err);
       setActionError(`Console: ${err}`);
+      setActionStatus((prev) => ({ ...prev, [key]: "error" }));
+    }
+    setTimeout(() => {
+      setActionStatus((prev) => ({ ...prev, [key]: "" }));
+      setActionError(null);
+    }, 5000);
+  };
+
+  const handleOpenIsolatedConsole = async (
+    account: SsoAccountWithSession,
+    roleName: string,
+  ) => {
+    const key = `${account.accountId}-${roleName}-isolated`;
+    setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
+    try {
+      await invoke("open_aws_console_isolated", {
+        accessToken: account.accessToken,
+        accountId: account.accountId,
+        roleName,
+        ssoRegion: account.ssoRegion,
+        consoleRegion: settings.default_region,
+        sessionDurationSecs: settings.session_timeout_hours * 3600,
+      });
+      setActionStatus((prev) => ({ ...prev, [key]: "done" }));
+    } catch (err) {
+      console.error("Failed to open isolated console session:", err);
+      setActionError(`Isolated console: ${err}`);
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
     setTimeout(() => {
@@ -268,6 +296,7 @@ export function AccountsPage({
               <div className="role-list">
                 {(roles[account.accountId] || []).map((role) => {
                   const consoleKey = `${account.accountId}-${role.roleName}-console`;
+                  const isolatedKey = `${account.accountId}-${role.roleName}-isolated`;
                   const cliKey = `${account.accountId}-${role.roleName}-cli`;
                   const bookmarkKey = `${account.accountId}-${role.roleName}-bookmark`;
                   return (
@@ -300,6 +329,17 @@ export function AccountsPage({
                           disabled={actionStatus[consoleKey] === "loading"}
                         >
                           <ExternalLink size={14} />
+                        </button>
+                        <button
+                          className={`icon-btn ${actionStatus[isolatedKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[isolatedKey] === "error" ? "icon-btn-error" : ""}`}
+                          title="Open in isolated session (keeps other accounts signed in)"
+                          aria-label="Open in isolated session (keeps other accounts signed in)"
+                          onClick={() =>
+                            handleOpenIsolatedConsole(account, role.roleName)
+                          }
+                          disabled={actionStatus[isolatedKey] === "loading"}
+                        >
+                          <Layers size={14} />
                         </button>
                         <button
                           className={`icon-btn ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[cliKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[cliKey] === "error" ? "icon-btn-error" : ""}`}

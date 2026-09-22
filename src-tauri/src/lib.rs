@@ -128,6 +128,7 @@ pub fn run() {
             commands::accounts::list_account_roles,
             commands::accounts::get_role_credentials,
             commands::accounts::open_aws_console,
+            commands::accounts::open_aws_console_isolated,
             commands::accounts::configure_cli_credentials,
             commands::accounts::stop_session,
             commands::accounts::stop_all_sessions,

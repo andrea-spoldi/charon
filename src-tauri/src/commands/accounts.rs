@@ -1,6 +1,7 @@
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::aws::config::{aws_credentials_path, load_profile_store, save_profile_store};
@@ -179,38 +180,20 @@ pub fn get_role_credentials(
     Ok(response.role_credentials)
 }
 
-/// Open AWS Console in the browser for a specific role via federation
-#[tauri::command]
-pub fn open_aws_console(
-    access_token: &str,
-    account_id: &str,
-    role_name: &str,
-    sso_region: &str,
-    console_region: &str,
-    session_duration_secs: Option<u64>,
-) -> Result<(), String> {
-    info!("Opening AWS Console for {role_name} in {account_id} (sso_region: {sso_region}, console_region: {console_region})");
+const SIGN_IN_BASE: &str = "https://us-east-1.signin.aws.amazon.com";
 
-    let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
-
-    // Build the federation session JSON
+/// Exchange a set of STS credentials for a one-time federation sign-in token.
+fn get_signin_token(creds: &RoleCredentials, duration_secs: u64) -> Result<String, String> {
     let session_json = serde_json::json!({
         "sessionId": creds.access_key_id,
         "sessionKey": creds.secret_access_key,
         "sessionToken": creds.session_token,
     })
     .to_string();
-
     let encoded_session = urlencoding::encode(&session_json);
 
-    // Session duration: default 8h (28800s), max 12h (43200s)
-    let duration = session_duration_secs.unwrap_or(28800).min(43200);
-
-    let sign_in_base = "https://us-east-1.signin.aws.amazon.com";
-
-    // Step 1: Get a sign-in token from the federation endpoint
     let signin_token_url = format!(
-        "{sign_in_base}/federation?Action=getSigninToken&SessionDuration={duration}&Session={encoded_session}"
+        "{SIGN_IN_BASE}/federation?Action=getSigninToken&SessionDuration={duration_secs}&Session={encoded_session}"
     );
 
     let output = Command::new("curl")
@@ -226,16 +209,19 @@ pub fn open_aws_console(
     let token_response: serde_json::Value = serde_json::from_slice(&output.stdout)
         .map_err(|e| format!("Failed to parse federation response: {e}"))?;
 
-    let signin_token = token_response["SigninToken"]
+    token_response["SigninToken"]
         .as_str()
-        .ok_or("No SigninToken in federation response")?;
+        .map(|s| s.to_string())
+        .ok_or_else(|| "No SigninToken in federation response".to_string())
+}
 
-    // Step 2: Build the federation login URL with proper encoding
+/// Build the federation login URL (properly encoded) for a sign-in token.
+fn build_login_url(signin_token: &str, console_region: &str) -> Result<String, String> {
     let destination_url = format!(
         "https://{console_region}.console.aws.amazon.com/console/home?region={console_region}"
     );
 
-    let mut login_url = url::Url::parse(&format!("{sign_in_base}/federation"))
+    let mut login_url = url::Url::parse(&format!("{SIGN_IN_BASE}/federation"))
         .map_err(|e| format!("Failed to parse federation URL: {e}"))?;
     login_url
         .query_pairs_mut()
@@ -244,10 +230,33 @@ pub fn open_aws_console(
         .append_pair("Destination", &destination_url)
         .append_pair("SigninToken", signin_token);
 
-    // Step 3: Wrap in OAuth logout redirect for seamless session replacement
+    Ok(login_url.to_string())
+}
+
+/// Open AWS Console in the browser for a specific role via federation
+#[tauri::command]
+pub fn open_aws_console(
+    access_token: &str,
+    account_id: &str,
+    role_name: &str,
+    sso_region: &str,
+    console_region: &str,
+    session_duration_secs: Option<u64>,
+) -> Result<(), String> {
+    info!("Opening AWS Console for {role_name} in {account_id} (sso_region: {sso_region}, console_region: {console_region})");
+
+    let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
+
+    // Session duration: default 8h (28800s), max 12h (43200s)
+    let duration = session_duration_secs.unwrap_or(28800).min(43200);
+
+    let signin_token = get_signin_token(&creds, duration)?;
+    let login_url = build_login_url(&signin_token, console_region)?;
+
+    // Wrap in OAuth logout redirect for seamless session replacement.
     // This clears any existing console session before logging into the new one,
     // avoiding the "sign out first" interstitial page.
-    let mut console_url = url::Url::parse(&format!("{sign_in_base}/oauth"))
+    let mut console_url = url::Url::parse(&format!("{SIGN_IN_BASE}/oauth"))
         .map_err(|e| format!("Failed to parse OAuth URL: {e}"))?;
     console_url
         .query_pairs_mut()
@@ -258,6 +267,84 @@ pub fn open_aws_console(
 
     info!("Opened AWS Console for {role_name} in {account_id}");
     Ok(())
+}
+
+/// Open AWS Console for a specific role in a browser window isolated to this
+/// account, so it can stay signed in alongside other accounts' console sessions.
+/// Unlike `open_aws_console`, this does not clear any existing console session —
+/// it relies on a dedicated Chrome profile directory for cookie isolation instead,
+/// and therefore requires Chrome (see `candidate_chrome_paths`).
+#[tauri::command]
+pub fn open_aws_console_isolated(
+    access_token: &str,
+    account_id: &str,
+    role_name: &str,
+    sso_region: &str,
+    console_region: &str,
+    session_duration_secs: Option<u64>,
+) -> Result<(), String> {
+    info!("Opening isolated AWS Console session for {role_name} in {account_id} (sso_region: {sso_region}, console_region: {console_region})");
+
+    let chrome_path = find_chrome_executable_with(&candidate_chrome_paths(), |p| p.exists())
+        .ok_or("Isolated console sessions require Google Chrome, which wasn't found at the expected install location")?;
+
+    let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
+    let duration = session_duration_secs.unwrap_or(28800).min(43200);
+    let signin_token = get_signin_token(&creds, duration)?;
+    let login_url = build_login_url(&signin_token, console_region)?;
+
+    let profile_dir = browser_profile_dir(&charon_data_dir(), account_id);
+    fs::create_dir_all(&profile_dir)
+        .map_err(|e| format!("Failed to create browser profile directory: {e}"))?;
+
+    build_isolated_launch_command(&chrome_path, &profile_dir, &login_url)
+        .spawn()
+        .map_err(|e| format!("Failed to launch isolated browser session: {e}"))?;
+
+    info!("Opened isolated AWS Console session for {role_name} in {account_id}");
+    Ok(())
+}
+
+/// Directory dedicated to one account's isolated browser profile, so its
+/// console session cookies don't collide with any other account's session.
+fn browser_profile_dir(base_dir: &Path, account_id: &str) -> PathBuf {
+    base_dir.join("browser-profiles").join(account_id)
+}
+
+/// Charon's own app-data directory (e.g. ~/Library/Application Support/charon on macOS),
+/// distinct from ~/.aws which holds standard AWS CLI config.
+fn charon_data_dir() -> PathBuf {
+    dirs::data_dir()
+        .expect("Could not determine app data directory")
+        .join("charon")
+}
+
+/// Known install locations for a Chromium-based browser, in preference order.
+/// Only Chrome is covered today — --user-data-dir isolation depends on the
+/// browser supporting it, which Safari (macOS's other bundled browser) does not.
+fn candidate_chrome_paths() -> Vec<PathBuf> {
+    vec![PathBuf::from(
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    )]
+}
+
+/// First candidate for which `exists` returns true, checked in order.
+fn find_chrome_executable_with<F: Fn(&Path) -> bool>(
+    candidates: &[PathBuf],
+    exists: F,
+) -> Option<PathBuf> {
+    candidates.iter().find(|p| exists(p)).cloned()
+}
+
+/// Command to launch `url` in a fresh Chrome window scoped to `profile_dir`,
+/// so its cookies stay isolated from any other account's console session.
+fn build_isolated_launch_command(chrome_path: &Path, profile_dir: &Path, url: &str) -> Command {
+    let mut cmd = Command::new(chrome_path);
+    cmd.arg(format!("--user-data-dir={}", profile_dir.display()))
+        .arg("--no-first-run")
+        .arg("--new-window")
+        .arg(url);
+    cmd
 }
 
 /// Write a set of STS credentials into a named section of an INI file
@@ -524,6 +611,78 @@ mod tests {
         assert_eq!(account.account_id, "111111111111");
         assert_eq!(account.session_name, "my-sso");
         assert_eq!(account.sso_region, "us-east-1");
+    }
+
+    #[test]
+    fn test_browser_profile_dir_scopes_by_account_id() {
+        let base = std::path::Path::new("/tmp/charon-test-base");
+        let dir = browser_profile_dir(base, "111111111111");
+        assert_eq!(dir, base.join("browser-profiles").join("111111111111"));
+    }
+
+    #[test]
+    fn test_candidate_chrome_paths_includes_macos_default_install() {
+        let candidates = candidate_chrome_paths();
+        assert!(candidates.contains(&std::path::PathBuf::from(
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        )));
+    }
+
+    #[test]
+    fn test_find_chrome_executable_with_returns_first_existing_candidate() {
+        let candidates = vec![
+            std::path::PathBuf::from("/does/not/exist/Chrome"),
+            std::path::PathBuf::from(
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            ),
+        ];
+        let found = find_chrome_executable_with(&candidates, |p| {
+            p == std::path::Path::new(
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            )
+        });
+        assert_eq!(
+            found,
+            Some(std::path::PathBuf::from(
+                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            ))
+        );
+    }
+
+    #[test]
+    fn test_find_chrome_executable_with_returns_none_when_nothing_exists() {
+        let candidates = vec![std::path::PathBuf::from("/does/not/exist/Chrome")];
+        let found = find_chrome_executable_with(&candidates, |_| false);
+        assert_eq!(found, None);
+    }
+
+    #[test]
+    fn test_build_login_url_includes_action_login_and_destination() {
+        let url = build_login_url("token-abc", "us-west-2").unwrap();
+        assert!(url.starts_with("https://us-east-1.signin.aws.amazon.com/federation?"));
+        assert!(url.contains("Action=login"));
+        assert!(url.contains("Issuer=Charon"));
+        assert!(url.contains("SigninToken=token-abc"));
+        assert!(url.contains("us-west-2.console.aws.amazon.com"));
+    }
+
+    #[test]
+    fn test_build_isolated_launch_command_uses_dedicated_profile_dir() {
+        let chrome =
+            std::path::Path::new("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
+        let profile_dir =
+            std::path::Path::new("/tmp/charon-test-base/browser-profiles/111111111111");
+        let url = "https://us-east-1.signin.aws.amazon.com/federation?Action=login";
+
+        let cmd = build_isolated_launch_command(chrome, profile_dir, url);
+
+        assert_eq!(cmd.get_program(), chrome.as_os_str());
+        let args: Vec<&str> = cmd.get_args().map(|a| a.to_str().unwrap()).collect();
+        assert!(args.contains(&"--new-window"));
+        assert!(args
+            .iter()
+            .any(|a| *a == format!("--user-data-dir={}", profile_dir.display())));
+        assert!(args.contains(&url));
     }
 
     #[test]

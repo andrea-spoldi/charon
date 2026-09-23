@@ -13,6 +13,7 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
     aws_cli_path: "aws",
     refresh_interval_secs: 30,
     session_timeout_hours: 8,
+    chrome_path: "",
   });
   const [saved, setSaved] = useState(false);
 
@@ -93,6 +94,25 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
           />
           <span className="form-hint">
             Path to the AWS CLI binary. Default: &quot;aws&quot;
+          </span>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="chrome-path">Google Chrome Location</label>
+          <input
+            id="chrome-path"
+            type="text"
+            value={settings.chrome_path}
+            onChange={(e) =>
+              setSettings({ ...settings, chrome_path: e.target.value })
+            }
+            placeholder="Auto-detect"
+          />
+          <span className="form-hint">
+            Needed for isolated console sessions (Accounts →
+            &quot;Open in isolated session&quot;), which open each account in
+            its own Chrome profile so multiple accounts can stay signed in at
+            once. Leave blank to auto-detect the default install location.
           </span>
         </div>
 

@@ -36,6 +36,7 @@ const settings: AppSettings = {
   aws_cli_path: "aws",
   refresh_interval_secs: 60,
   session_timeout_hours: 8,
+  chrome_path: "",
 };
 
 let invokedCommands: { cmd: string; args: unknown }[];

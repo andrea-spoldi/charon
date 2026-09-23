@@ -285,8 +285,9 @@ pub fn open_aws_console_isolated(
 ) -> Result<(), String> {
     info!("Opening isolated AWS Console session for {role_name} in {account_id} (sso_region: {sso_region}, console_region: {console_region})");
 
-    let chrome_path = find_chrome_executable_with(&candidate_chrome_paths(), |p| p.exists())
-        .ok_or("Isolated console sessions require Google Chrome, which wasn't found at the expected install location")?;
+    let chrome_path = resolve_chrome_path().ok_or(
+        "Isolated console sessions require Google Chrome. Set its location in Settings -> Google Chrome Location.",
+    )?;
 
     let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
     let duration = session_duration_secs.unwrap_or(28800).min(43200);
@@ -334,6 +335,24 @@ fn find_chrome_executable_with<F: Fn(&Path) -> bool>(
     exists: F,
 ) -> Option<PathBuf> {
     candidates.iter().find(|p| exists(p)).cloned()
+}
+
+/// A configured Settings override, or None (meaning: auto-detect instead).
+fn resolve_chrome_path_override(configured: &str) -> Option<PathBuf> {
+    if configured.is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(configured))
+    }
+}
+
+/// Resolve the Chrome executable for isolated console sessions: an explicit
+/// Settings override (Settings -> Google Chrome Location) if configured,
+/// otherwise the first auto-detected install.
+fn resolve_chrome_path() -> Option<PathBuf> {
+    let settings = crate::commands::settings::get_settings();
+    resolve_chrome_path_override(&settings.chrome_path)
+        .or_else(|| find_chrome_executable_with(&candidate_chrome_paths(), |p| p.exists()))
 }
 
 /// Command to launch `url` in a fresh Chrome window scoped to `profile_dir`,
@@ -618,6 +637,19 @@ mod tests {
         let base = std::path::Path::new("/tmp/charon-test-base");
         let dir = browser_profile_dir(base, "111111111111");
         assert_eq!(dir, base.join("browser-profiles").join("111111111111"));
+    }
+
+    #[test]
+    fn test_resolve_chrome_path_override_empty_means_auto_detect() {
+        assert_eq!(resolve_chrome_path_override(""), None);
+    }
+
+    #[test]
+    fn test_resolve_chrome_path_override_returns_configured_path() {
+        assert_eq!(
+            resolve_chrome_path_override("/custom/path/chrome"),
+            Some(std::path::PathBuf::from("/custom/path/chrome"))
+        );
     }
 
     #[test]

@@ -8,6 +8,10 @@ pub struct AppSettings {
     pub aws_cli_path: String,
     pub refresh_interval_secs: u64,
     pub session_timeout_hours: u64,
+    /// Explicit path to the Google Chrome executable, used for isolated
+    /// per-account console sessions. Empty means auto-detect.
+    #[serde(default)]
+    pub chrome_path: String,
 }
 
 impl Default for AppSettings {
@@ -17,6 +21,7 @@ impl Default for AppSettings {
             aws_cli_path: "aws".to_string(),
             refresh_interval_secs: 30,
             session_timeout_hours: 8,
+            chrome_path: String::new(),
         }
     }
 }
@@ -61,6 +66,7 @@ mod tests {
         assert_eq!(s.aws_cli_path, "aws");
         assert_eq!(s.refresh_interval_secs, 30);
         assert_eq!(s.session_timeout_hours, 8);
+        assert_eq!(s.chrome_path, "");
     }
 
     #[test]
@@ -70,11 +76,27 @@ mod tests {
             aws_cli_path: "/usr/local/bin/aws".to_string(),
             refresh_interval_secs: 60,
             session_timeout_hours: 4,
+            chrome_path: "/usr/local/bin/chrome".to_string(),
         };
         let json = serde_json::to_string(&s).unwrap();
         let parsed: AppSettings = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.default_region, "eu-west-1");
         assert_eq!(parsed.refresh_interval_secs, 60);
         assert_eq!(parsed.session_timeout_hours, 4);
+        assert_eq!(parsed.chrome_path, "/usr/local/bin/chrome");
+    }
+
+    #[test]
+    fn test_settings_deserializes_without_chrome_path_field() {
+        // Simulates a settings.json saved before chrome_path existed.
+        let json = r#"{
+            "default_region": "eu-west-1",
+            "aws_cli_path": "aws",
+            "refresh_interval_secs": 30,
+            "session_timeout_hours": 8
+        }"#;
+        let parsed: AppSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.chrome_path, "");
+        assert_eq!(parsed.default_region, "eu-west-1");
     }
 }

@@ -85,6 +85,7 @@ const settings: AppSettings = {
   aws_cli_path: "aws",
   refresh_interval_secs: 1,
   session_timeout_hours: 8,
+  chrome_path: "",
 };
 
 describe("ProfilesPage auto-refresh", () => {

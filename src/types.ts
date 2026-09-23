@@ -73,6 +73,7 @@ export interface AppSettings {
   aws_cli_path: string;
   refresh_interval_secs: number;
   session_timeout_hours: number;
+  chrome_path: string;
 }
 
 // SSM instance from describe-instance-information

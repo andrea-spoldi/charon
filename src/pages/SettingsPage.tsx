@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
+import { Save, Info } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import type { AppSettings } from "../types";
 
@@ -100,6 +100,16 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
         <div className="form-field">
           <label htmlFor="multi-session-console">
             Use AWS multi-session for Open AWS Console
+            <span
+              className="info-tooltip"
+              title={
+                'Also requires turning on multi-session in the AWS Console itself (account menu → "Turn on multi-session"). ' +
+                "That AWS-side setting is a browser cookie, so it persists until you clear cookies or turn it off there — " +
+                "and if it ends up out of sync with this toggle, Open AWS Console will fail with a 400 error until both match."
+              }
+            >
+              <Info size={13} />
+            </span>
           </label>
           <input
             id="multi-session-console"
@@ -113,15 +123,9 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
             }
           />
           <span className="form-hint">
-            Off (default): Open AWS Console silently replaces any other open
-            console session — no setup needed. On: it opens as an additional
-            session instead, so multiple accounts can stay signed in at once —
-            but only if you&apos;ve also turned on &quot;multi-session&quot; in
-            the AWS Console itself first (account-name menu → Turn on
-            multi-session). That AWS-side setting is a browser cookie: it
-            persists until you clear cookies or turn it off there, and once
-            it&apos;s on, turning this setting back off will make Open AWS
-            Console fail (a 400 error) until you do one or the other.
+            Off (default): replaces any other open console session. On: opens as
+            an additional session, so multiple accounts can stay signed in at
+            once.
           </span>
         </div>
 

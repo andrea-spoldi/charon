@@ -1,3 +1,16 @@
+## [0.17.0](https://github.com/andrea-spoldi/charon/compare/v0.16.0...v0.17.0) (2026-09-23)
+
+### 🚀 Features
+
+* add multi-session-aware AWS console open command ([119f7c9](https://github.com/andrea-spoldi/charon/commit/119f7c9991746d44a92e68037df7890d3a2c0627))
+* consolidate console-open buttons behind one Settings toggle ([087e27c](https://github.com/andrea-spoldi/charon/commit/087e27c4552db2a6ab798cd6e9c50f672036b9cb))
+* **ui:** add multi-session-aware console action to ProfilesPage ([b24c323](https://github.com/andrea-spoldi/charon/commit/b24c323e0bebec95a6ce44bde392cad18368668e))
+
+### 🐛 Bug Fixes
+
+* **ui:** break multi-session console tooltip into separate lines ([a687a24](https://github.com/andrea-spoldi/charon/commit/a687a2414afc2ee0c51eb60729783c5678ddc154))
+* **ui:** shorten multi-session console hint, move detail to a tooltip ([a4b5a07](https://github.com/andrea-spoldi/charon/commit/a4b5a07d9b344577da6722058cb68094352ccf37))
+
 ## [0.16.0](https://github.com/andrea-spoldi/charon/compare/v0.15.0...v0.16.0) (2026-09-16)
 
 ### 🚀 Features

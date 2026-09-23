@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Save } from "lucide-react";
+import { Save, Info } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import type { AppSettings } from "../types";
 
@@ -13,6 +13,7 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
     aws_cli_path: "aws",
     refresh_interval_secs: 30,
     session_timeout_hours: 8,
+    multi_session_console: false,
   });
   const [saved, setSaved] = useState(false);
 
@@ -93,6 +94,38 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
           />
           <span className="form-hint">
             Path to the AWS CLI binary. Default: &quot;aws&quot;
+          </span>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="multi-session-console">
+            Use AWS multi-session for Open AWS Console
+            <span
+              className="info-tooltip"
+              title={
+                'Also requires turning on multi-session in the AWS Console itself (account menu → "Turn on multi-session").\n' +
+                "That AWS-side setting is a browser cookie, so it persists until you clear cookies or turn it off there.\n" +
+                "If it ends up out of sync with this toggle, Open AWS Console will fail with a 400 error until both match."
+              }
+            >
+              <Info size={13} />
+            </span>
+          </label>
+          <input
+            id="multi-session-console"
+            type="checkbox"
+            checked={settings.multi_session_console}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                multi_session_console: e.target.checked,
+              })
+            }
+          />
+          <span className="form-hint">
+            Off (default): replaces any other open console session. On: opens as
+            an additional session, so multiple accounts can stay signed in at
+            once.
           </span>
         </div>
 

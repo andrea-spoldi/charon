@@ -142,14 +142,19 @@ export function ProfilesPage({
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
       const token = await resolveSessionToken(profile);
-      await invoke("open_aws_console", {
-        accessToken: token.access_token,
-        accountId: profile.sso_account_id,
-        roleName: profile.sso_role_name,
-        ssoRegion: token.region,
-        consoleRegion,
-        sessionDurationSecs: settings.session_timeout_hours * 3600,
-      });
+      await invoke(
+        settings.multi_session_console
+          ? "open_aws_console_multi_session"
+          : "open_aws_console",
+        {
+          accessToken: token.access_token,
+          accountId: profile.sso_account_id,
+          roleName: profile.sso_role_name,
+          ssoRegion: token.region,
+          consoleRegion,
+          sessionDurationSecs: settings.session_timeout_hours * 3600,
+        },
+      );
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
       console.error("Failed to open console:", err);
@@ -410,10 +415,18 @@ export function ProfilesPage({
                     <button
                       className={`icon-btn ${actionStatus[consoleKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[consoleKey] === "error" ? "icon-btn-error" : ""}`}
                       title={
-                        connectable ? "Open AWS Console" : "Login to SSO first"
+                        !connectable
+                          ? "Login to SSO first"
+                          : settings.multi_session_console
+                            ? "Open AWS Console (multi-session)"
+                            : "Open AWS Console"
                       }
                       aria-label={
-                        connectable ? "Open AWS Console" : "Login to SSO first"
+                        !connectable
+                          ? "Login to SSO first"
+                          : settings.multi_session_console
+                            ? "Open AWS Console (multi-session)"
+                            : "Open AWS Console"
                       }
                       onClick={() => handleOpenConsole(profile)}
                       disabled={

@@ -25,6 +25,7 @@ function App() {
     aws_cli_path: "aws",
     refresh_interval_secs: 30,
     session_timeout_hours: 8,
+    multi_session_console: false,
   });
   const { status: ssoStatus, refresh: refreshSsoStatus } = useSsoStatus();
   const {

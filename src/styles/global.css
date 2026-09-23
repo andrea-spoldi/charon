@@ -795,6 +795,15 @@
   color: var(--color-muted-text);
 }
 
+.info-tooltip {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  color: var(--color-muted-text);
+  cursor: help;
+  vertical-align: middle;
+}
+
 .form-value {
   font-size: 0.923rem;
   padding: 6px 0;

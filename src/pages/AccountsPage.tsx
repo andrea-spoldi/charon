@@ -99,14 +99,19 @@ export function AccountsPage({
     const key = `${account.accountId}-${roleName}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
-      await invoke("open_aws_console", {
-        accessToken: account.accessToken,
-        accountId: account.accountId,
-        roleName,
-        ssoRegion: account.ssoRegion,
-        consoleRegion: settings.default_region,
-        sessionDurationSecs: settings.session_timeout_hours * 3600,
-      });
+      await invoke(
+        settings.multi_session_console
+          ? "open_aws_console_multi_session"
+          : "open_aws_console",
+        {
+          accessToken: account.accessToken,
+          accountId: account.accountId,
+          roleName,
+          ssoRegion: account.ssoRegion,
+          consoleRegion: settings.default_region,
+          sessionDurationSecs: settings.session_timeout_hours * 3600,
+        },
+      );
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
       console.error("Failed to open console:", err);
@@ -292,8 +297,16 @@ export function AccountsPage({
                         </button>
                         <button
                           className={`icon-btn ${actionStatus[consoleKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[consoleKey] === "error" ? "icon-btn-error" : ""}`}
-                          title="Open AWS Console"
-                          aria-label="Open AWS Console"
+                          title={
+                            settings.multi_session_console
+                              ? "Open AWS Console (multi-session)"
+                              : "Open AWS Console"
+                          }
+                          aria-label={
+                            settings.multi_session_console
+                              ? "Open AWS Console (multi-session)"
+                              : "Open AWS Console"
+                          }
                           onClick={() =>
                             handleOpenConsole(account, role.roleName)
                           }

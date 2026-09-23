@@ -8,6 +8,12 @@ pub struct AppSettings {
     pub aws_cli_path: String,
     pub refresh_interval_secs: u64,
     pub session_timeout_hours: u64,
+    /// When true, "Open AWS Console" uses AWS's native multi-session support
+    /// (no session-replacing logout redirect) instead of the default
+    /// single-session behavior. Requires the user to also enable multi-session
+    /// in their browser via the AWS Console account menu.
+    #[serde(default)]
+    pub multi_session_console: bool,
 }
 
 impl Default for AppSettings {
@@ -17,6 +23,7 @@ impl Default for AppSettings {
             aws_cli_path: "aws".to_string(),
             refresh_interval_secs: 30,
             session_timeout_hours: 8,
+            multi_session_console: false,
         }
     }
 }
@@ -61,6 +68,7 @@ mod tests {
         assert_eq!(s.aws_cli_path, "aws");
         assert_eq!(s.refresh_interval_secs, 30);
         assert_eq!(s.session_timeout_hours, 8);
+        assert_eq!(s.multi_session_console, false);
     }
 
     #[test]
@@ -70,11 +78,27 @@ mod tests {
             aws_cli_path: "/usr/local/bin/aws".to_string(),
             refresh_interval_secs: 60,
             session_timeout_hours: 4,
+            multi_session_console: true,
         };
         let json = serde_json::to_string(&s).unwrap();
         let parsed: AppSettings = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.default_region, "eu-west-1");
         assert_eq!(parsed.refresh_interval_secs, 60);
         assert_eq!(parsed.session_timeout_hours, 4);
+        assert_eq!(parsed.multi_session_console, true);
+    }
+
+    #[test]
+    fn test_settings_deserializes_without_multi_session_console_field() {
+        // Simulates a settings.json saved before multi_session_console existed.
+        let json = r#"{
+            "default_region": "eu-west-1",
+            "aws_cli_path": "aws",
+            "refresh_interval_secs": 30,
+            "session_timeout_hours": 8
+        }"#;
+        let parsed: AppSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(parsed.multi_session_console, false);
+        assert_eq!(parsed.default_region, "eu-west-1");
     }
 }

@@ -7,7 +7,7 @@
 
   "current_session": {
     "id": "S-006",
-    "goal": "T-020/T-021/T-022 done: multi-session-aware console open command wired into both AccountsPage and ProfilesPage. User confirmed AccountsPage works live.",
+    "goal": "T-020/T-021/T-022/T-023 done: multi-session console support, now consolidated to one icon per row driven by a Settings opt-in toggle (default off). User confirmed the earlier two-button version worked live on Accounts; this build not yet tested live.",
     "task_ref": null,
     "started": "2026-09-22",
     "status": "in-progress",
@@ -41,6 +41,15 @@
       "priority": 3,
       "status": "done",
       "tags": ["frontend", "react", "multi-session-console"]
+    },
+    {
+      "id": "T-023",
+      "title": "Consolidate single/multi-session console buttons into one Settings-driven toggle",
+      "description": "T-021/T-022 shipped two separate icons per account/profile (plain 'Open AWS Console' + a second 'multi-session tab' button). User flagged the two-icon UX as confusing and asked for one icon instead, driven by an opt-in Settings toggle that defaults to off (today's single-session behavior) and explains the AWS-side opt-in + cookie/400-error tradeoff when turned on.",
+      "size": "S",
+      "priority": 4,
+      "status": "done",
+      "tags": ["frontend", "backend", "settings", "multi-session-console"]
     }
   ],
 
@@ -60,6 +69,13 @@
   ],
 
   "decisions": [
+    {
+      "id": "D-007",
+      "date": "2026-09-23",
+      "decision": "Replace the two separate console-open buttons (T-021/T-022) with one icon per account/profile, routed by a single AppSettings.multi_session_console boolean (default false = today's single-session behavior).",
+      "rationale": "User found two icons per row confusing and asked for a Settings-driven opt-in instead: one button whose behavior (and title text) reflects the current mode, with the tradeoff — needing to also enable multi-session in the AWS Console UI, that it's a per-browser cookie, and that leaving it on while this setting is off reproduces the D-006 400-error bug — explained in the Settings hint text rather than needing two buttons to convey.",
+      "supersedes": null
+    },
     {
       "id": "D-006",
       "date": "2026-09-23",
@@ -105,6 +121,13 @@
   ],
 
   "completed": [
+    {
+      "id": "T-023",
+      "title": "Consolidate single/multi-session console buttons into one Settings-driven toggle",
+      "completed_date": "2026-09-23",
+      "session_ref": "S-006",
+      "notes": "Added AppSettings.multi_session_console (settings.rs, #[serde(default)] for backward compat) and a 'Use AWS multi-session for Open AWS Console' checkbox in SettingsPage.tsx explaining the AWS-side opt-in, that it's a browser cookie, and the 400-error tradeoff if left mismatched. Removed the separate Layers-icon multi-session buttons/handlers from AccountsPage.tsx and ProfilesPage.tsx; the single existing 'Open AWS Console' button/handler in each now picks open_aws_console vs open_aws_console_multi_session based on settings.multi_session_console, with its title changing to 'Open AWS Console (multi-session)' when on. TDD throughout (Rust settings tests, SettingsPage/AccountsPage/ProfilesPage test updates — all re-verified with clean RED before implementing). All green: 13/13 vitest, 31/31 cargo tests, clippy/tsc/eslint/prettier clean. No backend change needed to either open_aws_console command — purely a frontend routing decision."
+    },
     {
       "id": "T-022",
       "title": "Frontend: wire multi-session-aware open into ProfilesPage",

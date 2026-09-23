@@ -34,12 +34,16 @@ let configureCallCount: number;
 let getRoleCredentialsCallCount: number;
 let stopSessionCallCount: number;
 let multiSessionConsoleCalls: unknown[];
+let singleSessionConsoleCalls: unknown[];
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: vi.fn(async (cmd: string, args?: unknown) => {
     switch (cmd) {
       case "open_aws_console_multi_session":
         multiSessionConsoleCalls.push(args);
+        return null;
+      case "open_aws_console":
+        singleSessionConsoleCalls.push(args);
         return null;
       case "list_profiles":
         return profilesListState;
@@ -89,6 +93,7 @@ const settings: AppSettings = {
   aws_cli_path: "aws",
   refresh_interval_secs: 1,
   session_timeout_hours: 8,
+  multi_session_console: false,
 };
 
 describe("ProfilesPage auto-refresh", () => {
@@ -100,6 +105,7 @@ describe("ProfilesPage auto-refresh", () => {
     getRoleCredentialsCallCount = 0;
     stopSessionCallCount = 0;
     multiSessionConsoleCalls = [];
+    singleSessionConsoleCalls = [];
     vi.useFakeTimers();
   });
 
@@ -236,7 +242,7 @@ describe("ProfilesPage auto-refresh", () => {
     expect(screen.queryByTitle("Stop CLI session")).not.toBeInTheDocument();
   });
 
-  it("calls open_aws_console_multi_session with the profile's session details when clicked", async () => {
+  it("calls open_aws_console (single-session, default) when multi_session_console is off", async () => {
     render(
       <ProfilesPage
         ssoStatus={ssoStatus}
@@ -246,19 +252,47 @@ describe("ProfilesPage auto-refresh", () => {
     );
 
     await vi.waitFor(() =>
+      expect(screen.getByTitle("Open AWS Console")).toBeInTheDocument(),
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTitle("Open AWS Console"));
+      await vi.waitFor(() => expect(singleSessionConsoleCalls.length).toBe(1));
+    });
+
+    expect(singleSessionConsoleCalls[0]).toEqual({
+      accessToken: "session-token",
+      accountId: profile.sso_account_id,
+      roleName: profile.sso_role_name,
+      ssoRegion: "us-east-1",
+      consoleRegion: settings.default_region,
+      sessionDurationSecs: settings.session_timeout_hours * 3600,
+    });
+    expect(multiSessionConsoleCalls.length).toBe(0);
+  });
+
+  it("calls open_aws_console_multi_session when multi_session_console is enabled in settings", async () => {
+    const multiSessionSettings: AppSettings = {
+      ...settings,
+      multi_session_console: true,
+    };
+
+    render(
+      <ProfilesPage
+        ssoStatus={ssoStatus}
+        settings={multiSessionSettings}
+        onError={() => {}}
+      />,
+    );
+
+    await vi.waitFor(() =>
       expect(
-        screen.getByTitle(
-          "Open in a multi-session tab (requires multi-session enabled in your browser)",
-        ),
+        screen.getByTitle("Open AWS Console (multi-session)"),
       ).toBeInTheDocument(),
     );
 
     await act(async () => {
-      fireEvent.click(
-        screen.getByTitle(
-          "Open in a multi-session tab (requires multi-session enabled in your browser)",
-        ),
-      );
+      fireEvent.click(screen.getByTitle("Open AWS Console (multi-session)"));
       await vi.waitFor(() => expect(multiSessionConsoleCalls.length).toBe(1));
     });
 
@@ -267,8 +301,9 @@ describe("ProfilesPage auto-refresh", () => {
       accountId: profile.sso_account_id,
       roleName: profile.sso_role_name,
       ssoRegion: "us-east-1",
-      consoleRegion: settings.default_region,
-      sessionDurationSecs: settings.session_timeout_hours * 3600,
+      consoleRegion: multiSessionSettings.default_region,
+      sessionDurationSecs: multiSessionSettings.session_timeout_hours * 3600,
     });
+    expect(singleSessionConsoleCalls.length).toBe(0);
   });
 });

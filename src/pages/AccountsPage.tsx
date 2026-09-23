@@ -9,7 +9,6 @@ import {
   Terminal,
   Bookmark,
   RefreshCw,
-  Layers,
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
 import type {
@@ -100,45 +99,23 @@ export function AccountsPage({
     const key = `${account.accountId}-${roleName}-console`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
-      await invoke("open_aws_console", {
-        accessToken: account.accessToken,
-        accountId: account.accountId,
-        roleName,
-        ssoRegion: account.ssoRegion,
-        consoleRegion: settings.default_region,
-        sessionDurationSecs: settings.session_timeout_hours * 3600,
-      });
+      await invoke(
+        settings.multi_session_console
+          ? "open_aws_console_multi_session"
+          : "open_aws_console",
+        {
+          accessToken: account.accessToken,
+          accountId: account.accountId,
+          roleName,
+          ssoRegion: account.ssoRegion,
+          consoleRegion: settings.default_region,
+          sessionDurationSecs: settings.session_timeout_hours * 3600,
+        },
+      );
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
     } catch (err) {
       console.error("Failed to open console:", err);
       setActionError(`Console: ${err}`);
-      setActionStatus((prev) => ({ ...prev, [key]: "error" }));
-    }
-    setTimeout(() => {
-      setActionStatus((prev) => ({ ...prev, [key]: "" }));
-      setActionError(null);
-    }, 5000);
-  };
-
-  const handleOpenMultiSessionConsole = async (
-    account: SsoAccountWithSession,
-    roleName: string,
-  ) => {
-    const key = `${account.accountId}-${roleName}-multisession`;
-    setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
-    try {
-      await invoke("open_aws_console_multi_session", {
-        accessToken: account.accessToken,
-        accountId: account.accountId,
-        roleName,
-        ssoRegion: account.ssoRegion,
-        consoleRegion: settings.default_region,
-        sessionDurationSecs: settings.session_timeout_hours * 3600,
-      });
-      setActionStatus((prev) => ({ ...prev, [key]: "done" }));
-    } catch (err) {
-      console.error("Failed to open multi-session console:", err);
-      setActionError(`Multi-session console: ${err}`);
       setActionStatus((prev) => ({ ...prev, [key]: "error" }));
     }
     setTimeout(() => {
@@ -296,7 +273,6 @@ export function AccountsPage({
               <div className="role-list">
                 {(roles[account.accountId] || []).map((role) => {
                   const consoleKey = `${account.accountId}-${role.roleName}-console`;
-                  const multiSessionKey = `${account.accountId}-${role.roleName}-multisession`;
                   const cliKey = `${account.accountId}-${role.roleName}-cli`;
                   const bookmarkKey = `${account.accountId}-${role.roleName}-bookmark`;
                   return (
@@ -321,28 +297,22 @@ export function AccountsPage({
                         </button>
                         <button
                           className={`icon-btn ${actionStatus[consoleKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[consoleKey] === "error" ? "icon-btn-error" : ""}`}
-                          title="Open AWS Console"
-                          aria-label="Open AWS Console"
+                          title={
+                            settings.multi_session_console
+                              ? "Open AWS Console (multi-session)"
+                              : "Open AWS Console"
+                          }
+                          aria-label={
+                            settings.multi_session_console
+                              ? "Open AWS Console (multi-session)"
+                              : "Open AWS Console"
+                          }
                           onClick={() =>
                             handleOpenConsole(account, role.roleName)
                           }
                           disabled={actionStatus[consoleKey] === "loading"}
                         >
                           <ExternalLink size={14} />
-                        </button>
-                        <button
-                          className={`icon-btn ${actionStatus[multiSessionKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[multiSessionKey] === "error" ? "icon-btn-error" : ""}`}
-                          title="Open in a multi-session tab (requires multi-session enabled in your browser)"
-                          aria-label="Open in a multi-session tab (requires multi-session enabled in your browser)"
-                          onClick={() =>
-                            handleOpenMultiSessionConsole(
-                              account,
-                              role.roleName,
-                            )
-                          }
-                          disabled={actionStatus[multiSessionKey] === "loading"}
-                        >
-                          <Layers size={14} />
                         </button>
                         <button
                           className={`icon-btn ${actionStatus[cliKey] === "loading" ? "icon-btn-loading" : ""} ${actionStatus[cliKey] === "done" ? "icon-btn-success" : ""} ${actionStatus[cliKey] === "error" ? "icon-btn-error" : ""}`}

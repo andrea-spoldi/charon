@@ -13,6 +13,7 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
     aws_cli_path: "aws",
     refresh_interval_secs: 30,
     session_timeout_hours: 8,
+    multi_session_console: false,
   });
   const [saved, setSaved] = useState(false);
 
@@ -93,6 +94,34 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
           />
           <span className="form-hint">
             Path to the AWS CLI binary. Default: &quot;aws&quot;
+          </span>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="multi-session-console">
+            Use AWS multi-session for Open AWS Console
+          </label>
+          <input
+            id="multi-session-console"
+            type="checkbox"
+            checked={settings.multi_session_console}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                multi_session_console: e.target.checked,
+              })
+            }
+          />
+          <span className="form-hint">
+            Off (default): Open AWS Console silently replaces any other open
+            console session — no setup needed. On: it opens as an additional
+            session instead, so multiple accounts can stay signed in at once —
+            but only if you&apos;ve also turned on &quot;multi-session&quot; in
+            the AWS Console itself first (account-name menu → Turn on
+            multi-session). That AWS-side setting is a browser cookie: it
+            persists until you clear cookies or turn it off there, and once
+            it&apos;s on, turning this setting back off will make Open AWS
+            Console fail (a 400 error) until you do one or the other.
           </span>
         </div>
 

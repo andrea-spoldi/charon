@@ -179,38 +179,20 @@ pub fn get_role_credentials(
     Ok(response.role_credentials)
 }
 
-/// Open AWS Console in the browser for a specific role via federation
-#[tauri::command]
-pub fn open_aws_console(
-    access_token: &str,
-    account_id: &str,
-    role_name: &str,
-    sso_region: &str,
-    console_region: &str,
-    session_duration_secs: Option<u64>,
-) -> Result<(), String> {
-    info!("Opening AWS Console for {role_name} in {account_id} (sso_region: {sso_region}, console_region: {console_region})");
+const SIGN_IN_BASE: &str = "https://us-east-1.signin.aws.amazon.com";
 
-    let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
-
-    // Build the federation session JSON
+/// Exchange a set of STS credentials for a one-time federation sign-in token.
+fn get_signin_token(creds: &RoleCredentials, duration_secs: u64) -> Result<String, String> {
     let session_json = serde_json::json!({
         "sessionId": creds.access_key_id,
         "sessionKey": creds.secret_access_key,
         "sessionToken": creds.session_token,
     })
     .to_string();
-
     let encoded_session = urlencoding::encode(&session_json);
 
-    // Session duration: default 8h (28800s), max 12h (43200s)
-    let duration = session_duration_secs.unwrap_or(28800).min(43200);
-
-    let sign_in_base = "https://us-east-1.signin.aws.amazon.com";
-
-    // Step 1: Get a sign-in token from the federation endpoint
     let signin_token_url = format!(
-        "{sign_in_base}/federation?Action=getSigninToken&SessionDuration={duration}&Session={encoded_session}"
+        "{SIGN_IN_BASE}/federation?Action=getSigninToken&SessionDuration={duration_secs}&Session={encoded_session}"
     );
 
     let output = Command::new("curl")
@@ -226,16 +208,19 @@ pub fn open_aws_console(
     let token_response: serde_json::Value = serde_json::from_slice(&output.stdout)
         .map_err(|e| format!("Failed to parse federation response: {e}"))?;
 
-    let signin_token = token_response["SigninToken"]
+    token_response["SigninToken"]
         .as_str()
-        .ok_or("No SigninToken in federation response")?;
+        .map(|s| s.to_string())
+        .ok_or_else(|| "No SigninToken in federation response".to_string())
+}
 
-    // Step 2: Build the federation login URL with proper encoding
+/// Build the federation login URL (properly encoded) for a sign-in token.
+fn build_login_url(signin_token: &str, console_region: &str) -> Result<String, String> {
     let destination_url = format!(
         "https://{console_region}.console.aws.amazon.com/console/home?region={console_region}"
     );
 
-    let mut login_url = url::Url::parse(&format!("{sign_in_base}/federation"))
+    let mut login_url = url::Url::parse(&format!("{SIGN_IN_BASE}/federation"))
         .map_err(|e| format!("Failed to parse federation URL: {e}"))?;
     login_url
         .query_pairs_mut()
@@ -244,10 +229,34 @@ pub fn open_aws_console(
         .append_pair("Destination", &destination_url)
         .append_pair("SigninToken", signin_token);
 
-    // Step 3: Wrap in OAuth logout redirect for seamless session replacement
-    // This clears any existing console session before logging into the new one,
-    // avoiding the "sign out first" interstitial page.
-    let mut console_url = url::Url::parse(&format!("{sign_in_base}/oauth"))
+    Ok(login_url.to_string())
+}
+
+/// Open AWS Console in the browser for a specific role via federation.
+/// Wraps the login in an OAuth logout redirect so it cleanly replaces any
+/// existing console session in the same browser, avoiding the "sign out
+/// first" interstitial. NOTE: this conflicts with AWS's native multi-session
+/// support (see open_aws_console_multi_session) — if the user has opted in
+/// to that in their browser, this command's logout step can leave the
+/// browser unable to sign in to any console until cookies are cleared.
+#[tauri::command]
+pub fn open_aws_console(
+    access_token: &str,
+    account_id: &str,
+    role_name: &str,
+    sso_region: &str,
+    console_region: &str,
+    session_duration_secs: Option<u64>,
+) -> Result<(), String> {
+    info!("Opening AWS Console for {role_name} in {account_id} (sso_region: {sso_region}, console_region: {console_region})");
+
+    let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
+    let duration = session_duration_secs.unwrap_or(28800).min(43200);
+    let signin_token = get_signin_token(&creds, duration)?;
+    let login_url = build_login_url(&signin_token, console_region)?;
+
+    // Wrap in OAuth logout redirect for seamless session replacement.
+    let mut console_url = url::Url::parse(&format!("{SIGN_IN_BASE}/oauth"))
         .map_err(|e| format!("Failed to parse OAuth URL: {e}"))?;
     console_url
         .query_pairs_mut()
@@ -257,6 +266,35 @@ pub fn open_aws_console(
     open::that(console_url.as_str()).map_err(|e| format!("Failed to open browser: {e}"))?;
 
     info!("Opened AWS Console for {role_name} in {account_id}");
+    Ok(())
+}
+
+/// Open AWS Console for a specific role without forcing a session-replacing
+/// logout first, so it plays nicely with AWS's native multi-session console
+/// support: once the user has opted in to that (per-browser, via the account
+/// menu in the console itself), each additional account opened this way adds
+/// to that browser's session menu instead of replacing the current one. If
+/// the user hasn't opted in, AWS shows its own "sign out first?" interstitial
+/// instead of Charon silently clearing the existing session.
+#[tauri::command]
+pub fn open_aws_console_multi_session(
+    access_token: &str,
+    account_id: &str,
+    role_name: &str,
+    sso_region: &str,
+    console_region: &str,
+    session_duration_secs: Option<u64>,
+) -> Result<(), String> {
+    info!("Opening multi-session AWS Console for {role_name} in {account_id} (sso_region: {sso_region}, console_region: {console_region})");
+
+    let creds = get_role_credentials(access_token, account_id, role_name, sso_region)?;
+    let duration = session_duration_secs.unwrap_or(28800).min(43200);
+    let signin_token = get_signin_token(&creds, duration)?;
+    let login_url = build_login_url(&signin_token, console_region)?;
+
+    open::that(&login_url).map_err(|e| format!("Failed to open browser: {e}"))?;
+
+    info!("Opened multi-session AWS Console for {role_name} in {account_id}");
     Ok(())
 }
 
@@ -487,6 +525,16 @@ pub fn list_all_portal_accounts() -> Result<Vec<SsoAccountWithSession>, String> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_build_login_url_includes_action_login_and_destination() {
+        let url = build_login_url("token-abc", "us-west-2").unwrap();
+        assert!(url.starts_with("https://us-east-1.signin.aws.amazon.com/federation?"));
+        assert!(url.contains("Action=login"));
+        assert!(url.contains("Issuer=Charon"));
+        assert!(url.contains("SigninToken=token-abc"));
+        assert!(url.contains("us-west-2.console.aws.amazon.com"));
+    }
 
     #[test]
     fn test_sso_account_deserialize() {

@@ -103,9 +103,9 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
             <span
               className="info-tooltip"
               title={
-                'Also requires turning on multi-session in the AWS Console itself (account menu → "Turn on multi-session"). ' +
-                "That AWS-side setting is a browser cookie, so it persists until you clear cookies or turn it off there — " +
-                "and if it ends up out of sync with this toggle, Open AWS Console will fail with a 400 error until both match."
+                'Also requires turning on multi-session in the AWS Console itself (account menu → "Turn on multi-session").\n' +
+                "That AWS-side setting is a browser cookie, so it persists until you clear cookies or turn it off there.\n" +
+                "If it ends up out of sync with this toggle, Open AWS Console will fail with a 400 error until both match."
               }
             >
               <Info size={13} />

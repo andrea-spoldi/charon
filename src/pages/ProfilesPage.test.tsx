@@ -33,10 +33,14 @@ let sessionStatus: "active" | "expired";
 let configureCallCount: number;
 let getRoleCredentialsCallCount: number;
 let stopSessionCallCount: number;
+let multiSessionConsoleCalls: unknown[];
 
 vi.mock("@tauri-apps/api/core", () => ({
-  invoke: vi.fn(async (cmd: string) => {
+  invoke: vi.fn(async (cmd: string, args?: unknown) => {
     switch (cmd) {
+      case "open_aws_console_multi_session":
+        multiSessionConsoleCalls.push(args);
+        return null;
       case "list_profiles":
         return profilesListState;
       case "list_sso_sessions":
@@ -95,6 +99,7 @@ describe("ProfilesPage auto-refresh", () => {
     configureCallCount = 0;
     getRoleCredentialsCallCount = 0;
     stopSessionCallCount = 0;
+    multiSessionConsoleCalls = [];
     vi.useFakeTimers();
   });
 
@@ -229,5 +234,41 @@ describe("ProfilesPage auto-refresh", () => {
       expect(screen.getByTitle("Start CLI session")).toBeInTheDocument(),
     );
     expect(screen.queryByTitle("Stop CLI session")).not.toBeInTheDocument();
+  });
+
+  it("calls open_aws_console_multi_session with the profile's session details when clicked", async () => {
+    render(
+      <ProfilesPage
+        ssoStatus={ssoStatus}
+        settings={settings}
+        onError={() => {}}
+      />,
+    );
+
+    await vi.waitFor(() =>
+      expect(
+        screen.getByTitle(
+          "Open in a multi-session tab (requires multi-session enabled in your browser)",
+        ),
+      ).toBeInTheDocument(),
+    );
+
+    await act(async () => {
+      fireEvent.click(
+        screen.getByTitle(
+          "Open in a multi-session tab (requires multi-session enabled in your browser)",
+        ),
+      );
+      await vi.waitFor(() => expect(multiSessionConsoleCalls.length).toBe(1));
+    });
+
+    expect(multiSessionConsoleCalls[0]).toEqual({
+      accessToken: "session-token",
+      accountId: profile.sso_account_id,
+      roleName: profile.sso_role_name,
+      ssoRegion: "us-east-1",
+      consoleRegion: settings.default_region,
+      sessionDurationSecs: settings.session_timeout_hours * 3600,
+    });
   });
 });

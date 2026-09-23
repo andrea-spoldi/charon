@@ -7,7 +7,7 @@
 
   "current_session": {
     "id": "S-006",
-    "goal": "T-020/T-021 done: multi-session-aware console open command + AccountsPage wiring, on feat/multi-session-console. Next: user to test locally (enable multi-session in browser, click the new Layers-icon button on a second account).",
+    "goal": "T-020/T-021/T-022 done: multi-session-aware console open command wired into both AccountsPage and ProfilesPage. User confirmed AccountsPage works live.",
     "task_ref": null,
     "started": "2026-09-22",
     "status": "in-progress",
@@ -30,6 +30,15 @@
       "description": "Replace or add alongside the existing 'Open AWS Console' action; user must opt in to multi-session once per browser via AWS's own account menu (out of app scope), after which each additional account opened via this command should stack rather than replace.",
       "size": "S",
       "priority": 2,
+      "status": "done",
+      "tags": ["frontend", "react", "multi-session-console"]
+    },
+    {
+      "id": "T-022",
+      "title": "Frontend: wire multi-session-aware open into ProfilesPage",
+      "description": "ProfilesPage has its own separate 'Open AWS Console' action (handleOpenConsole, calling open_aws_console) distinct from AccountsPage's — T-021 only covered AccountsPage. Add the same 'Open in a multi-session tab' action there too.",
+      "size": "S",
+      "priority": 3,
       "status": "done",
       "tags": ["frontend", "react", "multi-session-console"]
     }
@@ -96,6 +105,13 @@
   ],
 
   "completed": [
+    {
+      "id": "T-022",
+      "title": "Frontend: wire multi-session-aware open into ProfilesPage",
+      "completed_date": "2026-09-23",
+      "session_ref": "S-006",
+      "notes": "User noticed T-021 only covered AccountsPage, not Profiles (they have separate, independent 'Open AWS Console' actions/handlers). Added handleOpenMultiSessionConsole in ProfilesPage.tsx (TDD-first: RED confirmed twice — once via a flawed test using screen.findByTitle, which hangs under this file's vi.useFakeTimers() setup and times out for the wrong mechanical reason; fixed the test to use vi.waitFor like the file's other tests, then re-verified a clean 'element not found' RED before re-implementing) and a matching button (Layers icon, same title as AccountsPage's) next to 'Open AWS Console' in the profile-actions row, calling open_aws_console_multi_session with the profile's resolved session token. All green: 10/10 vitest, tsc/eslint/prettier clean."
+    },
     {
       "id": "T-021",
       "title": "Frontend: wire multi-session-aware open into AccountsPage",

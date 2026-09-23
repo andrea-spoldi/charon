@@ -7,7 +7,7 @@
 
   "current_session": {
     "id": "S-006",
-    "goal": "T-014 and T-016 done (isolated-console backend command + frontend action). Remaining: T-015 (likely redundant, needs confirm/cancel), T-017 (settings), T-018 (more tests), T-019 (stretch cleanup).",
+    "goal": "T-014, T-016, T-017 done (isolated-console backend command, frontend action, Chrome location setting). T-018 test coverage already satisfied along the way. Remaining: T-015 (likely redundant, needs confirm/cancel), T-019 (stretch cleanup).",
     "task_ref": null,
     "started": "2026-09-22",
     "status": "in-progress",
@@ -45,10 +45,10 @@
     {
       "id": "T-017",
       "title": "Settings: default browser/isolation strategy",
-      "description": "Settings UI to pick the isolation strategy (default single-session browser vs. per-account isolated Chrome profiles) and fall back gracefully with a clear message when the required browser (e.g. Chrome) isn't installed.",
+      "description": "Settings UI to pick the isolation strategy (default single-session browser vs. per-account isolated Chrome profiles) and fall back gracefully with a clear message when the required browser (e.g. Chrome) isn't installed. NARROWED at user's request to just a configurable Chrome location (see T-017 in completed[]) rather than a full strategy toggle; the graceful-fallback message still applies whether or not Chrome is found.",
       "size": "S",
       "priority": 4,
-      "status": "pending",
+      "status": "done",
       "tags": ["frontend", "settings", "multi-session-console"]
     },
     {
@@ -57,7 +57,7 @@
       "description": "Rust unit tests for the new command's URL/profile-argument construction (mirror existing get_role_credentials/open_aws_console test style), and a Vitest test for the new frontend 'open in new session' action.",
       "size": "S",
       "priority": 5,
-      "status": "pending",
+      "status": "done",
       "tags": ["testing", "multi-session-console"]
     },
     {
@@ -121,6 +121,13 @@
   ],
 
   "completed": [
+    {
+      "id": "T-017",
+      "title": "Settings: configurable Google Chrome location for isolated console sessions",
+      "completed_date": "2026-09-23",
+      "session_ref": "S-006",
+      "notes": "Triggered by user hitting 'requires Google Chrome, which is not found at the expected install location' testing T-014 locally (Chrome installed at a non-default path). Added AppSettings.chrome_path (src-tauri/src/commands/settings.rs) with #[serde(default)] so existing settings.json files without the field still deserialize (verified with a dedicated backward-compat test, not just the happy path) instead of silently resetting ALL settings to defaults on load. Added resolve_chrome_path_override()/resolve_chrome_path() in accounts.rs, mirroring the existing aws_cli_path/resolve_aws_cli override convention exactly (empty string = auto-detect, non-empty = trust the configured path outright, no existence check). Added a 'Google Chrome Location' field in SettingsPage.tsx next to AWS CLI Path. TDD throughout: settings roundtrip/backward-compat tests, resolve_chrome_path_override unit tests, and a new SettingsPage.test.tsx (page had no test file before). NARROWED from the original T-017 backlog description (see backlog[] T-017) — just the location override, not a full isolation-strategy toggle, per direct user request. All green: 38/38 cargo tests, 10/10 vitest, clippy/tsc/eslint/prettier clean."
+    },
     {
       "id": "T-016",
       "title": "Frontend: 'Open in new session' action for accounts/profiles",

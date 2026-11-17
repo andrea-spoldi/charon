@@ -102,10 +102,7 @@ export interface TunnelConfig {
 
 // Active tunnel status
 export type TunnelStatus =
-  | "connecting"
-  | "connected"
-  | "disconnected"
-  | "error";
+  "connecting" | "connected" | "disconnected" | "error";
 
 // Active tunnel runtime state
 export interface ActiveTunnel {
@@ -123,9 +120,4 @@ export interface ActiveTunnel {
 
 // Navigation pages
 export type Page =
-  | "accounts"
-  | "sessions"
-  | "profiles"
-  | "settings"
-  | "tunnels"
-  | "shell";
+  "accounts" | "sessions" | "profiles" | "settings" | "tunnels" | "shell";

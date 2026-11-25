@@ -9,36 +9,22 @@
     "goal": "Auto-start (Play) the default profile after a successful SSO session login, gated by an opt-in Settings toggle (default off).",
     "task_ref": null,
     "started": "2026-11-25",
-    "status": "in-progress",
-    "blocker": null
+    "status": "closed",
+    "blocker": null,
+    "ended": "2026-11-25",
+    "summary": "Shipped opt-in auto-start of the default profile after SSO login (T-024..T-027) on branch feat/auto-start-default-profile; PR opened."
   },
   "backlog": [
     {
-      "id": "T-024",
-      "title": "Backend + Settings UI: add AppSettings.auto_start_default_profile toggle (default off)",
-      "description": "#[serde(default)] bool in settings.rs with Rust tests for default/backward-compat; checkbox + hint in SettingsPage.tsx with test. Mirrors the multi_session_console pattern (D-007).",
+      "id": "T-028",
+      "title": "Fix full `pnpm lint` exiting 1 with no output",
+      "description": "On main and this branch, `pnpm lint` (full-repo ESLint) exits 1 silently, likely an OOM/crash; ESLint on individual files is clean. Find the cause (e.g. a large ignored dir being linted, missing ignores) and make `make lint` reliable again.",
       "size": "S",
       "priority": 1,
-      "status": "done",
+      "status": "pending",
       "tags": [
-        "backend",
-        "frontend",
-        "settings",
-        "auto-start-default"
-      ]
-    },
-    {
-      "id": "T-025",
-      "title": "Lift per-profile credential expiry tracking out of ProfilesPage so other pages can register a started profile",
-      "description": "expirations state + applyCredentials currently live inside ProfilesPage, so a profile Played from elsewhere would show Play (not Stop) and never auto-refresh (see T-011). Move to a shared hook/context owned by App.tsx; no behavior change, existing ProfilesPage tests must stay green.",
-      "size": "S",
-      "priority": 2,
-      "status": "done",
-      "tags": [
-        "frontend",
-        "react",
-        "refactor",
-        "auto-start-default"
+        "tooling",
+        "lint"
       ]
     }
   ],

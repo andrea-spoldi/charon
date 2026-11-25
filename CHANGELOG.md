@@ -1,3 +1,18 @@
+## [0.18.0](https://github.com/andrea-spoldi/charon/compare/v0.17.0...v0.18.0) (2026-11-25)
+
+### 🚀 Features
+
+* **sessions:** auto-start default profile after SSO login ([228151b](https://github.com/andrea-spoldi/charon/commit/228151b63a8703ff5aedd99578f5adb3b4fca817))
+* **settings:** add auto-start default profile toggle ([7234edf](https://github.com/andrea-spoldi/charon/commit/7234edf317ab32445abded444d8eff4743c7d642))
+
+### 🐛 Bug Fixes
+
+* **statusbar:** clear profile tracking on stop all sessions ([7b658ab](https://github.com/andrea-spoldi/charon/commit/7b658ab70f717b407758e50e16a2152b8308d661))
+
+### ♻️ Code Refactoring
+
+* **profiles:** lift credential tracking into app-level hook ([ca41a8d](https://github.com/andrea-spoldi/charon/commit/ca41a8decf55a28750e8e362f717f6b26abdb129))
+
 ## [0.17.0](https://github.com/andrea-spoldi/charon/compare/v0.16.0...v0.17.0) (2026-09-23)
 
 ### 🚀 Features

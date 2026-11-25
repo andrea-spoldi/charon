@@ -94,6 +94,7 @@ const settings: AppSettings = {
   refresh_interval_secs: 1,
   session_timeout_hours: 8,
   multi_session_console: false,
+  auto_start_default_profile: false,
 };
 
 describe("ProfilesPage auto-refresh", () => {

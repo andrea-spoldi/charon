@@ -3,56 +3,58 @@
 ```json
 {
   "project": "charon",
-  "updated": "2026-09-23",
-
+  "updated": "2026-11-25",
   "current_session": {
-    "id": "S-006",
-    "goal": "T-020/T-021/T-022/T-023 done: multi-session console support, now consolidated to one icon per row driven by a Settings opt-in toggle (default off). User confirmed the earlier two-button version worked live on Accounts; this build not yet tested live.",
-    "task_ref": null,
-    "started": "2026-09-22",
+    "id": "S-007",
+    "goal": "Auto-start (Play) the default profile after a successful SSO session login, gated by an opt-in Settings toggle (default off).",
+    "task_ref": "T-025",
+    "started": "2026-11-25",
     "status": "in-progress",
     "blocker": null
   },
-
   "backlog": [
     {
-      "id": "T-020",
-      "title": "Backend: multi-session-aware AWS console open command",
-      "description": "New command that opens the plain federation login URL without the OAuth-logout-redirect wrapper open_aws_console uses, so it doesn't fight AWS's native multi-session cookie scheme (see D-006). Reuses get_signin_token/build_login_url extraction pattern.",
+      "id": "T-024",
+      "title": "Backend + Settings UI: add AppSettings.auto_start_default_profile toggle (default off)",
+      "description": "#[serde(default)] bool in settings.rs with Rust tests for default/backward-compat; checkbox + hint in SettingsPage.tsx with test. Mirrors the multi_session_console pattern (D-007).",
       "size": "S",
       "priority": 1,
       "status": "done",
-      "tags": ["backend", "rust", "multi-session-console"]
+      "tags": [
+        "backend",
+        "frontend",
+        "settings",
+        "auto-start-default"
+      ]
     },
     {
-      "id": "T-021",
-      "title": "Frontend: wire multi-session-aware open into AccountsPage",
-      "description": "Replace or add alongside the existing 'Open AWS Console' action; user must opt in to multi-session once per browser via AWS's own account menu (out of app scope), after which each additional account opened via this command should stack rather than replace.",
+      "id": "T-025",
+      "title": "Lift per-profile credential expiry tracking out of ProfilesPage so other pages can register a started profile",
+      "description": "expirations state + applyCredentials currently live inside ProfilesPage, so a profile Played from elsewhere would show Play (not Stop) and never auto-refresh (see T-011). Move to a shared hook/context owned by App.tsx; no behavior change, existing ProfilesPage tests must stay green.",
       "size": "S",
       "priority": 2,
-      "status": "done",
-      "tags": ["frontend", "react", "multi-session-console"]
+      "status": "pending",
+      "tags": [
+        "frontend",
+        "react",
+        "refactor",
+        "auto-start-default"
+      ]
     },
     {
-      "id": "T-022",
-      "title": "Frontend: wire multi-session-aware open into ProfilesPage",
-      "description": "ProfilesPage has its own separate 'Open AWS Console' action (handleOpenConsole, calling open_aws_console) distinct from AccountsPage's — T-021 only covered AccountsPage. Add the same 'Open in a multi-session tab' action there too.",
+      "id": "T-026",
+      "title": "Auto-Play the default profile after successful SSO login when the setting is on",
+      "description": "In SessionsPage handleLogin success path: if settings.auto_start_default_profile and the default profile's sso_session === the logged-in session, call configure_cli_credentials via the shared tracker (T-025) so the row shows Stop and auto-refresh applies. Failure is surfaced as a toast, never blocks login. Tests: fires when on + matching session; skipped when off, no default, or different session.",
       "size": "S",
       "priority": 3,
-      "status": "done",
-      "tags": ["frontend", "react", "multi-session-console"]
-    },
-    {
-      "id": "T-023",
-      "title": "Consolidate single/multi-session console buttons into one Settings-driven toggle",
-      "description": "T-021/T-022 shipped two separate icons per account/profile (plain 'Open AWS Console' + a second 'multi-session tab' button). User flagged the two-icon UX as confusing and asked for one icon instead, driven by an opt-in Settings toggle that defaults to off (today's single-session behavior) and explains the AWS-side opt-in + cookie/400-error tradeoff when turned on.",
-      "size": "S",
-      "priority": 4,
-      "status": "done",
-      "tags": ["frontend", "backend", "settings", "multi-session-console"]
+      "status": "pending",
+      "tags": [
+        "frontend",
+        "react",
+        "auto-start-default"
+      ]
     }
   ],
-
   "housekeeping": [
     {
       "date": "2026-07-14",
@@ -65,10 +67,20 @@
     {
       "date": "2026-09-23",
       "notes": "Abandoned feat/isolated-console-sessions (T-014/T-016/T-017/T-018, pushed to origin but not merged, user will discard the branch): built per-account isolated Chrome profiles for concurrent console sessions, but live testing showed each isolated profile is a genuinely bare, unpersonalized Chrome instance (no bookmarks/extensions/passwords/theme/Google sign-in) — usable but not practical. Pivoted to AWS's native multi-session console support (see D-006) on a fresh branch (feat/multi-session-console) off main; this TASKS.md entry restarts the backlog accordingly (T-020/T-021), since the old branch's TASKS.md updates live only on that unmerged branch."
+    },
+    {
+      "date": "2026-11-25",
+      "notes": "Closed S-006 at session start (S-007): T-020..T-023 all done and shipped (multi-session console, released in 0.17.0); the record had been left 'in-progress'."
     }
   ],
-
   "decisions": [
+    {
+      "id": "D-008",
+      "date": "2026-11-25",
+      "decision": "'Session initiated' = a successful SSO device-auth login in SessionsPage (not app launch). Auto-start only the default profile, only when it belongs to the session that just logged in, behind AppSettings.auto_start_default_profile (default off).",
+      "rationale": "User choice at S-007 start. Default-off keeps today's behavior unchanged; matching on sso_session avoids writing credentials for a profile whose session isn't the one just authenticated.",
+      "supersedes": null
+    },
     {
       "id": "D-007",
       "date": "2026-09-23",
@@ -119,8 +131,14 @@
       "supersedes": null
     }
   ],
-
   "completed": [
+    {
+      "id": "T-024",
+      "title": "Backend + Settings UI: add AppSettings.auto_start_default_profile toggle (default off)",
+      "completed_date": "2026-11-25",
+      "session_ref": "S-007",
+      "notes": "Added #[serde(default)] auto_start_default_profile to AppSettings (settings.rs) + backward-compat deserialization test; 'Auto-start default profile after SSO login' checkbox in SettingsPage.tsx; field added to types.ts, App.tsx/SettingsPage defaults and test fixtures. TDD: Rust and vitest RED verified before implementing. Also converted assert_eq!(x, bool) to assert! in settings.rs and tunnels.rs:924 — clippy 1.95 bool_assert_comparison was already failing on main. 14/14 vitest, 32/32 cargo, clippy/fmt/tsc/prettier clean; eslint clean on changed files (full `pnpm lint` exits 1 silently on main too — pre-existing, likely OOM)."
+    },
     {
       "id": "T-023",
       "title": "Consolidate single/multi-session console buttons into one Settings-driven toggle",

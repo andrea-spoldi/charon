@@ -10,6 +10,7 @@ const initialSettings: AppSettings = {
   refresh_interval_secs: 30,
   session_timeout_hours: 8,
   multi_session_console: false,
+  auto_start_default_profile: false,
 };
 
 let savedSettings: AppSettings | null;
@@ -43,5 +44,27 @@ describe("SettingsPage multi-session console toggle", () => {
 
     await waitFor(() => expect(savedSettings).not.toBeNull());
     expect(savedSettings?.multi_session_console).toBe(true);
+  });
+});
+
+describe("SettingsPage auto-start default profile toggle", () => {
+  beforeEach(() => {
+    savedSettings = null;
+  });
+
+  it("defaults to off and saves true once enabled", async () => {
+    render(<SettingsPage />);
+
+    const checkbox = await screen.findByLabelText(
+      "Auto-start default profile after SSO login",
+    );
+    expect(checkbox).not.toBeChecked();
+
+    fireEvent.click(checkbox);
+    fireEvent.click(screen.getByText("Save Settings"));
+
+    await waitFor(() => expect(savedSettings).not.toBeNull());
+    expect(savedSettings?.auto_start_default_profile).toBe(true);
+    expect(savedSettings?.multi_session_console).toBe(false);
   });
 });

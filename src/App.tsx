@@ -26,6 +26,7 @@ function App() {
     refresh_interval_secs: 30,
     session_timeout_hours: 8,
     multi_session_console: false,
+    auto_start_default_profile: false,
   });
   const { status: ssoStatus, refresh: refreshSsoStatus } = useSsoStatus();
   const {

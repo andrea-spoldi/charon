@@ -7,7 +7,7 @@
   "current_session": {
     "id": "S-007",
     "goal": "Auto-start (Play) the default profile after a successful SSO session login, gated by an opt-in Settings toggle (default off).",
-    "task_ref": "T-026",
+    "task_ref": "T-027",
     "started": "2026-11-25",
     "status": "in-progress",
     "blocker": null
@@ -42,19 +42,6 @@
       ]
     },
     {
-      "id": "T-026",
-      "title": "Auto-Play the default profile after successful SSO login when the setting is on",
-      "description": "In SessionsPage handleLogin success path: if settings.auto_start_default_profile and the default profile's sso_session === the logged-in session, call configure_cli_credentials via the shared tracker (T-025) so the row shows Stop and auto-refresh applies. Failure is surfaced as a toast, never blocks login. Tests: fires when on + matching session; skipped when off, no default, or different session.",
-      "size": "S",
-      "priority": 3,
-      "status": "pending",
-      "tags": [
-        "frontend",
-        "react",
-        "auto-start-default"
-      ]
-    },
-    {
       "id": "T-027",
       "title": "StatusBar 'stop all sessions' must also clear app-level profile tracking",
       "description": "App.tsx onStopAllSessions calls stop_all_sessions but never untracks profiles in useProfileCredentials, so rows keep showing Stop and the auto-refresh loop can rewrite the just-stopped credentials. Pre-existing (same when tracking lived in ProfilesPage); now cheap to fix: add untrackAll() to the hook and call it there. Needs a regression test.",
@@ -80,7 +67,7 @@
     },
     {
       "date": "2026-09-23",
-      "notes": "Abandoned feat/isolated-console-sessions (T-014/T-016/T-017/T-018, pushed to origin but not merged, user will discard the branch): built per-account isolated Chrome profiles for concurrent console sessions, but live testing showed each isolated profile is a genuinely bare, unpersonalized Chrome instance (no bookmarks/extensions/passwords/theme/Google sign-in) — usable but not practical. Pivoted to AWS's native multi-session console support (see D-006) on a fresh branch (feat/multi-session-console) off main; this TASKS.md entry restarts the backlog accordingly (T-020/T-021), since the old branch's TASKS.md updates live only on that unmerged branch."
+      "notes": "Abandoned feat/isolated-console-sessions (T-014/T-016/T-017/T-018, pushed to origin but not merged, user will discard the branch): built per-account isolated Chrome profiles for concurrent console sessions, but live testing showed each isolated profile is a genuinely bare, unpersonalized Chrome instance (no bookmarks/extensions/passwords/theme/Google sign-in) \u2014 usable but not practical. Pivoted to AWS's native multi-session console support (see D-006) on a fresh branch (feat/multi-session-console) off main; this TASKS.md entry restarts the backlog accordingly (T-020/T-021), since the old branch's TASKS.md updates live only on that unmerged branch."
     },
     {
       "date": "2026-11-25",
@@ -99,21 +86,21 @@
       "id": "D-007",
       "date": "2026-09-23",
       "decision": "Replace the two separate console-open buttons (T-021/T-022) with one icon per account/profile, routed by a single AppSettings.multi_session_console boolean (default false = today's single-session behavior).",
-      "rationale": "User found two icons per row confusing and asked for a Settings-driven opt-in instead: one button whose behavior (and title text) reflects the current mode, with the tradeoff — needing to also enable multi-session in the AWS Console UI, that it's a per-browser cookie, and that leaving it on while this setting is off reproduces the D-006 400-error bug — explained in the Settings hint text rather than needing two buttons to convey.",
+      "rationale": "User found two icons per row confusing and asked for a Settings-driven opt-in instead: one button whose behavior (and title text) reflects the current mode, with the tradeoff \u2014 needing to also enable multi-session in the AWS Console UI, that it's a per-browser cookie, and that leaving it on while this setting is off reproduces the D-006 400-error bug \u2014 explained in the Settings hint text rather than needing two buttons to convey.",
       "supersedes": null
     },
     {
       "id": "D-006",
       "date": "2026-09-23",
       "decision": "Support concurrent multi-account AWS console sessions via AWS's native multi-session feature (opt-in per browser, Jan 2025) instead of isolated OS browser profiles. Supersedes D-005.",
-      "rationale": "D-005's isolated-Chrome-profile approach (feat/isolated-console-sessions) worked mechanically but produced a bare, unpersonalized browser window per account — user found it impractical in live testing. AWS's native multi-session support (docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/multisession.html) lets up to 5 identities, including IAM Identity Center federated roles, stay signed in concurrently in ONE regular browser via the account-name menu, once the user opts in per-browser. User confirmed in live testing that open_aws_console's existing OAuth-logout-redirect wrapper actively conflicts with this: opening a second account via Charon after enabling multi-session threw a 400 error and left the browser unable to sign in to any console until cookies were cleared. The fix is to stop forcing that logout redirect for a new multi-session-aware open path, letting AWS's own session menu decide whether to add or replace.",
+      "rationale": "D-005's isolated-Chrome-profile approach (feat/isolated-console-sessions) worked mechanically but produced a bare, unpersonalized browser window per account \u2014 user found it impractical in live testing. AWS's native multi-session support (docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/multisession.html) lets up to 5 identities, including IAM Identity Center federated roles, stay signed in concurrently in ONE regular browser via the account-name menu, once the user opts in per-browser. User confirmed in live testing that open_aws_console's existing OAuth-logout-redirect wrapper actively conflicts with this: opening a second account via Charon after enabling multi-session threw a 400 error and left the browser unable to sign in to any console until cookies were cleared. The fix is to stop forcing that logout redirect for a new multi-session-aware open path, letting AWS's own session menu decide whether to add or replace.",
       "supersedes": "D-005"
     },
     {
       "id": "D-005",
       "date": "2026-09-22",
       "decision": "SUPERSEDED by D-006. (Original: multi-account concurrent AWS console sessions would use per-account isolated OS browser profiles, not multiple tabs/windows in one browser profile.)",
-      "rationale": "Superseded — see D-006 for why.",
+      "rationale": "Superseded \u2014 see D-006 for why.",
       "supersedes": null
     },
     {
@@ -158,21 +145,21 @@
       "title": "Backend + Settings UI: add AppSettings.auto_start_default_profile toggle (default off)",
       "completed_date": "2026-11-25",
       "session_ref": "S-007",
-      "notes": "Added #[serde(default)] auto_start_default_profile to AppSettings (settings.rs) + backward-compat deserialization test; 'Auto-start default profile after SSO login' checkbox in SettingsPage.tsx; field added to types.ts, App.tsx/SettingsPage defaults and test fixtures. TDD: Rust and vitest RED verified before implementing. Also converted assert_eq!(x, bool) to assert! in settings.rs and tunnels.rs:924 — clippy 1.95 bool_assert_comparison was already failing on main. 14/14 vitest, 32/32 cargo, clippy/fmt/tsc/prettier clean; eslint clean on changed files (full `pnpm lint` exits 1 silently on main too — pre-existing, likely OOM)."
+      "notes": "Added #[serde(default)] auto_start_default_profile to AppSettings (settings.rs) + backward-compat deserialization test; 'Auto-start default profile after SSO login' checkbox in SettingsPage.tsx; field added to types.ts, App.tsx/SettingsPage defaults and test fixtures. TDD: Rust and vitest RED verified before implementing. Also converted assert_eq!(x, bool) to assert! in settings.rs and tunnels.rs:924 \u2014 clippy 1.95 bool_assert_comparison was already failing on main. 14/14 vitest, 32/32 cargo, clippy/fmt/tsc/prettier clean; eslint clean on changed files (full `pnpm lint` exits 1 silently on main too \u2014 pre-existing, likely OOM)."
     },
     {
       "id": "T-023",
       "title": "Consolidate single/multi-session console buttons into one Settings-driven toggle",
       "completed_date": "2026-09-23",
       "session_ref": "S-006",
-      "notes": "Added AppSettings.multi_session_console (settings.rs, #[serde(default)] for backward compat) and a 'Use AWS multi-session for Open AWS Console' checkbox in SettingsPage.tsx explaining the AWS-side opt-in, that it's a browser cookie, and the 400-error tradeoff if left mismatched. Removed the separate Layers-icon multi-session buttons/handlers from AccountsPage.tsx and ProfilesPage.tsx; the single existing 'Open AWS Console' button/handler in each now picks open_aws_console vs open_aws_console_multi_session based on settings.multi_session_console, with its title changing to 'Open AWS Console (multi-session)' when on. TDD throughout (Rust settings tests, SettingsPage/AccountsPage/ProfilesPage test updates — all re-verified with clean RED before implementing). All green: 13/13 vitest, 31/31 cargo tests, clippy/tsc/eslint/prettier clean. No backend change needed to either open_aws_console command — purely a frontend routing decision."
+      "notes": "Added AppSettings.multi_session_console (settings.rs, #[serde(default)] for backward compat) and a 'Use AWS multi-session for Open AWS Console' checkbox in SettingsPage.tsx explaining the AWS-side opt-in, that it's a browser cookie, and the 400-error tradeoff if left mismatched. Removed the separate Layers-icon multi-session buttons/handlers from AccountsPage.tsx and ProfilesPage.tsx; the single existing 'Open AWS Console' button/handler in each now picks open_aws_console vs open_aws_console_multi_session based on settings.multi_session_console, with its title changing to 'Open AWS Console (multi-session)' when on. TDD throughout (Rust settings tests, SettingsPage/AccountsPage/ProfilesPage test updates \u2014 all re-verified with clean RED before implementing). All green: 13/13 vitest, 31/31 cargo tests, clippy/tsc/eslint/prettier clean. No backend change needed to either open_aws_console command \u2014 purely a frontend routing decision."
     },
     {
       "id": "T-022",
       "title": "Frontend: wire multi-session-aware open into ProfilesPage",
       "completed_date": "2026-09-23",
       "session_ref": "S-006",
-      "notes": "User noticed T-021 only covered AccountsPage, not Profiles (they have separate, independent 'Open AWS Console' actions/handlers). Added handleOpenMultiSessionConsole in ProfilesPage.tsx (TDD-first: RED confirmed twice — once via a flawed test using screen.findByTitle, which hangs under this file's vi.useFakeTimers() setup and times out for the wrong mechanical reason; fixed the test to use vi.waitFor like the file's other tests, then re-verified a clean 'element not found' RED before re-implementing) and a matching button (Layers icon, same title as AccountsPage's) next to 'Open AWS Console' in the profile-actions row, calling open_aws_console_multi_session with the profile's resolved session token. All green: 10/10 vitest, tsc/eslint/prettier clean."
+      "notes": "User noticed T-021 only covered AccountsPage, not Profiles (they have separate, independent 'Open AWS Console' actions/handlers). Added handleOpenMultiSessionConsole in ProfilesPage.tsx (TDD-first: RED confirmed twice \u2014 once via a flawed test using screen.findByTitle, which hangs under this file's vi.useFakeTimers() setup and times out for the wrong mechanical reason; fixed the test to use vi.waitFor like the file's other tests, then re-verified a clean 'element not found' RED before re-implementing) and a matching button (Layers icon, same title as AccountsPage's) next to 'Open AWS Console' in the profile-actions row, calling open_aws_console_multi_session with the profile's resolved session token. All green: 10/10 vitest, tsc/eslint/prettier clean."
     },
     {
       "id": "T-021",
@@ -186,14 +173,14 @@
       "title": "Backend: multi-session-aware AWS console open command",
       "completed_date": "2026-09-23",
       "session_ref": "S-006",
-      "notes": "Added open_aws_console_multi_session in src-tauri/src/commands/accounts.rs, registered in lib.rs. Extracted get_signin_token()/build_login_url() out of open_aws_console (same refactor as the abandoned isolated-profile branch, redone here since this branch started fresh off main), with no behavior change to open_aws_console. The new command does exactly what open_aws_console does minus the final OAuth-logout-redirect wrap — see D-006 for why that wrapper is the actual bug the user hit. TDD: build_login_url unit test (RED verified before extracting). All green: 30/30 cargo tests, clippy clean."
+      "notes": "Added open_aws_console_multi_session in src-tauri/src/commands/accounts.rs, registered in lib.rs. Extracted get_signin_token()/build_login_url() out of open_aws_console (same refactor as the abandoned isolated-profile branch, redone here since this branch started fresh off main), with no behavior change to open_aws_console. The new command does exactly what open_aws_console does minus the final OAuth-logout-redirect wrap \u2014 see D-006 for why that wrapper is the actual bug the user hit. TDD: build_login_url unit test (RED verified before extracting). All green: 30/30 cargo tests, clippy clean."
     },
     {
       "id": "T-013",
       "title": "Document design system (PRODUCT.md, DESIGN.md) and harden accessibility, contrast, and nav",
       "completed_date": "2026-09-16",
       "session_ref": null,
-      "notes": "Commit 1c368a1, released as v0.15.0/v0.16.0 (not logged at the time — backfilled 2026-09-22). Added PRODUCT.md + DESIGN.md + .impeccable/design.json sidecar documenting the 'Operator's Console' VS Code Dark+-derived visual system. Fixed WCAG AA contrast failures (-onprose text-safe variants for Muted Text/Editor Blue/Danger Red; fixed undefined --color-text-muted breaking the SSO token badge color). Added aria-live toast region, aria-labels on icon-only buttons, per-page <h1>, aria-current on active nav, prefers-reduced-motion fallbacks. Recompressed background asset 3.1MB PNG -> 346KB JPEG. Pinned tauri.conf.json minWidth/minHeight (900x600). Normalized stray font-size/radius/color one-offs into CSS variables. Reordered sidebar nav to match real usage (Sessions, Profiles, Accounts, Tunnels, Shell, Settings) and defaulted app to Sessions on launch. Fixed a vitest localStorage mock bug (Node's native stub was shadowing jsdom's, silently failing all App.test.tsx assertions)."
+      "notes": "Commit 1c368a1, released as v0.15.0/v0.16.0 (not logged at the time \u2014 backfilled 2026-09-22). Added PRODUCT.md + DESIGN.md + .impeccable/design.json sidecar documenting the 'Operator's Console' VS Code Dark+-derived visual system. Fixed WCAG AA contrast failures (-onprose text-safe variants for Muted Text/Editor Blue/Danger Red; fixed undefined --color-text-muted breaking the SSO token badge color). Added aria-live toast region, aria-labels on icon-only buttons, per-page <h1>, aria-current on active nav, prefers-reduced-motion fallbacks. Recompressed background asset 3.1MB PNG -> 346KB JPEG. Pinned tauri.conf.json minWidth/minHeight (900x600). Normalized stray font-size/radius/color one-offs into CSS variables. Reordered sidebar nav to match real usage (Sessions, Profiles, Accounts, Tunnels, Shell, Settings) and defaulted app to Sessions on launch. Fixed a vitest localStorage mock bug (Node's native stub was shadowing jsdom's, silently failing all App.test.tsx assertions)."
     },
     {
       "id": "T-008",
@@ -207,7 +194,7 @@
       "title": "Frontend: auto-refresh a profile's CLI credentials shortly before expiry, only if its SSO session is still active",
       "completed_date": "2026-07-14",
       "session_ref": "S-005",
-      "notes": "Added per-profile expirations state in ProfilesPage.tsx keyed by profile name, populated only from an explicit Play click via configure_cli_credentials' expiresAt (see T-011 fix — an initial 'seed from persisted session_active' effect was removed for over-reaching). Interval effect (paced by settings.refresh_interval_secs) reissues credentials via the shared applyCredentials() helper once within REFRESH_BUFFER_MS (5 min) of expiry, but only if resolveSessionToken() reports the profile's SSO session status is still 'active' — otherwise it's a silent no-op. Also removed the old single default-profile-only expiration tracking (App.tsx effect + StatusBar 'Profile Expires' text), which only ever reflected the default profile regardless of which profiles were actually active; StatusBar's stop-all button now gates on hasActiveSessions instead."
+      "notes": "Added per-profile expirations state in ProfilesPage.tsx keyed by profile name, populated only from an explicit Play click via configure_cli_credentials' expiresAt (see T-011 fix \u2014 an initial 'seed from persisted session_active' effect was removed for over-reaching). Interval effect (paced by settings.refresh_interval_secs) reissues credentials via the shared applyCredentials() helper once within REFRESH_BUFFER_MS (5 min) of expiry, but only if resolveSessionToken() reports the profile's SSO session status is still 'active' \u2014 otherwise it's a silent no-op. Also removed the old single default-profile-only expiration tracking (App.tsx effect + StatusBar 'Profile Expires' text), which only ever reflected the default profile regardless of which profiles were actually active; StatusBar's stop-all button now gates on hasActiveSessions instead."
     },
     {
       "id": "T-010",
@@ -221,14 +208,14 @@
       "title": "Fix bug: visiting Profiles auto-fetched/refreshed credentials for ALL saved profiles, not just ones Played this session",
       "completed_date": "2026-07-14",
       "session_ref": "S-005",
-      "notes": "Root cause: T-009's seeding effect scanned profiles.session_active (a flag persisted forever once a profile is Played, only cleared by an explicit Stop) to resurrect expiry-tracking on every ProfilesPage mount. Any profile ever Played and not explicitly Stopped — plausibly most/all saved profiles in daily use — got swept into get_role_credentials fetches and, subsequently, periodic configure_cli_credentials writes to ~/.aws/credentials. Fix: removed the seeding effect entirely; expirations (and therefore auto-refresh eligibility) is now populated only by an explicit Play click in the current running session. Tradeoff: after an app restart, a profile won't auto-refresh until Played again in that session, even if its Stop button still shows session_active from before. Added a regression test in ProfilesPage.test.tsx that fails on the old seeding-effect code and passes on the fix (verified both ways before committing). Follow-up in the same task: the profile-row Play/Stop icon was still driven by the stale persisted session_active flag directly, so a profile Played in a prior run (and not Stopped) kept showing the Stop (square) icon after restart even though it was no longer tracked/auto-refreshed. Switched the icon condition (and the now-redundant session_active checks on the credential badges and the auto-refresh interval) to key off expirations[profile.name] != null instead, so the icon accurately reflects in-session tracking state. Verified this specific regression the same way (test fails on session_active-based condition, passes on expirations-based one)."
+      "notes": "Root cause: T-009's seeding effect scanned profiles.session_active (a flag persisted forever once a profile is Played, only cleared by an explicit Stop) to resurrect expiry-tracking on every ProfilesPage mount. Any profile ever Played and not explicitly Stopped \u2014 plausibly most/all saved profiles in daily use \u2014 got swept into get_role_credentials fetches and, subsequently, periodic configure_cli_credentials writes to ~/.aws/credentials. Fix: removed the seeding effect entirely; expirations (and therefore auto-refresh eligibility) is now populated only by an explicit Play click in the current running session. Tradeoff: after an app restart, a profile won't auto-refresh until Played again in that session, even if its Stop button still shows session_active from before. Added a regression test in ProfilesPage.test.tsx that fails on the old seeding-effect code and passes on the fix (verified both ways before committing). Follow-up in the same task: the profile-row Play/Stop icon was still driven by the stale persisted session_active flag directly, so a profile Played in a prior run (and not Stopped) kept showing the Stop (square) icon after restart even though it was no longer tracked/auto-refreshed. Switched the icon condition (and the now-redundant session_active checks on the credential badges and the auto-refresh interval) to key off expirations[profile.name] != null instead, so the icon accurately reflects in-session tracking state. Verified this specific regression the same way (test fails on session_active-based condition, passes on expirations-based one)."
     },
     {
       "id": "T-012",
       "title": "Revert an abandoned profile to Play once its credentials actually expire without being refreshed",
       "completed_date": "2026-07-15",
       "session_ref": "S-005",
-      "notes": "Edge case: if a profile's SSO session dies before its STS credentials do, the auto-refresh loop correctly no-ops (per spec), but expirations[name] stayed set until an explicit Stop — so the row kept showing Stop even after the credentials genuinely expired and stopped working, requiring an extra manual Stop-then-Play to recover. Added abandonExpiredProfile() in ProfilesPage.tsx: the auto-refresh interval now checks expiresAt <= now first: if a tracked profile's expiry has actually passed, it clears the expirations entry and best-effort calls stop_session to clean up the dead ~/.aws/credentials section, reverting the row to Play automatically. Added a regression test verified against the pre-fix code (fails without it, passes with it).",
+      "notes": "Edge case: if a profile's SSO session dies before its STS credentials do, the auto-refresh loop correctly no-ops (per spec), but expirations[name] stayed set until an explicit Stop \u2014 so the row kept showing Stop even after the credentials genuinely expired and stopped working, requiring an extra manual Stop-then-Play to recover. Added abandonExpiredProfile() in ProfilesPage.tsx: the auto-refresh interval now checks expiresAt <= now first: if a tracked profile's expiry has actually passed, it clears the expirations entry and best-effort calls stop_session to clean up the dead ~/.aws/credentials section, reverting the row to Play automatically. Added a regression test verified against the pre-fix code (fails without it, passes with it).",
       "commit": "pending"
     },
     {
@@ -279,6 +266,20 @@
       "completed_date": "2026-06-11",
       "session_ref": "S-004",
       "notes": "Added .releaserc.json, scripts/bump-version.mjs, .github/workflows/semantic-release.yml. Semantic-release auto-bumps 5 version files and pushes tags that trigger cargo-dist."
+    },
+    {
+      "id": "T-026",
+      "title": "Auto-Play the default profile after successful SSO login when the setting is on",
+      "description": "In SessionsPage handleLogin success path: if settings.auto_start_default_profile and the default profile's sso_session === the logged-in session, call configure_cli_credentials via the shared tracker (T-025) so the row shows Stop and auto-refresh applies. Failure is surfaced as a toast, never blocks login. Tests: fires when on + matching session; skipped when off, no default, or different session.",
+      "size": "S",
+      "priority": 3,
+      "status": "done",
+      "tags": [
+        "frontend",
+        "react",
+        "auto-start-default"
+      ],
+      "completed": "2026-11-25"
     }
   ]
 }

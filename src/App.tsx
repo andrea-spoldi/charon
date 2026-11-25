@@ -11,6 +11,7 @@ import { TunnelsPage } from "./pages/TunnelsPage";
 import { ShellPage } from "./pages/ShellPage";
 import { useSsoStatus } from "./hooks/useSsoStatus";
 import { useProfiles } from "./hooks/useProfiles";
+import { autoStartDefaultProfile } from "./hooks/autoStartDefaultProfile";
 import { useProfileCredentials } from "./hooks/useProfileCredentials";
 import { useAccounts } from "./hooks/useAccounts";
 import { useTunnels } from "./hooks/useTunnels";
@@ -82,6 +83,33 @@ function App() {
     }
   }, [ssoStatus.status, resetAccounts]);
 
+  // T-026 / D-008: optionally start the default profile after an SSO login.
+  // Never blocks or undoes the login; a failure only shows a toast.
+  const { start: startProfile } = profileCredentials;
+  const handleLoggedIn = useCallback(
+    async (sessionName: string) => {
+      try {
+        const started = await autoStartDefaultProfile({
+          sessionName,
+          enabled: settings.auto_start_default_profile,
+          start: startProfile,
+        });
+        if (started) {
+          addToast(`Started default profile "${started.name}"`, "success");
+          refreshProfiles();
+        }
+      } catch (err) {
+        addToast(`Could not auto-start the default profile: ${err}`, "error");
+      }
+    },
+    [
+      settings.auto_start_default_profile,
+      startProfile,
+      addToast,
+      refreshProfiles,
+    ],
+  );
+
   const refreshAccounts = useCallback(() => {
     fetchAllPortalAccounts();
   }, [fetchAllPortalAccounts]);
@@ -109,6 +137,7 @@ function App() {
             onRefresh={refreshProfiles}
             onStatusChange={refreshSsoStatus}
             onError={addToast}
+            onLoggedIn={handleLoggedIn}
           />
         );
       case "profiles":

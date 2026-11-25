@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, act, within } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
+import { useState } from "react";
 import { ProfilesPage } from "./ProfilesPage";
+import { useProfileCredentials } from "../hooks/useProfileCredentials";
 import type { AwsProfile, SsoTokenInfo, AppSettings } from "../types";
 
 const profile: AwsProfile = {
@@ -97,6 +99,39 @@ const settings: AppSettings = {
   auto_start_default_profile: false,
 };
 
+// Mirrors App.tsx: credential tracking lives above ProfilesPage, so it
+// survives ProfilesPage unmounting when the user navigates elsewhere.
+function Harness({
+  settings: harnessSettings,
+  showProfiles = true,
+}: {
+  settings: AppSettings;
+  showProfiles?: boolean;
+}) {
+  const credentials = useProfileCredentials({
+    ssoStatus,
+    settings: harnessSettings,
+  });
+  return showProfiles ? (
+    <ProfilesPage
+      ssoStatus={ssoStatus}
+      settings={harnessSettings}
+      credentials={credentials}
+      onError={() => {}}
+    />
+  ) : null;
+}
+
+function NavigableHarness() {
+  const [showProfiles, setShowProfiles] = useState(true);
+  return (
+    <>
+      <button onClick={() => setShowProfiles((v) => !v)}>toggle-nav</button>
+      <Harness settings={settings} showProfiles={showProfiles} />
+    </>
+  );
+}
+
 describe("ProfilesPage auto-refresh", () => {
   beforeEach(() => {
     profileState = { ...profile };
@@ -115,13 +150,7 @@ describe("ProfilesPage auto-refresh", () => {
   });
 
   it("auto-refreshes a profile's credentials before expiry while its SSO session is active", async () => {
-    render(
-      <ProfilesPage
-        ssoStatus={ssoStatus}
-        settings={settings}
-        onError={() => {}}
-      />,
-    );
+    render(<Harness settings={settings} />);
 
     await vi.waitFor(() =>
       expect(screen.getByTitle("Start CLI session")).toBeInTheDocument(),
@@ -141,13 +170,7 @@ describe("ProfilesPage auto-refresh", () => {
   });
 
   it("does not refresh a profile once its SSO session has expired", async () => {
-    render(
-      <ProfilesPage
-        ssoStatus={ssoStatus}
-        settings={settings}
-        onError={() => {}}
-      />,
-    );
+    render(<Harness settings={settings} />);
 
     await vi.waitFor(() =>
       expect(screen.getByTitle("Start CLI session")).toBeInTheDocument(),
@@ -172,13 +195,7 @@ describe("ProfilesPage auto-refresh", () => {
   it("never touches a profile that wasn't Played this session, even if its stored session_active flag is stale", async () => {
     profilesListState = [profileState, staleActiveProfile];
 
-    render(
-      <ProfilesPage
-        ssoStatus={ssoStatus}
-        settings={settings}
-        onError={() => {}}
-      />,
-    );
+    render(<Harness settings={settings} />);
 
     await vi.waitFor(() =>
       expect(screen.getByText(staleActiveProfile.name)).toBeInTheDocument(),
@@ -206,13 +223,7 @@ describe("ProfilesPage auto-refresh", () => {
   });
 
   it("reverts to Play once a tracked profile's credentials actually expire without being refreshed", async () => {
-    render(
-      <ProfilesPage
-        ssoStatus={ssoStatus}
-        settings={settings}
-        onError={() => {}}
-      />,
-    );
+    render(<Harness settings={settings} />);
 
     await vi.waitFor(() =>
       expect(screen.getByTitle("Start CLI session")).toBeInTheDocument(),
@@ -244,13 +255,7 @@ describe("ProfilesPage auto-refresh", () => {
   });
 
   it("calls open_aws_console (single-session, default) when multi_session_console is off", async () => {
-    render(
-      <ProfilesPage
-        ssoStatus={ssoStatus}
-        settings={settings}
-        onError={() => {}}
-      />,
-    );
+    render(<Harness settings={settings} />);
 
     await vi.waitFor(() =>
       expect(screen.getByTitle("Open AWS Console")).toBeInTheDocument(),
@@ -278,13 +283,7 @@ describe("ProfilesPage auto-refresh", () => {
       multi_session_console: true,
     };
 
-    render(
-      <ProfilesPage
-        ssoStatus={ssoStatus}
-        settings={multiSessionSettings}
-        onError={() => {}}
-      />,
-    );
+    render(<Harness settings={multiSessionSettings} />);
 
     await vi.waitFor(() =>
       expect(
@@ -306,5 +305,34 @@ describe("ProfilesPage auto-refresh", () => {
       sessionDurationSecs: multiSessionSettings.session_timeout_hours * 3600,
     });
     expect(singleSessionConsoleCalls.length).toBe(0);
+  });
+
+  it("keeps tracking and auto-refreshing a Played profile after navigating away from Profiles and back", async () => {
+    render(<NavigableHarness />);
+
+    await vi.waitFor(() =>
+      expect(screen.getByTitle("Start CLI session")).toBeInTheDocument(),
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByTitle("Start CLI session"));
+      await vi.waitFor(() => expect(configureCallCount).toBe(1));
+    });
+
+    // Navigate away: ProfilesPage unmounts.
+    fireEvent.click(screen.getByText("toggle-nav"));
+    expect(screen.queryByTitle("Stop CLI session")).not.toBeInTheDocument();
+
+    // Auto-refresh must keep running while ProfilesPage is not mounted.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1000);
+    });
+    await vi.waitFor(() => expect(configureCallCount).toBe(2));
+
+    // Navigate back: the row still shows Stop.
+    fireEvent.click(screen.getByText("toggle-nav"));
+    await vi.waitFor(() =>
+      expect(screen.getByTitle("Stop CLI session")).toBeInTheDocument(),
+    );
   });
 });

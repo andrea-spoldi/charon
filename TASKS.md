@@ -7,7 +7,7 @@
   "current_session": {
     "id": "S-007",
     "goal": "Auto-start (Play) the default profile after a successful SSO session login, gated by an opt-in Settings toggle (default off).",
-    "task_ref": "T-025",
+    "task_ref": "T-026",
     "started": "2026-11-25",
     "status": "in-progress",
     "blocker": null
@@ -33,7 +33,7 @@
       "description": "expirations state + applyCredentials currently live inside ProfilesPage, so a profile Played from elsewhere would show Play (not Stop) and never auto-refresh (see T-011). Move to a shared hook/context owned by App.tsx; no behavior change, existing ProfilesPage tests must stay green.",
       "size": "S",
       "priority": 2,
-      "status": "pending",
+      "status": "done",
       "tags": [
         "frontend",
         "react",
@@ -51,6 +51,20 @@
       "tags": [
         "frontend",
         "react",
+        "auto-start-default"
+      ]
+    },
+    {
+      "id": "T-027",
+      "title": "StatusBar 'stop all sessions' must also clear app-level profile tracking",
+      "description": "App.tsx onStopAllSessions calls stop_all_sessions but never untracks profiles in useProfileCredentials, so rows keep showing Stop and the auto-refresh loop can rewrite the just-stopped credentials. Pre-existing (same when tracking lived in ProfilesPage); now cheap to fix: add untrackAll() to the hook and call it there. Needs a regression test.",
+      "size": "S",
+      "priority": 4,
+      "status": "pending",
+      "tags": [
+        "frontend",
+        "react",
+        "bug",
         "auto-start-default"
       ]
     }
@@ -132,6 +146,13 @@
     }
   ],
   "completed": [
+    {
+      "id": "T-025",
+      "title": "Lift per-profile credential expiry tracking out of ProfilesPage so other pages can register a started profile",
+      "completed_date": "2026-11-25",
+      "session_ref": "S-007",
+      "notes": "New src/hooks/useProfileCredentials.ts (tracked {profile, expiresAt} map, derived expirations, now, start/stop/untrack/updateProfile, abandon-expired + auto-refresh interval, exported resolveSessionToken) owned by App.tsx and passed to ProfilesPage as a credentials prop. The hook stores a snapshot of each started profile so it doesn't depend on either useProfiles() instance (App's and ProfilesPage's diverge); ProfilesPage untracks on delete and updates the snapshot on save. Side effect (intended): since App only mounts the active page, tracking + auto-refresh used to be lost on navigating away from Profiles; it now persists. Tests: ProfilesPage tests now render via a Harness mirroring App; new navigation regression test, mutation-verified (fails when ProfilesPage owns its own tracker, passes with the lift). 15/15 vitest, tsc/prettier clean, eslint clean on changed files."
+    },
     {
       "id": "T-024",
       "title": "Backend + Settings UI: add AppSettings.auto_start_default_profile toggle (default off)",

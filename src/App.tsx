@@ -11,6 +11,7 @@ import { TunnelsPage } from "./pages/TunnelsPage";
 import { ShellPage } from "./pages/ShellPage";
 import { useSsoStatus } from "./hooks/useSsoStatus";
 import { useProfiles } from "./hooks/useProfiles";
+import { useProfileCredentials } from "./hooks/useProfileCredentials";
 import { useAccounts } from "./hooks/useAccounts";
 import { useTunnels } from "./hooks/useTunnels";
 import { useToast } from "./hooks/useToast";
@@ -45,6 +46,9 @@ function App() {
     fetchRoles,
     reset: resetAccounts,
   } = useAccounts();
+  // Lives here (not in ProfilesPage) so started profiles stay tracked and
+  // auto-refreshed while the user is on another page.
+  const profileCredentials = useProfileCredentials({ ssoStatus, settings });
   const tunnels = useTunnels();
   const { toasts, addToast, dismissToast } = useToast();
   const { fontSize, setFontSize } = useFontSize();
@@ -112,6 +116,7 @@ function App() {
           <ProfilesPage
             ssoStatus={ssoStatus}
             settings={settings}
+            credentials={profileCredentials}
             onError={addToast}
           />
         );

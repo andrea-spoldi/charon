@@ -215,7 +215,7 @@ function App() {
         hasActiveSessions={profiles.some((p) => p.session_active)}
         onStopAllSessions={async () => {
           try {
-            const msg = await invoke<string>("stop_all_sessions");
+            const msg = await profileCredentials.stopAll();
             refreshProfiles();
             addToast(msg, "info");
           } catch (err) {

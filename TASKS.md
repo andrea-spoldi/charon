@@ -7,7 +7,7 @@
   "current_session": {
     "id": "S-007",
     "goal": "Auto-start (Play) the default profile after a successful SSO session login, gated by an opt-in Settings toggle (default off).",
-    "task_ref": "T-027",
+    "task_ref": null,
     "started": "2026-11-25",
     "status": "in-progress",
     "blocker": null
@@ -38,20 +38,6 @@
         "frontend",
         "react",
         "refactor",
-        "auto-start-default"
-      ]
-    },
-    {
-      "id": "T-027",
-      "title": "StatusBar 'stop all sessions' must also clear app-level profile tracking",
-      "description": "App.tsx onStopAllSessions calls stop_all_sessions but never untracks profiles in useProfileCredentials, so rows keep showing Stop and the auto-refresh loop can rewrite the just-stopped credentials. Pre-existing (same when tracking lived in ProfilesPage); now cheap to fix: add untrackAll() to the hook and call it there. Needs a regression test.",
-      "size": "S",
-      "priority": 4,
-      "status": "pending",
-      "tags": [
-        "frontend",
-        "react",
-        "bug",
         "auto-start-default"
       ]
     }
@@ -277,6 +263,21 @@
       "tags": [
         "frontend",
         "react",
+        "auto-start-default"
+      ],
+      "completed": "2026-11-25"
+    },
+    {
+      "id": "T-027",
+      "title": "StatusBar 'stop all sessions' must also clear app-level profile tracking",
+      "description": "App.tsx onStopAllSessions calls stop_all_sessions but never untracks profiles in useProfileCredentials, so rows keep showing Stop and the auto-refresh loop can rewrite the just-stopped credentials. Pre-existing (same when tracking lived in ProfilesPage); now cheap to fix: add untrackAll() to the hook and call it there. Needs a regression test.",
+      "size": "S",
+      "priority": 4,
+      "status": "done",
+      "tags": [
+        "frontend",
+        "react",
+        "bug",
         "auto-start-default"
       ],
       "completed": "2026-11-25"

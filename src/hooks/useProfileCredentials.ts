@@ -107,6 +107,14 @@ export function useProfileCredentials({
     [untrack],
   );
 
+  // Stop every session (StatusBar "stop all") and forget all tracking, so
+  // auto-refresh can't re-issue the credentials that were just removed.
+  const stopAll = useCallback(async (): Promise<string> => {
+    const msg = await invoke<string>("stop_all_sessions");
+    setTracked({});
+    return msg;
+  }, []);
+
   // A tracked profile's credentials expired without being refreshed in
   // time (its SSO session died before we could renew them). Stop treating
   // it as active: clean up its dead ~/.aws/credentials entry so the UI
@@ -157,7 +165,7 @@ export function useProfileCredentials({
     abandonExpired,
   ]);
 
-  return { expirations, now, start, stop, untrack, updateProfile };
+  return { expirations, now, start, stop, stopAll, untrack, updateProfile };
 }
 
 export type ProfileCredentials = ReturnType<typeof useProfileCredentials>;

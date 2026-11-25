@@ -14,6 +14,11 @@ pub struct AppSettings {
     /// in their browser via the AWS Console account menu.
     #[serde(default)]
     pub multi_session_console: bool,
+    /// When true, a successful SSO login automatically starts (Plays) the
+    /// default profile, if that profile belongs to the session that just
+    /// logged in. Off by default.
+    #[serde(default)]
+    pub auto_start_default_profile: bool,
 }
 
 impl Default for AppSettings {
@@ -24,6 +29,7 @@ impl Default for AppSettings {
             refresh_interval_secs: 30,
             session_timeout_hours: 8,
             multi_session_console: false,
+            auto_start_default_profile: false,
         }
     }
 }
@@ -68,7 +74,8 @@ mod tests {
         assert_eq!(s.aws_cli_path, "aws");
         assert_eq!(s.refresh_interval_secs, 30);
         assert_eq!(s.session_timeout_hours, 8);
-        assert_eq!(s.multi_session_console, false);
+        assert!(!s.multi_session_console);
+        assert!(!s.auto_start_default_profile);
     }
 
     #[test]
@@ -79,13 +86,15 @@ mod tests {
             refresh_interval_secs: 60,
             session_timeout_hours: 4,
             multi_session_console: true,
+            auto_start_default_profile: true,
         };
         let json = serde_json::to_string(&s).unwrap();
         let parsed: AppSettings = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.default_region, "eu-west-1");
         assert_eq!(parsed.refresh_interval_secs, 60);
         assert_eq!(parsed.session_timeout_hours, 4);
-        assert_eq!(parsed.multi_session_console, true);
+        assert!(parsed.multi_session_console);
+        assert!(parsed.auto_start_default_profile);
     }
 
     #[test]
@@ -98,7 +107,22 @@ mod tests {
             "session_timeout_hours": 8
         }"#;
         let parsed: AppSettings = serde_json::from_str(json).unwrap();
-        assert_eq!(parsed.multi_session_console, false);
+        assert!(!parsed.multi_session_console);
         assert_eq!(parsed.default_region, "eu-west-1");
+    }
+
+    #[test]
+    fn test_settings_deserializes_without_auto_start_default_profile_field() {
+        // Simulates a settings.json saved before auto_start_default_profile existed.
+        let json = r#"{
+            "default_region": "eu-west-1",
+            "aws_cli_path": "aws",
+            "refresh_interval_secs": 30,
+            "session_timeout_hours": 8,
+            "multi_session_console": true
+        }"#;
+        let parsed: AppSettings = serde_json::from_str(json).unwrap();
+        assert!(!parsed.auto_start_default_profile);
+        assert!(parsed.multi_session_console);
     }
 }

@@ -921,7 +921,7 @@ mod tests {
         let parsed: TunnelConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(parsed.name, "Production DB");
         assert_eq!(parsed.remote_port, 5432);
-        assert_eq!(parsed.use_random_port, false);
+        assert!(!parsed.use_random_port);
     }
 
     #[test]

@@ -37,6 +37,7 @@ const baseSettings: AppSettings = {
   refresh_interval_secs: 60,
   session_timeout_hours: 8,
   multi_session_console: false,
+  auto_start_default_profile: false,
 };
 
 let invokedCommands: { cmd: string; args: unknown }[];

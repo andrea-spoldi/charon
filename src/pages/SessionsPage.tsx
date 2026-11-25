@@ -52,6 +52,8 @@ interface SessionsPageProps {
   onRefresh: () => void;
   onStatusChange: () => void;
   onError?: (message: string, type?: "error" | "success" | "info") => void;
+  /** Called once an SSO login for `sessionName` has completed successfully. */
+  onLoggedIn?: (sessionName: string) => void;
 }
 
 export function SessionsPage({
@@ -60,6 +62,7 @@ export function SessionsPage({
   onRefresh,
   onStatusChange,
   onError,
+  onLoggedIn,
 }: SessionsPageProps) {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<SsoSession | null>(null);
@@ -253,6 +256,7 @@ export function SessionsPage({
       setDeviceAuth(null);
       onStatusChange();
       fetchSessionTokens(sessions);
+      onLoggedIn?.(name);
     } catch (err) {
       if (!pollAbortRef.current) {
         const msg = String(err);

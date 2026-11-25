@@ -74,6 +74,7 @@ export interface AppSettings {
   refresh_interval_secs: number;
   session_timeout_hours: number;
   multi_session_console: boolean;
+  auto_start_default_profile: boolean;
 }
 
 // SSM instance from describe-instance-information

@@ -11,6 +11,8 @@ import { TunnelsPage } from "./pages/TunnelsPage";
 import { ShellPage } from "./pages/ShellPage";
 import { useSsoStatus } from "./hooks/useSsoStatus";
 import { useProfiles } from "./hooks/useProfiles";
+import { autoStartDefaultProfile } from "./hooks/autoStartDefaultProfile";
+import { useProfileCredentials } from "./hooks/useProfileCredentials";
 import { useAccounts } from "./hooks/useAccounts";
 import { useTunnels } from "./hooks/useTunnels";
 import { useToast } from "./hooks/useToast";
@@ -26,6 +28,7 @@ function App() {
     refresh_interval_secs: 30,
     session_timeout_hours: 8,
     multi_session_console: false,
+    auto_start_default_profile: false,
   });
   const { status: ssoStatus, refresh: refreshSsoStatus } = useSsoStatus();
   const {
@@ -44,6 +47,9 @@ function App() {
     fetchRoles,
     reset: resetAccounts,
   } = useAccounts();
+  // Lives here (not in ProfilesPage) so started profiles stay tracked and
+  // auto-refreshed while the user is on another page.
+  const profileCredentials = useProfileCredentials({ ssoStatus, settings });
   const tunnels = useTunnels();
   const { toasts, addToast, dismissToast } = useToast();
   const { fontSize, setFontSize } = useFontSize();
@@ -77,6 +83,33 @@ function App() {
     }
   }, [ssoStatus.status, resetAccounts]);
 
+  // T-026 / D-008: optionally start the default profile after an SSO login.
+  // Never blocks or undoes the login; a failure only shows a toast.
+  const { start: startProfile } = profileCredentials;
+  const handleLoggedIn = useCallback(
+    async (sessionName: string) => {
+      try {
+        const started = await autoStartDefaultProfile({
+          sessionName,
+          enabled: settings.auto_start_default_profile,
+          start: startProfile,
+        });
+        if (started) {
+          addToast(`Started default profile "${started.name}"`, "success");
+          refreshProfiles();
+        }
+      } catch (err) {
+        addToast(`Could not auto-start the default profile: ${err}`, "error");
+      }
+    },
+    [
+      settings.auto_start_default_profile,
+      startProfile,
+      addToast,
+      refreshProfiles,
+    ],
+  );
+
   const refreshAccounts = useCallback(() => {
     fetchAllPortalAccounts();
   }, [fetchAllPortalAccounts]);
@@ -104,6 +137,7 @@ function App() {
             onRefresh={refreshProfiles}
             onStatusChange={refreshSsoStatus}
             onError={addToast}
+            onLoggedIn={handleLoggedIn}
           />
         );
       case "profiles":
@@ -111,6 +145,7 @@ function App() {
           <ProfilesPage
             ssoStatus={ssoStatus}
             settings={settings}
+            credentials={profileCredentials}
             onError={addToast}
           />
         );
@@ -180,7 +215,7 @@ function App() {
         hasActiveSessions={profiles.some((p) => p.session_active)}
         onStopAllSessions={async () => {
           try {
-            const msg = await invoke<string>("stop_all_sessions");
+            const msg = await profileCredentials.stopAll();
             refreshProfiles();
             addToast(msg, "info");
           } catch (err) {

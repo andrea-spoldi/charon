@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   Plus,
   Trash2,
@@ -15,25 +15,23 @@ import {
 import { invoke } from "@tauri-apps/api/core";
 import { useProfiles } from "../hooks/useProfiles";
 import { ProfileForm } from "./ProfileForm";
-import type {
-  AwsProfile,
-  SsoTokenInfo,
-  AppSettings,
-  ConfigureCliCredentialsResult,
-} from "../types";
-
-// Refresh a profile's credentials this long before they actually expire.
-const REFRESH_BUFFER_MS = 5 * 60 * 1000;
+import {
+  resolveSessionToken as resolveToken,
+  type ProfileCredentials,
+} from "../hooks/useProfileCredentials";
+import type { AwsProfile, SsoTokenInfo, AppSettings } from "../types";
 
 interface ProfilesPageProps {
   ssoStatus: SsoTokenInfo;
   settings: AppSettings;
+  credentials: ProfileCredentials;
   onError?: (message: string, type?: "error" | "success" | "info") => void;
 }
 
 export function ProfilesPage({
   ssoStatus,
   settings,
+  credentials,
   onError,
 }: ProfilesPageProps) {
   const {
@@ -53,12 +51,12 @@ export function ProfilesPage({
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [copiedProfile, setCopiedProfile] = useState<string | null>(null);
 
-  // Per-profile credential expiration (epoch ms), for active (played) profiles only.
-  const [expirations, setExpirations] = useState<Record<string, number>>({});
-  const [now, setNow] = useState(() => Date.now());
+  // Per-profile credential expiration (epoch ms), for profiles started this run.
+  const { expirations, now } = credentials;
 
   const handleSave = async (profile: AwsProfile) => {
     await saveProfile(profile);
+    credentials.updateProfile(profile);
     setShowForm(false);
     setEditing(null);
   };
@@ -66,6 +64,7 @@ export function ProfilesPage({
   const handleDelete = async (name: string) => {
     if (confirmDelete === name) {
       await deleteProfile(name);
+      credentials.untrack(name);
       setConfirmDelete(null);
     } else {
       setConfirmDelete(name);
@@ -97,42 +96,8 @@ export function ProfilesPage({
   };
 
   const resolveSessionToken = useCallback(
-    async (profile: AwsProfile): Promise<SsoTokenInfo> => {
-      if (profile.sso_session) {
-        return await invoke<SsoTokenInfo>("get_session_sso_token", {
-          sessionName: profile.sso_session,
-        });
-      }
-      // Profiles without an explicit session fall back to the global active token
-      if (!ssoStatus.access_token || !ssoStatus.region) {
-        throw new Error("No active SSO session");
-      }
-      return ssoStatus;
-    },
+    (profile: AwsProfile) => resolveToken(profile, ssoStatus),
     [ssoStatus],
-  );
-
-  // Fetch fresh role credentials for a profile and record their expiry.
-  // Shared by the Play button and the background auto-refresh loop.
-  const applyCredentials = useCallback(
-    async (profile: AwsProfile): Promise<ConfigureCliCredentialsResult> => {
-      const cliRegion = profile.region || settings.default_region;
-      const token = await resolveSessionToken(profile);
-      const result = await invoke<ConfigureCliCredentialsResult>(
-        "configure_cli_credentials",
-        {
-          accessToken: token.access_token,
-          accountId: profile.sso_account_id,
-          roleName: profile.sso_role_name,
-          ssoRegion: token.region,
-          cliRegion,
-          profileName: profile.name,
-        },
-      );
-      setExpirations((prev) => ({ ...prev, [profile.name]: result.expiresAt }));
-      return result;
-    },
-    [resolveSessionToken, settings.default_region],
   );
 
   const handleOpenConsole = async (profile: AwsProfile) => {
@@ -172,7 +137,7 @@ export function ProfilesPage({
     const key = `${profile.name}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
-      const result = await applyCredentials(profile);
+      const result = await credentials.start(profile);
       setActionStatus((prev) => ({ ...prev, [key]: "done" }));
       onError?.(result.message, "success");
       refresh();
@@ -190,12 +155,7 @@ export function ProfilesPage({
     const key = `${profile.name}-cli`;
     setActionStatus((prev) => ({ ...prev, [key]: "loading" }));
     try {
-      await invoke("stop_session", { profileName: profile.name });
-      setExpirations((prev) => {
-        const next = { ...prev };
-        delete next[profile.name];
-        return next;
-      });
+      await credentials.stop(profile);
       setActionStatus((prev) => ({ ...prev, [key]: "stopped" }));
       onError?.(`Session stopped for ${profile.name}`, "info");
       refresh();
@@ -208,60 +168,6 @@ export function ProfilesPage({
       setActionStatus((prev) => ({ ...prev, [key]: "" }));
     }, 3000);
   };
-
-  // A tracked profile's credentials expired without being refreshed in
-  // time (its SSO session died before we could renew them). Stop treating
-  // it as active: clean up its dead ~/.aws/credentials entry so the UI
-  // reverts to "off" (Play) instead of a stale "Stop".
-  const abandonExpiredProfile = useCallback(async (profile: AwsProfile) => {
-    setExpirations((prev) => {
-      const next = { ...prev };
-      delete next[profile.name];
-      return next;
-    });
-    try {
-      await invoke("stop_session", { profileName: profile.name });
-    } catch {
-      // Best-effort cleanup; it's untracked in the UI either way.
-    }
-  }, []);
-
-  // Background auto-refresh: shortly before a played profile's credentials
-  // expire, reissue them — but only while its SSO session is still active.
-  useEffect(() => {
-    const intervalMs = (settings.refresh_interval_secs || 30) * 1000;
-    const timer = setInterval(async () => {
-      setNow(Date.now());
-      const nowMs = Date.now();
-      for (const profile of profiles) {
-        const expiresAt = expirations[profile.name];
-        if (expiresAt == null) continue;
-        if (expiresAt <= nowMs) {
-          await abandonExpiredProfile(profile);
-          continue;
-        }
-        if (expiresAt - nowMs > REFRESH_BUFFER_MS) continue;
-        try {
-          const token = await resolveSessionToken(profile);
-          if (token.status !== "active") continue;
-          await applyCredentials(profile);
-        } catch (err) {
-          console.error(
-            `Auto-refresh failed for profile [${profile.name}]:`,
-            err,
-          );
-        }
-      }
-    }, intervalMs);
-    return () => clearInterval(timer);
-  }, [
-    settings.refresh_interval_secs,
-    profiles,
-    expirations,
-    resolveSessionToken,
-    applyCredentials,
-    abandonExpiredProfile,
-  ]);
 
   const handleCopyName = async (name: string) => {
     try {

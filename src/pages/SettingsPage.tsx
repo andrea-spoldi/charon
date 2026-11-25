@@ -14,6 +14,7 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
     refresh_interval_secs: 30,
     session_timeout_hours: 8,
     multi_session_console: false,
+    auto_start_default_profile: false,
   });
   const [saved, setSaved] = useState(false);
 
@@ -126,6 +127,28 @@ export function SettingsPage({ onSettingsChanged }: SettingsPageProps) {
             Off (default): replaces any other open console session. On: opens as
             an additional session, so multiple accounts can stay signed in at
             once.
+          </span>
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="auto-start-default-profile">
+            Auto-start default profile after SSO login
+          </label>
+          <input
+            id="auto-start-default-profile"
+            type="checkbox"
+            checked={settings.auto_start_default_profile}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                auto_start_default_profile: e.target.checked,
+              })
+            }
+          />
+          <span className="form-hint">
+            Off (default): profiles start only when you press Play. On: after
+            you log in to an SSO session, the default profile starts
+            automatically if it belongs to that session.
           </span>
         </div>
 

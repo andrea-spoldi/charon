@@ -28,7 +28,7 @@
     {
       "id": "T-038",
       "title": "Release tooling: semantic-release 26, @semantic-release/changelog 7, @semantic-release/git 11, conventional-changelog-conventionalcommits 10",
-      "description": "Runs only in the Semantic Release workflow on main (Node 22). Check Node engine requirements against semantic-release.yml; verify with the next push to main. Split from T-031.",
+      "description": "Runs only in the Semantic Release workflow on main (Node 22). Check Node engine requirements against semantic-release.yml; verify with the next push to main. Split from T-031. Finding: semantic-release 26 requires node >=26.13 and exits at startup otherwise, so semantic-release.yml moves from Node 22 to 26.",
       "size": "S",
       "priority": 5,
       "status": "pending",

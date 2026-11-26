@@ -17,6 +17,11 @@ updates:
       prefix: "chore(deps)"
       prefix-development: "chore(deps-dev)"
     groups:
+      # All security fixes for this ecosystem land in one PR.
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
       # Batch routine minor/patch bumps into a single PR to reduce noise.
       npm-minor-patch:
         patterns:
@@ -24,10 +29,19 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      # Major bumps get their own single PR, since they may need code changes.
+      npm-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   # Rust backend (Tauri)
+  # Root, not /src-tauri: this is a Cargo workspace and the only Cargo.lock
+  # lives at the root. Pointing at /src-tauri bumped Cargo.toml without
+  # updating the lockfile (see the nix 0.32 PR).
   - package-ecosystem: "cargo"
-    directory: "/src-tauri"
+    directory: "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
@@ -37,12 +51,21 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     groups:
+      cargo-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
       cargo-minor-patch:
         patterns:
           - "*"
         update-types:
           - "minor"
           - "patch"
+      cargo-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   # Keep GitHub Actions used in workflows up to date too.
   - package-ecosystem: "github-actions"
@@ -54,3 +77,7 @@ updates:
       - "github-actions"
     commit-message:
       prefix: "chore(ci)"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

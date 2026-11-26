@@ -3,31 +3,16 @@
 ```json
 {
   "project": "charon",
-  "updated": "2026-11-25",
+  "updated": "2026-11-26",
   "current_session": {
-    "id": "S-007",
-    "goal": "Auto-start (Play) the default profile after a successful SSO session login, gated by an opt-in Settings toggle (default off).",
+    "id": "S-008",
+    "goal": "Make whole-repo linting reliable (T-028) and consolidate open Dependabot dependency updates.",
     "task_ref": null,
-    "started": "2026-11-25",
-    "status": "closed",
-    "blocker": null,
-    "ended": "2026-11-25",
-    "summary": "Shipped opt-in auto-start of the default profile after SSO login (T-024..T-027) on branch feat/auto-start-default-profile; PR opened."
+    "started": "2026-11-26",
+    "status": "in-progress",
+    "blocker": null
   },
-  "backlog": [
-    {
-      "id": "T-028",
-      "title": "Fix full `pnpm lint` exiting 1 with no output",
-      "description": "On main and this branch, `pnpm lint` (full-repo ESLint) exits 1 silently, likely an OOM/crash; ESLint on individual files is clean. Find the cause (e.g. a large ignored dir being linted, missing ignores) and make `make lint` reliable again.",
-      "size": "S",
-      "priority": 1,
-      "status": "pending",
-      "tags": [
-        "tooling",
-        "lint"
-      ]
-    }
-  ],
+  "backlog": [],
   "housekeeping": [
     {
       "date": "2026-07-14",
@@ -267,6 +252,19 @@
         "auto-start-default"
       ],
       "completed": "2026-11-25"
+    },
+    {
+      "id": "T-028",
+      "title": "Fix full `pnpm lint` exiting 1 with no output",
+      "description": "On main and this branch, `pnpm lint` (full-repo ESLint) exits 1 silently, likely an OOM/crash; ESLint on individual files is clean. Find the cause (e.g. a large ignored dir being linted, missing ignores) and make `make lint` reliable again. Root cause: not pnpm lint itself \u2014 the rtk output wrapper sometimes runs a whole-repo `eslint .`, and the config had no global ignores, so it parsed Tauri's compressed codegen assets under target/ (plus dist/, .claude/). Fixed with global ignores.",
+      "size": "S",
+      "priority": 1,
+      "status": "done",
+      "tags": [
+        "tooling",
+        "lint"
+      ],
+      "completed": "2026-11-26"
     }
   ]
 }

@@ -4,7 +4,6 @@ use crate::aws::sso_cache::{self, SsoTokenInfo};
 use crate::commands::resolve_aws_cli;
 use log::{info, warn};
 use serde::Serialize;
-use sha1::{Digest, Sha1};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -169,9 +168,7 @@ fn write_sso_cache(
 
     // AWS CLI v2 uses SHA1 of the session name as the cache filename
     // when using sso-session based configs
-    let mut hasher = Sha1::new();
-    hasher.update(session_name.as_bytes());
-    let hash = format!("{:x}", hasher.finalize());
+    let hash = sso_cache::session_cache_hash(session_name);
     let cache_file = cache_dir.join(format!("{hash}.json"));
 
     // Compute expiration timestamp

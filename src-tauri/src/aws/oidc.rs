@@ -1,6 +1,18 @@
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
 
+/// The HTTP client for AWS API calls. reqwest is built with
+/// `rustls-no-provider`, so install ring as the process-wide rustls
+/// crypto provider first; without one `Client::new()` panics (D-009).
+pub fn http_client() -> reqwest::Client {
+    static INSTALL: std::sync::Once = std::sync::Once::new();
+    INSTALL.call_once(|| {
+        // Err only means another provider is already installed: fine.
+        let _ = rustls::crypto::ring::default_provider().install_default();
+    });
+    reqwest::Client::new()
+}
+
 /// OIDC client registration response
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -86,7 +98,7 @@ pub async fn register_client(
 
     info!("Registering OIDC client: {client_name} in {region}");
 
-    let client = reqwest::Client::new();
+    let client = http_client();
     let resp = client
         .post(&url)
         .json(&body)
@@ -127,7 +139,7 @@ pub async fn start_device_authorization(
 
     info!("Starting device authorization for: {start_url}");
 
-    let http = reqwest::Client::new();
+    let http = http_client();
     let resp = http
         .post(&url)
         .json(&body)
@@ -168,7 +180,7 @@ pub async fn create_token(
         "deviceCode": device_code,
     });
 
-    let http = reqwest::Client::new();
+    let http = http_client();
     let resp = http
         .post(&url)
         .json(&body)
@@ -224,6 +236,32 @@ pub async fn create_token(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn test_http_client_builds_with_crypto_provider() {
+        // reqwest's rustls-no-provider panics in Client::new() unless a
+        // process-wide rustls CryptoProvider is installed first.
+        let _client = super::http_client();
+        let _again = super::http_client();
+    }
+
+    /// Live TLS check for dependency upgrades (network needed):
+    /// `cargo test live_tls -- --ignored`. Any HTTP status means the TLS
+    /// handshake (ring + OS certificate store) succeeded.
+    #[test]
+    #[ignore]
+    fn live_tls_handshake_with_aws_oidc() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let resp = rt
+            .block_on(
+                super::http_client()
+                    .post("https://oidc.us-east-1.amazonaws.com/client/register")
+                    .json(&serde_json::json!({}))
+                    .send(),
+            )
+            .expect("TLS handshake with AWS OIDC failed");
+        assert!(resp.status().is_client_error(), "got {}", resp.status());
+    }
+
     use super::*;
 
     #[test]

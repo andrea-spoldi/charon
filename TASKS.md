@@ -7,7 +7,7 @@
   "current_session": {
     "id": "S-010",
     "goal": "Frontend toolchain upgrades, starting with the test stack (T-034).",
-    "task_ref": "T-036",
+    "task_ref": "T-037",
     "started": "2026-11-26",
     "status": "in-progress",
     "blocker": null
@@ -23,19 +23,6 @@
       "tags": [
         "ci",
         "node"
-      ]
-    },
-    {
-      "id": "T-036",
-      "title": "Types/lint: TypeScript 6.0 (NOT 7), ESLint 10, eslint-config-prettier 10",
-      "description": "typescript-eslint 8.74 peers on typescript >=4.8.4 <6.1.0, so TS 7 is blocked until typescript-eslint supports it; target 6.0.x. Consider a Dependabot ignore for typescript >=6.1 meanwhile. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
-      "size": "M",
-      "priority": 3,
-      "status": "pending",
-      "tags": [
-        "deps",
-        "frontend",
-        "lint"
       ]
     },
     {
@@ -403,6 +390,20 @@
         "deps",
         "frontend",
         "build"
+      ],
+      "completed": "2026-11-26"
+    },
+    {
+      "id": "T-036",
+      "title": "Types/lint: TypeScript 6.0 (NOT 7), ESLint 10, eslint-config-prettier 10",
+      "description": "typescript-eslint 8.74 peers on typescript >=4.8.4 <6.1.0, so TS 7 is blocked until typescript-eslint supports it; target 6.0.x. Consider a Dependabot ignore for typescript >=6.1 meanwhile. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
+      "size": "M",
+      "priority": 3,
+      "status": "done",
+      "tags": [
+        "deps",
+        "frontend",
+        "lint"
       ],
       "completed": "2026-11-26"
     }

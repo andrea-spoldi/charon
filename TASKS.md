@@ -5,26 +5,14 @@
   "project": "charon",
   "updated": "2026-11-26",
   "current_session": {
-    "id": "S-009",
-    "goal": "Rust major dependency upgrades: reqwest 0.13, dirs 7, sha1 0.11, base64 0.23 (T-030).",
-    "task_ref": null,
+    "id": "S-010",
+    "goal": "Frontend toolchain upgrades, starting with the test stack (T-034).",
+    "task_ref": "T-034",
     "started": "2026-11-26",
     "status": "in-progress",
     "blocker": null
   },
   "backlog": [
-    {
-      "id": "T-031",
-      "title": "Frontend toolchain majors: TypeScript 7, Vite 8, Vitest 5, ESLint 10, jsdom 31, jest-dom 8, plugin-react 6, lucide-react 1.x, eslint-config-prettier 10, semantic-release stack",
-      "description": "Supersedes Dependabot #33, #32, #31, #30, #27, #24, #22, #21, #20, #19. Likely decompose into (a) build/test: vite + plugin-react + vitest + jsdom + jest-dom, (b) lint/types: typescript + eslint + eslint-config-prettier, (c) lucide-react (icon renames), (d) release tooling. Use `pnpm up -i --latest`. Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build; check the app still launches (make dev).",
-      "size": "L",
-      "priority": 3,
-      "status": "pending",
-      "tags": [
-        "deps",
-        "frontend"
-      ]
-    },
     {
       "id": "T-033",
       "title": "Move the release build off Node 20 (EOL April 2026)",
@@ -35,6 +23,71 @@
       "tags": [
         "ci",
         "node"
+      ]
+    },
+    {
+      "id": "T-034",
+      "title": "Test stack: Vitest 5, jsdom 31, @testing-library/jest-dom 8",
+      "description": "Vitest 5 accepts vite ^6.4, so this is independent of the Vite major. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
+      "size": "S",
+      "priority": 1,
+      "status": "pending",
+      "tags": [
+        "deps",
+        "frontend",
+        "test"
+      ]
+    },
+    {
+      "id": "T-035",
+      "title": "Build: Vite 8 + @vitejs/plugin-react 6 (must move together)",
+      "description": "plugin-react 6 peers on vite ^8. Vite 8 is Rolldown-based: check vite.config.ts and the Tauri dev/build flow (make dev, make build). Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
+      "size": "M",
+      "priority": 2,
+      "status": "pending",
+      "tags": [
+        "deps",
+        "frontend",
+        "build"
+      ]
+    },
+    {
+      "id": "T-036",
+      "title": "Types/lint: TypeScript 6.0 (NOT 7), ESLint 10, eslint-config-prettier 10",
+      "description": "typescript-eslint 8.74 peers on typescript >=4.8.4 <6.1.0, so TS 7 is blocked until typescript-eslint supports it; target 6.0.x. Consider a Dependabot ignore for typescript >=6.1 meanwhile. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
+      "size": "M",
+      "priority": 3,
+      "status": "pending",
+      "tags": [
+        "deps",
+        "frontend",
+        "lint"
+      ]
+    },
+    {
+      "id": "T-037",
+      "title": "lucide-react 0.563 -> 1.x",
+      "description": "Only runtime dependency in the batch. Check every imported icon still exists (renames/removals in 1.0); tsc catches missing named exports. Eyeball the UI in make dev. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
+      "size": "S",
+      "priority": 4,
+      "status": "pending",
+      "tags": [
+        "deps",
+        "frontend",
+        "ui"
+      ]
+    },
+    {
+      "id": "T-038",
+      "title": "Release tooling: semantic-release 26, @semantic-release/changelog 7, @semantic-release/git 11, conventional-changelog-conventionalcommits 10",
+      "description": "Runs only in the Semantic Release workflow on main (Node 22). Check Node engine requirements against semantic-release.yml; verify with the next push to main. Split from T-031.",
+      "size": "S",
+      "priority": 5,
+      "status": "pending",
+      "tags": [
+        "deps",
+        "ci",
+        "release"
       ]
     }
   ],
@@ -326,6 +379,18 @@
         "rust"
       ],
       "completed": "2026-11-26"
+    },
+    {
+      "id": "T-032",
+      "title": "GitHub Actions majors: checkout 7, setup-node 7, upload-artifact 7, download-artifact 8",
+      "size": "S",
+      "status": "done",
+      "tags": [
+        "deps",
+        "ci"
+      ],
+      "completed": "2026-11-26",
+      "description": "PR #45. Lost from completed[] in the #44/#45 merge resolution; restored."
     }
   ],
   "sessions": [
@@ -338,6 +403,16 @@
       "blocker": null,
       "ended": "2026-11-26",
       "summary": "T-028 (ESLint global ignores) and T-029 (in-range deps refresh fixing rustls/serde_with alerts + stale Cargo.lock, Dependabot config) shipped in PR #40, released as 0.18.1. Logged T-030..T-032 for major upgrades."
+    },
+    {
+      "id": "S-009",
+      "goal": "Rust major dependency upgrades: reqwest 0.13, dirs 7, sha1 0.11, base64 0.23 (T-030).",
+      "task_ref": null,
+      "started": "2026-11-26",
+      "status": "closed",
+      "blocker": null,
+      "ended": "2026-11-26",
+      "summary": "T-030 (Rust majors, PR #44, D-009 ring over aws-lc-rs) and T-032 (Actions majors, PR #45) merged; SSO login verified on macOS. Closed 6 orphaned /src-tauri Dependabot PRs. Logged T-033."
     }
   ]
 }

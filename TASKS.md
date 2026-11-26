@@ -7,7 +7,7 @@
   "current_session": {
     "id": "S-010",
     "goal": "Frontend toolchain upgrades, starting with the test stack (T-034).",
-    "task_ref": "T-035",
+    "task_ref": "T-036",
     "started": "2026-11-26",
     "status": "in-progress",
     "blocker": null
@@ -23,19 +23,6 @@
       "tags": [
         "ci",
         "node"
-      ]
-    },
-    {
-      "id": "T-035",
-      "title": "Build: Vite 8 + @vitejs/plugin-react 6 (must move together)",
-      "description": "plugin-react 6 peers on vite ^8. Vite 8 is Rolldown-based: check vite.config.ts and the Tauri dev/build flow (make dev, make build). Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
-      "size": "M",
-      "priority": 2,
-      "status": "pending",
-      "tags": [
-        "deps",
-        "frontend",
-        "build"
       ]
     },
     {
@@ -75,6 +62,18 @@
         "deps",
         "ci",
         "release"
+      ]
+    },
+    {
+      "id": "T-039",
+      "title": "Run tests and lint on pull requests in CI",
+      "description": "Today the only PR check is cargo-dist's `plan` job (release.yml), so a green PR, including every Dependabot PR, says nothing about tests. Add a workflow on pull_request running pnpm install --frozen-lockfile, make test and make lint on ubuntu (Tauri Linux system deps needed for cargo test/clippy). Consider making it a required check.",
+      "size": "S",
+      "priority": 2,
+      "status": "pending",
+      "tags": [
+        "ci",
+        "test"
       ]
     }
   ],
@@ -390,6 +389,20 @@
         "deps",
         "frontend",
         "test"
+      ],
+      "completed": "2026-11-26"
+    },
+    {
+      "id": "T-035",
+      "title": "Build: Vite 8 + @vitejs/plugin-react 6 (must move together)",
+      "description": "plugin-react 6 peers on vite ^8. Vite 8 is Rolldown-based: check vite.config.ts and the Tauri dev/build flow (make dev, make build). Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
+      "size": "M",
+      "priority": 2,
+      "status": "done",
+      "tags": [
+        "deps",
+        "frontend",
+        "build"
       ],
       "completed": "2026-11-26"
     }

@@ -38,7 +38,7 @@
     "@types/react-dom": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^8.74.0",
     "@typescript-eslint/parser": "^8.74.0",
-    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react": "^6.3.0",
     "conventional-changelog-conventionalcommits": "^9.3.1",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^9.1.2",
@@ -46,7 +46,7 @@
     "prettier": "^3.10.1",
     "semantic-release": "^25.0.9",
     "typescript": "^5.9.3",
-    "vite": "^6.4.6",
+    "vite": "^8.3.8",
     "vitest": "^5.1.2"
   }
 }

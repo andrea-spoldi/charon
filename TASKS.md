@@ -7,7 +7,7 @@
   "current_session": {
     "id": "S-010",
     "goal": "Frontend toolchain upgrades, starting with the test stack (T-034).",
-    "task_ref": "T-037",
+    "task_ref": "T-038",
     "started": "2026-11-26",
     "status": "in-progress",
     "blocker": null
@@ -23,19 +23,6 @@
       "tags": [
         "ci",
         "node"
-      ]
-    },
-    {
-      "id": "T-037",
-      "title": "lucide-react 0.563 -> 1.x",
-      "description": "Only runtime dependency in the batch. Check every imported icon still exists (renames/removals in 1.0); tsc catches missing named exports. Eyeball the UI in make dev. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
-      "size": "S",
-      "priority": 4,
-      "status": "pending",
-      "tags": [
-        "deps",
-        "frontend",
-        "ui"
       ]
     },
     {
@@ -404,6 +391,20 @@
         "deps",
         "frontend",
         "lint"
+      ],
+      "completed": "2026-11-26"
+    },
+    {
+      "id": "T-037",
+      "title": "lucide-react 0.563 -> 1.x",
+      "description": "Only runtime dependency in the batch. Check every imported icon still exists (renames/removals in 1.0); tsc catches missing named exports. Eyeball the UI in make dev. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
+      "size": "S",
+      "priority": 4,
+      "status": "done",
+      "tags": [
+        "deps",
+        "frontend",
+        "ui"
       ],
       "completed": "2026-11-26"
     }

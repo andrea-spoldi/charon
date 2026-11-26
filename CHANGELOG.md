@@ -1,3 +1,9 @@
+## [0.18.2](https://github.com/andrea-spoldi/charon/compare/v0.18.1...v0.18.2) (2026-11-26)
+
+### 🐛 Bug Fixes
+
+* **deps-dev:** keep conventional-changelog-conventionalcommits on 9 ([e3e92cc](https://github.com/andrea-spoldi/charon/commit/e3e92ccc19463069834391b957b0341ae6fc3b83))
+
 ## [0.18.1](https://github.com/andrea-spoldi/charon/compare/v0.18.0...v0.18.1) (2026-11-26)
 
 ### 🐛 Bug Fixes

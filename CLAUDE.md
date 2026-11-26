@@ -9,7 +9,7 @@ Desktop application for managing connections to multiple AWS accounts via AWS Id
 - **Bundler**: Vite 6
 - **Test Runner**: Vitest (frontend), Cargo test (Rust)
 - **Package Managers**: Cargo (Rust), pnpm (frontend)
-- **CI/CD**: GitLab CI
+- **CI/CD**: GitHub Actions (`.github/workflows/`: `ci.yml` PR checks, `release.yml` cargo-dist, `semantic-release.yml`)
 
 ## Repository Structure
 

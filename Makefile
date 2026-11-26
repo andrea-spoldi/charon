@@ -1,4 +1,4 @@
-.PHONY: setup build dist test lint fmt run clean
+.PHONY: setup build dist test test-frontend test-rust lint lint-frontend lint-rust fmt run clean
 
 ## setup: Install all dependencies
 setup:
@@ -40,9 +40,15 @@ test-rust:
 	cd src-tauri && cargo test
 
 ## lint: Run all linters
-lint:
+lint: lint-frontend lint-rust
+
+## lint-frontend: Run ESLint and Prettier checks
+lint-frontend:
 	pnpm lint
 	pnpm format:check
+
+## lint-rust: Run rustfmt and Clippy checks
+lint-rust:
 	cd src-tauri && cargo fmt -- --check
 	cd src-tauri && cargo clippy -- -D warnings
 

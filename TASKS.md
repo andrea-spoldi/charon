@@ -36,18 +36,6 @@
         "deps",
         "frontend"
       ]
-    },
-    {
-      "id": "T-032",
-      "title": "GitHub Actions majors: checkout 7, setup-node 7, upload-artifact 7, download-artifact 8",
-      "description": "Supersedes Dependabot #11, #12, #13, #10. upload/download-artifact majors must move together. Verify on a CI run. Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build.",
-      "size": "S",
-      "priority": 4,
-      "status": "pending",
-      "tags": [
-        "deps",
-        "ci"
-      ]
     }
   ],
   "housekeeping": [
@@ -313,6 +301,19 @@
       "tags": [
         "deps",
         "security",
+        "ci"
+      ],
+      "completed": "2026-11-26"
+    },
+    {
+      "id": "T-032",
+      "title": "GitHub Actions majors: checkout 7, setup-node 7, upload-artifact 7, download-artifact 8",
+      "description": "Supersedes Dependabot #11, #12, #13, #10. upload/download-artifact majors must move together. Verify on a CI run. Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build.",
+      "size": "S",
+      "priority": 4,
+      "status": "done",
+      "tags": [
+        "deps",
         "ci"
       ],
       "completed": "2026-11-26"

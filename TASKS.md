@@ -7,7 +7,7 @@
   "current_session": {
     "id": "S-010",
     "goal": "Frontend toolchain upgrades, starting with the test stack (T-034).",
-    "task_ref": "T-034",
+    "task_ref": "T-035",
     "started": "2026-11-26",
     "status": "in-progress",
     "blocker": null
@@ -23,19 +23,6 @@
       "tags": [
         "ci",
         "node"
-      ]
-    },
-    {
-      "id": "T-034",
-      "title": "Test stack: Vitest 5, jsdom 31, @testing-library/jest-dom 8",
-      "description": "Vitest 5 accepts vite ^6.4, so this is independent of the Vite major. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
-      "size": "S",
-      "priority": 1,
-      "status": "pending",
-      "tags": [
-        "deps",
-        "frontend",
-        "test"
       ]
     },
     {
@@ -391,6 +378,20 @@
       ],
       "completed": "2026-11-26",
       "description": "PR #45. Lost from completed[] in the #44/#45 merge resolution; restored."
+    },
+    {
+      "id": "T-034",
+      "title": "Test stack: Vitest 5, jsdom 31, @testing-library/jest-dom 8",
+      "description": "Vitest 5 accepts vite ^6.4, so this is independent of the Vite major. Split from T-031. Verify: make test, make lint, tsc, make build or make dev on macOS. Close Dependabot #43 when all of T-034..T-038 are merged (it bundles them).",
+      "size": "S",
+      "priority": 1,
+      "status": "done",
+      "tags": [
+        "deps",
+        "frontend",
+        "test"
+      ],
+      "completed": "2026-11-26"
     }
   ],
   "sessions": [

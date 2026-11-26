@@ -5,9 +5,9 @@
   "project": "charon",
   "updated": "2026-11-26",
   "current_session": {
-    "id": "S-008",
-    "goal": "Make whole-repo linting reliable (T-028) and consolidate open Dependabot dependency updates.",
-    "task_ref": null,
+    "id": "S-009",
+    "goal": "Rust major dependency upgrades: reqwest 0.13, dirs 7, sha1 0.11, base64 0.23 (T-030).",
+    "task_ref": "T-030",
     "started": "2026-11-26",
     "status": "in-progress",
     "blocker": null
@@ -316,6 +316,18 @@
         "ci"
       ],
       "completed": "2026-11-26"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "S-008",
+      "goal": "Make whole-repo linting reliable (T-028) and consolidate open Dependabot dependency updates.",
+      "task_ref": null,
+      "started": "2026-11-26",
+      "status": "closed",
+      "blocker": null,
+      "ended": "2026-11-26",
+      "summary": "T-028 (ESLint global ignores) and T-029 (in-range deps refresh fixing rustls/serde_with alerts + stale Cargo.lock, Dependabot config) shipped in PR #40, released as 0.18.1. Logged T-030..T-032 for major upgrades."
     }
   ]
 }

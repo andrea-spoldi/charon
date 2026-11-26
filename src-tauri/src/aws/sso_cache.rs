@@ -39,11 +39,22 @@ fn sso_cache_dir() -> PathBuf {
         .join("cache")
 }
 
-/// Read the token cache for a specific SSO session by name (SHA1 of session_name → filename)
-pub fn get_session_token(session_name: &str) -> Option<SsoTokenInfo> {
+/// AWS CLI v2 names an sso-session's token cache file after the lowercase
+/// hex SHA-1 of the session name. Must match the CLI byte for byte, or
+/// Charon and the CLI stop seeing each other's logins.
+pub fn session_cache_hash(session_name: &str) -> String {
     let mut hasher = Sha1::new();
     hasher.update(session_name.as_bytes());
-    let hash = format!("{:x}", hasher.finalize());
+    hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
+}
+
+/// Read the token cache for a specific SSO session by name (SHA1 of session_name → filename)
+pub fn get_session_token(session_name: &str) -> Option<SsoTokenInfo> {
+    let hash = session_cache_hash(session_name);
 
     let cache_file = sso_cache_dir().join(format!("{hash}.json"));
     let content = std::fs::read_to_string(&cache_file).ok()?;
@@ -68,9 +79,7 @@ pub fn get_session_token(session_name: &str) -> Option<SsoTokenInfo> {
 /// Delete the token cache file for a specific SSO session.
 /// Returns true if the file was removed, false if it didn't exist.
 pub fn delete_session_token(session_name: &str) -> Result<bool, String> {
-    let mut hasher = Sha1::new();
-    hasher.update(session_name.as_bytes());
-    let hash = format!("{:x}", hasher.finalize());
+    let hash = session_cache_hash(session_name);
 
     let cache_file = sso_cache_dir().join(format!("{hash}.json"));
     if cache_file.exists() {
@@ -234,6 +243,15 @@ fn is_leap(year: i64) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_session_cache_hash_matches_aws_cli_filename() {
+        // `printf 'my-sso' | shasum -a 1`
+        assert_eq!(
+            session_cache_hash("my-sso"),
+            "0ad374308c5a4e22f723adf10145eafad7c4031c"
+        );
+    }
 
     #[test]
     fn test_is_expired_past() {

@@ -7,24 +7,12 @@
   "current_session": {
     "id": "S-009",
     "goal": "Rust major dependency upgrades: reqwest 0.13, dirs 7, sha1 0.11, base64 0.23 (T-030).",
-    "task_ref": "T-030",
+    "task_ref": null,
     "started": "2026-11-26",
     "status": "in-progress",
     "blocker": null
   },
   "backlog": [
-    {
-      "id": "T-030",
-      "title": "Rust major upgrades: reqwest 0.13, dirs 7, sha1 0.11, base64 0.23",
-      "description": "Supersedes Dependabot #38, #28, #26, #25. Use cargo-edit `cargo upgrade --incompatible`; fix API breaks (reqwest 0.13 and base64 0.23 likely need code changes). Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build; check the app still launches (make dev).",
-      "size": "M",
-      "priority": 2,
-      "status": "pending",
-      "tags": [
-        "deps",
-        "rust"
-      ]
-    },
     {
       "id": "T-031",
       "title": "Frontend toolchain majors: TypeScript 7, Vite 8, Vitest 5, ESLint 10, jsdom 31, jest-dom 8, plugin-react 6, lucide-react 1.x, eslint-config-prettier 10, semantic-release stack",
@@ -124,6 +112,15 @@
       "decision": "Use semantic-release with @semantic-release/exec to automate version bumps across package.json, Cargo.toml, tauri.conf.json, and both Cargo.lock files. Requires RELEASE_TOKEN PAT because GITHUB_TOKEN pushes don't trigger downstream workflows.",
       "rationale": "Eliminates manual version bumping in 4+ files. Tag push from semantic-release triggers existing cargo-dist release.yml.",
       "supersedes": null
+    },
+    {
+      "id": "D-009",
+      "date": "2026-11-26",
+      "title": "reqwest 0.13 uses rustls-no-provider + ring, not the default aws-lc-rs",
+      "rationale": "reqwest 0.13's `rustls` feature pulls aws-lc-sys, which needs NASM on Windows x86_64 (cargo-dist target x86_64-pc-windows-msvc) unless prebuilt-nasm is opted into; release builds only run on tags, so a break would surface as a failed release. ring keeps the previous crypto backend and adds no native build tooling. The provider is installed once in aws::oidc::http_client(), which every AWS HTTP call must use; Client::new() panics without it (covered by a unit test). TLS now verifies against the OS trust store (rustls-platform-verifier) instead of bundled webpki roots.",
+      "refs": [
+        "T-030"
+      ]
     }
   ],
   "completed": [
@@ -314,6 +311,19 @@
         "deps",
         "security",
         "ci"
+      ],
+      "completed": "2026-11-26"
+    },
+    {
+      "id": "T-030",
+      "title": "Rust major upgrades: reqwest 0.13, dirs 7, sha1 0.11, base64 0.23",
+      "description": "Supersedes Dependabot #38, #28, #26, #25. Use cargo-edit `cargo upgrade --incompatible`; fix API breaks (reqwest 0.13 and base64 0.23 likely need code changes). Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build; check the app still launches (make dev).",
+      "size": "M",
+      "priority": 2,
+      "status": "done",
+      "tags": [
+        "deps",
+        "rust"
       ],
       "completed": "2026-11-26"
     }

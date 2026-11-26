@@ -7,25 +7,12 @@
   "current_session": {
     "id": "S-010",
     "goal": "Frontend toolchain upgrades, starting with the test stack (T-034).",
-    "task_ref": "T-038",
+    "task_ref": null,
     "started": "2026-11-26",
     "status": "in-progress",
     "blocker": null
   },
   "backlog": [
-    {
-      "id": "T-038",
-      "title": "Release tooling: semantic-release 26, @semantic-release/changelog 7, @semantic-release/git 11, conventional-changelog-conventionalcommits 10",
-      "description": "Runs only in the Semantic Release workflow on main (Node 22). Check Node engine requirements against semantic-release.yml; verify with the next push to main. Split from T-031. Finding: semantic-release 26 requires node >=26.13 and exits at startup otherwise, so semantic-release.yml moves from Node 22 to 26.",
-      "size": "S",
-      "priority": 5,
-      "status": "pending",
-      "tags": [
-        "deps",
-        "ci",
-        "release"
-      ]
-    },
     {
       "id": "T-039",
       "title": "Run tests and lint on pull requests in CI",
@@ -406,6 +393,20 @@
       "tags": [
         "ci",
         "node"
+      ],
+      "completed": "2026-11-26"
+    },
+    {
+      "id": "T-038",
+      "title": "Release tooling: semantic-release 26, @semantic-release/changelog 7, @semantic-release/git 11, conventional-changelog-conventionalcommits 10",
+      "description": "Runs only in the Semantic Release workflow on main (Node 22). Check Node engine requirements against semantic-release.yml; verify with the next push to main. Split from T-031. Finding: semantic-release 26 requires node >=26.13 and exits at startup otherwise, so semantic-release.yml moves from Node 22 to 26. Dry run (Node 26) found conventional-changelog-conventionalcommits 10 crashes note generation (needs conventional-changelog-writer 9; release-notes-generator 14.1.1 bundles writer 8). Kept the preset on 9.3.1 with a Dependabot ignore until release-notes-generator 15 is stable; regenerated 0.18.0 notes match CHANGELOG.md exactly.",
+      "size": "S",
+      "priority": 5,
+      "status": "done",
+      "tags": [
+        "deps",
+        "ci",
+        "release"
       ],
       "completed": "2026-11-26"
     }

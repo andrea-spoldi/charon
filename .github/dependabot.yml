@@ -21,6 +21,12 @@ updates:
       # typescript-eslint release widens its peer range (T-036).
       - dependency-name: "typescript"
         versions: [">=6.1.0"]
+      # v10 needs conventional-changelog-writer 9, but
+      # @semantic-release/release-notes-generator 14.x bundles writer 8 and
+      # crashes generating notes. Remove once release-notes-generator 15 is
+      # stable (T-038).
+      - dependency-name: "conventional-changelog-conventionalcommits"
+        versions: [">=10.0.0"]
     groups:
       # All security fixes for this ecosystem land in one PR.
       npm-security:

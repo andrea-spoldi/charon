@@ -14,18 +14,6 @@
   },
   "backlog": [
     {
-      "id": "T-033",
-      "title": "Move the release build off Node 20 (EOL April 2026)",
-      "description": "release.yml build-local-artifacts uses actions/setup-node with node-version '20'; semantic-release.yml already uses '22'. Bump to a supported LTS (22, or 24 to match the setup-node v7 runtime), ideally the same in both workflows. Verify with the next tagged release: only the Linux build runs in CI (mac/Windows are built locally).",
-      "size": "S",
-      "priority": 5,
-      "status": "pending",
-      "tags": [
-        "ci",
-        "node"
-      ]
-    },
-    {
       "id": "T-038",
       "title": "Release tooling: semantic-release 26, @semantic-release/changelog 7, @semantic-release/git 11, conventional-changelog-conventionalcommits 10",
       "description": "Runs only in the Semantic Release workflow on main (Node 22). Check Node engine requirements against semantic-release.yml; verify with the next push to main. Split from T-031. Finding: semantic-release 26 requires node >=26.13 and exits at startup otherwise, so semantic-release.yml moves from Node 22 to 26.",
@@ -405,6 +393,19 @@
         "deps",
         "frontend",
         "ui"
+      ],
+      "completed": "2026-11-26"
+    },
+    {
+      "id": "T-033",
+      "title": "Move the release build off Node 20 (EOL April 2026)",
+      "description": "release.yml build-local-artifacts uses actions/setup-node with node-version '20'; semantic-release.yml already uses '22'. Bump to a supported LTS (22, or 24 to match the setup-node v7 runtime), ideally the same in both workflows. Verify with the next tagged release: only the Linux build runs in CI (mac/Windows are built locally). Done in PR #52 together with T-038: both workflows now on Node 26 (semantic-release 26 requires it).",
+      "size": "S",
+      "priority": 5,
+      "status": "done",
+      "tags": [
+        "ci",
+        "node"
       ],
       "completed": "2026-11-26"
     }

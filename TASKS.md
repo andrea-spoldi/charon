@@ -36,6 +36,18 @@
         "deps",
         "frontend"
       ]
+    },
+    {
+      "id": "T-033",
+      "title": "Move the release build off Node 20 (EOL April 2026)",
+      "description": "release.yml build-local-artifacts uses actions/setup-node with node-version '20'; semantic-release.yml already uses '22'. Bump to a supported LTS (22, or 24 to match the setup-node v7 runtime), ideally the same in both workflows. Verify with the next tagged release: only the Linux build runs in CI (mac/Windows are built locally).",
+      "size": "S",
+      "priority": 5,
+      "status": "pending",
+      "tags": [
+        "ci",
+        "node"
+      ]
     }
   ],
   "housekeeping": [

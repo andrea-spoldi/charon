@@ -3,28 +3,50 @@
 ```json
 {
   "project": "charon",
-  "updated": "2026-11-25",
+  "updated": "2026-11-26",
   "current_session": {
-    "id": "S-007",
-    "goal": "Auto-start (Play) the default profile after a successful SSO session login, gated by an opt-in Settings toggle (default off).",
+    "id": "S-008",
+    "goal": "Make whole-repo linting reliable (T-028) and consolidate open Dependabot dependency updates.",
     "task_ref": null,
-    "started": "2026-11-25",
-    "status": "closed",
-    "blocker": null,
-    "ended": "2026-11-25",
-    "summary": "Shipped opt-in auto-start of the default profile after SSO login (T-024..T-027) on branch feat/auto-start-default-profile; PR opened."
+    "started": "2026-11-26",
+    "status": "in-progress",
+    "blocker": null
   },
   "backlog": [
     {
-      "id": "T-028",
-      "title": "Fix full `pnpm lint` exiting 1 with no output",
-      "description": "On main and this branch, `pnpm lint` (full-repo ESLint) exits 1 silently, likely an OOM/crash; ESLint on individual files is clean. Find the cause (e.g. a large ignored dir being linted, missing ignores) and make `make lint` reliable again.",
-      "size": "S",
-      "priority": 1,
+      "id": "T-030",
+      "title": "Rust major upgrades: reqwest 0.13, dirs 7, sha1 0.11, base64 0.23",
+      "description": "Supersedes Dependabot #38, #28, #26, #25. Use cargo-edit `cargo upgrade --incompatible`; fix API breaks (reqwest 0.13 and base64 0.23 likely need code changes). Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build; check the app still launches (make dev).",
+      "size": "M",
+      "priority": 2,
       "status": "pending",
       "tags": [
-        "tooling",
-        "lint"
+        "deps",
+        "rust"
+      ]
+    },
+    {
+      "id": "T-031",
+      "title": "Frontend toolchain majors: TypeScript 7, Vite 8, Vitest 5, ESLint 10, jsdom 31, jest-dom 8, plugin-react 6, lucide-react 1.x, eslint-config-prettier 10, semantic-release stack",
+      "description": "Supersedes Dependabot #33, #32, #31, #30, #27, #24, #22, #21, #20, #19. Likely decompose into (a) build/test: vite + plugin-react + vitest + jsdom + jest-dom, (b) lint/types: typescript + eslint + eslint-config-prettier, (c) lucide-react (icon renames), (d) release tooling. Use `pnpm up -i --latest`. Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build; check the app still launches (make dev).",
+      "size": "L",
+      "priority": 3,
+      "status": "pending",
+      "tags": [
+        "deps",
+        "frontend"
+      ]
+    },
+    {
+      "id": "T-032",
+      "title": "GitHub Actions majors: checkout 7, setup-node 7, upload-artifact 7, download-artifact 8",
+      "description": "Supersedes Dependabot #11, #12, #13, #10. upload/download-artifact majors must move together. Verify on a CI run. Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build.",
+      "size": "S",
+      "priority": 4,
+      "status": "pending",
+      "tags": [
+        "deps",
+        "ci"
       ]
     }
   ],
@@ -267,6 +289,33 @@
         "auto-start-default"
       ],
       "completed": "2026-11-25"
+    },
+    {
+      "id": "T-028",
+      "title": "Fix full `pnpm lint` exiting 1 with no output",
+      "description": "On main and this branch, `pnpm lint` (full-repo ESLint) exits 1 silently, likely an OOM/crash; ESLint on individual files is clean. Find the cause (e.g. a large ignored dir being linted, missing ignores) and make `make lint` reliable again. Root cause: not pnpm lint itself \u2014 the rtk output wrapper sometimes runs a whole-repo `eslint .`, and the config had no global ignores, so it parsed Tauri's compressed codegen assets under target/ (plus dist/, .claude/). Fixed with global ignores.",
+      "size": "S",
+      "priority": 1,
+      "status": "done",
+      "tags": [
+        "tooling",
+        "lint"
+      ],
+      "completed": "2026-11-26"
+    },
+    {
+      "id": "T-029",
+      "title": "In-range dependency refresh + Dependabot config fix",
+      "description": "cargo update + pnpm update within existing ranges: fixes rustls and serde_with alerts and the stale root Cargo.lock left by the nix 0.32 PR. dependabot.yml: cargo directory / (workspace lockfile), grouped security and major updates per ecosystem, grouped GitHub Actions.",
+      "size": "S",
+      "priority": 1,
+      "status": "done",
+      "tags": [
+        "deps",
+        "security",
+        "ci"
+      ],
+      "completed": "2026-11-26"
     }
   ]
 }

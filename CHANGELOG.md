@@ -1,3 +1,9 @@
+## [0.18.1](https://github.com/andrea-spoldi/charon/compare/v0.18.0...v0.18.1) (2026-11-26)
+
+### 🐛 Bug Fixes
+
+* **lint:** add ESLint global ignores for build and tooling output ([bad7805](https://github.com/andrea-spoldi/charon/commit/bad7805148223fff1f1fdc5b264acd4e5d76f9cf))
+
 ## [0.18.0](https://github.com/andrea-spoldi/charon/compare/v0.17.0...v0.18.0) (2026-11-25)
 
 ### 🚀 Features

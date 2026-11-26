@@ -26,15 +26,15 @@
       ]
     },
     {
-      "id": "T-032",
-      "title": "GitHub Actions majors: checkout 7, setup-node 7, upload-artifact 7, download-artifact 8",
-      "description": "Supersedes Dependabot #11, #12, #13, #10. upload/download-artifact majors must move together. Verify on a CI run. Close the matching Dependabot PRs once merged. Run make test, make lint and a locked build.",
+      "id": "T-033",
+      "title": "Move the release build off Node 20 (EOL April 2026)",
+      "description": "release.yml build-local-artifacts uses actions/setup-node with node-version '20'; semantic-release.yml already uses '22'. Bump to a supported LTS (22, or 24 to match the setup-node v7 runtime), ideally the same in both workflows. Verify with the next tagged release: only the Linux build runs in CI (mac/Windows are built locally).",
       "size": "S",
-      "priority": 4,
+      "priority": 5,
       "status": "pending",
       "tags": [
-        "deps",
-        "ci"
+        "ci",
+        "node"
       ]
     }
   ],

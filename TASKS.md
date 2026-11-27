@@ -3,29 +3,16 @@
 ```json
 {
   "project": "charon",
-  "updated": "2026-11-26",
+  "updated": "2026-11-27",
   "current_session": {
     "id": "S-011",
-    "goal": "Run tests and lint on pull requests in CI (T-039).",
-    "task_ref": "T-039",
+    "goal": "Run tests and lint on pull requests in CI (T-039); fix Cargo.lock release drift (T-040).",
+    "task_ref": "T-039, T-040",
     "started": "2026-11-26",
-    "status": "in-progress",
+    "status": "done",
     "blocker": null
   },
-  "backlog": [
-    {
-      "id": "T-039",
-      "title": "Run tests and lint on pull requests in CI",
-      "description": "Today the only PR check is cargo-dist's `plan` job (release.yml), so a green PR, including every Dependabot PR, says nothing about tests. Add a workflow on pull_request running pnpm install --frozen-lockfile, make test and make lint on ubuntu (Tauri Linux system deps needed for cargo test/clippy). Consider making it a required check.",
-      "size": "S",
-      "priority": 2,
-      "status": "in-progress",
-      "tags": [
-        "ci",
-        "test"
-      ]
-    }
-  ],
+  "backlog": [],
   "housekeeping": [
     {
       "date": "2026-07-14",
@@ -98,7 +85,7 @@
       "id": "D-004",
       "date": "2026-06-11",
       "decision": "Use semantic-release with @semantic-release/exec to automate version bumps across package.json, Cargo.toml, tauri.conf.json, and both Cargo.lock files. Requires RELEASE_TOKEN PAT because GITHUB_TOKEN pushes don't trigger downstream workflows.",
-      "rationale": "Eliminates manual version bumping in 4+ files. Tag push from semantic-release triggers existing cargo-dist release.yml.",
+      "rationale": "Eliminates manual version bumping in 4+ files. Tag push from semantic-release triggers existing cargo-dist release.yml. Correction (2026-11-27, T-040): until then only package.json, src-tauri/Cargo.toml and tauri.conf.json were bumped; the root Cargo.lock (the only lockfile) now is too.",
       "supersedes": null
     },
     {
@@ -109,6 +96,13 @@
       "refs": [
         "T-030"
       ]
+    },
+    {
+      "id": "D-010",
+      "date": "2026-11-26",
+      "decision": "Require the two CI checks on main through a repository ruleset ('main: require CI', id 28171330), not classic branch protection, with the Repository admin role as an 'always' bypass actor.",
+      "rationale": "semantic-release pushes its chore(release) commit directly to main with the RELEASE_TOKEN PAT (D-004). Without the admin bypass that push would be rejected for missing checks and releases would break. Checks are pinned to the GitHub Actions app (integration 15368); 'require up to date' is off so Dependabot PRs don't need rebasing.",
+      "supersedes": null
     }
   ],
   "completed": [
@@ -409,6 +403,36 @@
         "release"
       ],
       "completed": "2026-11-26"
+    },
+    {
+      "id": "T-039",
+      "title": "Run tests and lint on pull requests in CI",
+      "description": "Today the only PR check is cargo-dist's `plan` job (release.yml), so a green PR, including every Dependabot PR, says nothing about tests. Add a workflow on pull_request running pnpm install --frozen-lockfile, make test and make lint on ubuntu (Tauri Linux system deps needed for cargo test/clippy). Consider making it a required check.",
+      "size": "S",
+      "priority": 2,
+      "status": "done",
+      "tags": [
+        "ci",
+        "test"
+      ],
+      "completed": "2026-11-26",
+      "session_ref": "S-011",
+      "notes": "PR #54: ci.yml with parallel Frontend (lint-frontend, tsc -b, test-frontend) and Rust (Tauri deps, pnpm build, lint-rust, test-rust) jobs; Makefile lint split. Required via ruleset 28171330 (see D-010)."
+    },
+    {
+      "id": "T-040",
+      "title": "Bump root Cargo.lock in the semantic-release commit",
+      "description": "scripts/bump-version.sh updates package.json, src-tauri/Cargo.toml and tauri.conf.json, but not the workspace Cargo.lock, and .releaserc's @semantic-release/git assets don't include it. Every release tags a commit whose lockfile still has the previous charon version, and the next local cargo build dirties Cargo.lock (seen after 0.18.2 and after 0.14.1).",
+      "size": "S",
+      "priority": 1,
+      "status": "done",
+      "tags": [
+        "ci",
+        "release"
+      ],
+      "completed": "2026-11-27",
+      "session_ref": "S-011",
+      "notes": "bump-version.sh now edits the charon entry in the root Cargo.lock with awk (no Rust toolchain on the semantic-release runner) and exits 1 if the entry is missing; Cargo.lock added to @semantic-release/git assets. Also synced the lockfile to 0.18.2. Verified in a scratch worktree: bump to 9.9.9 passes `cargo metadata --locked`; a renamed entry fails the script."
     }
   ],
   "sessions": [

@@ -20,4 +20,16 @@ awk -v ver="$VERSION" '!done && /^version = ".*"/ { print "version = \"" ver "\"
 # src-tauri/tauri.conf.json
 sed -i"" -e "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/" src-tauri/tauri.conf.json
 
-echo "Version bumped to ${VERSION} in package.json, Cargo.toml, tauri.conf.json"
+# Cargo.lock (workspace root): the charon package entry only. Plain text edit
+# so the release job needs no Rust toolchain; the line after 'name = "charon"'
+# is always its version.
+awk -v ver="$VERSION" '
+  pending && /^version = ".*"/ { print "version = \"" ver "\""; pending=0; bumped=1; next }
+  { pending=0 }
+  /^name = "charon"$/ { pending=1 }
+  { print }
+  END { if (!bumped) { print "bump-version: charon entry not found in Cargo.lock" > "/dev/stderr"; exit 1 } }
+' Cargo.lock > Cargo.lock.tmp
+mv Cargo.lock.tmp Cargo.lock
+
+echo "Version bumped to ${VERSION} in package.json, Cargo.toml, tauri.conf.json, Cargo.lock"

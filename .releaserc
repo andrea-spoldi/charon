@@ -112,7 +112,8 @@
           "CHANGELOG.md",
           "package.json",
           "src-tauri/Cargo.toml",
-          "src-tauri/tauri.conf.json"
+          "src-tauri/tauri.conf.json",
+          "Cargo.lock"
         ],
         "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
       }
